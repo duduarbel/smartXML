@@ -1,0 +1,23 @@
+<!DOCTYPE note [
+	<!-- Parameter entity (DTD-only macro) -->
+	<!ENTITY % personContent "(name, email)">
+	<!-- General entity -->
+	<!ENTITY author "Dudu Arbel">
+	<!-- Notation (non-XML data type) -->
+	<!NOTATION jpeg SYSTEM "image/jpeg">
+	<!-- Element declarations -->
+	<!ELEMENT note (from, to, body, attachment?)>
+	<!ELEMENT from %personContent;>
+	<!ELEMENT to %personContent;>
+	<!ELEMENT name (#PCDATA)>
+	<!ELEMENT email (#PCDATA)>
+	<!ELEMENT body (#PCDATA)>
+	<!ELEMENT attachment EMPTY>
+	<!-- Attribute declarations -->
+	<!ATTLIST note
+		date CDATA #REQUIRED>
+	<!ATTLIST attachment
+		src   CDATA   #REQUIRED
+		type  NOTATION (jpeg) #REQUIRED>
+]>
+<root></root>

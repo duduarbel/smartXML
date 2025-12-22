@@ -1,0 +1,68 @@
+<lib:catalog xmlns:lib="http://www.example.com/library/v1"
+             xmlns:user="http://www.example.com/user/v1"
+             id="main-catalog-2025"
+             xsi:schemaLocation="http://www.example.com/library/v1 library.xsd"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <lib:book lib:id="ISBN-9781234567890" format="hardcover">
+        <lib:title>The Algorithm's Muse</lib:title>
+
+        <lib:author role="primary">
+            <lib:firstName>Evelyn</lib:firstName>
+            <lib:lastName>Reed</lib:lastName>
+            <lib:contact type="email">evelyn.r@domain.com</lib:contact>
+        </lib:author>
+
+        <lib:publication>
+            <lib:publisher country="US">TechPress Global</lib:publisher>
+            <lib:date>2023-11-15</lib:date>
+            <lib:pages unit="pages">450</lib:pages>
+        </lib:publication>
+
+        <lib:keywords>
+            <lib:tag>AI</lib:tag>
+            <lib:tag>Machine Learning</lib:tag>
+            <lib:tag>Philosophy</lib:tag>
+        </lib:keywords>
+
+        <lib:reviews count="2">
+            <user:reviewer user:id="U901">
+                <user:rating score="5.0"/>
+                <user:comment>A stunning synthesis of tech and humanity.</user:comment>
+            </user:reviewer>
+        </lib:reviews>
+    </lib:book>
+
+    <lib:book lib:id="ISBN-9780987654321" format="ebook">
+        <lib:title>Quantum Leaps in CSS</lib:title>
+
+        <lib:author role="primary">
+            <lib:firstName>Kenji</lib:firstName>
+            <lib:lastName>Tanaka</lib:lastName>
+            <lib:contact type="phone">(555) 123-4567</lib:contact>
+        </lib:author>
+
+        <lib:author role="secondary">
+            <lib:firstName>Sara</lib:firstName>
+            <lib:lastName>Chen</lib:lastName>
+        </lib:author>
+
+        <lib:publication>
+            <lib:publisher country="CA">WebDev House</lib:publisher>
+            <lib:date>2024-03-01</lib:date>
+            <lib:pages unit="pages"/>
+        </lib:publication>
+
+        <lib:reviews count="1">
+            <user:reviewer user:id="U305">
+                <user:rating score="4.2"/>
+                <user:comment>Excellent resource, though a bit dense in the later chapters.</user:comment>
+            </user:reviewer>
+            <user:reviewer user:id="U788">
+                <user:rating score="5.0"/>
+                <user:comment>The best CSS guide I've read this year!</user:comment>
+            </user:reviewer>
+        </lib:reviews>
+    </lib:book>
+
+</lib:catalog>

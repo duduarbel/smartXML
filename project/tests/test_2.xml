@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inventory:catalog xmlns:inventory="http://www.example.com/inventory"
+                   xmlns:meta="http://www.example.com/metadata">
+
+    <book id="bk101" category="fiction">
+        <meta:isbn>978-3-16-148410-0</meta:isbn>
+        <title>The Python Autocrat</title>
+        <author>Jane Doe</author>
+        <price currency="USD">29.95</price>
+        <publish_date>2023-10-15</publish_date>
+
+        <description>
+            <![CDATA[A story about <coding> & "logic". The <tags> inside here are ignored by the parser.]]>
+        </description>
+
+        <available_online />
+    </book>
+
+</inventory:catalog>
