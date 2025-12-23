@@ -9,3 +9,4 @@ cmake-build-*/
 test.tmp.txt
 __pycache__/
 venv/
+smartXML.egg-info/
