@@ -1424,7 +1424,6 @@ def test_bad_format_12():
 
 
 @pytest.mark.all
-@pytest.mark.one
 def test_read_me_example():
     # README example test
     input_file = Path('./readme_example.xml')
@@ -1964,4 +1963,65 @@ def test_c_data_3():
     assert result == src
 
 
-# TODO add tests for read() and write and to_string()
+@pytest.mark.all
+def test_to_string():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <tag1>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </tag1>
+        </root>
+        """
+    )
+
+    dst1 = textwrap.dedent(
+        """\
+        <tag1>
+        \t<bbbbb/>
+        \t<ccccc></ccccc>
+        </tag1>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    tag1 = xml.find("tag1")
+
+    tag1_str = tag1.to_string()
+    assert tag1_str == dst1
+
+@pytest.mark.all
+@pytest.mark.one
+def test_read():
+
+    xml = SmartXML()
+
+    with pytest.raises(ValueError) as error:
+        xml.write()
+    assert str(error.value) == "File name is not specified"
+    assert error.type is ValueError
+
+    with pytest.raises(TypeError) as error:
+        xml.read('ssss')
+    assert str(error.value) == "file_name must be a pathlib.Path object"
+    assert error.type is TypeError
+
+    src = textwrap.dedent(
+        """\
+        <root>
+        \t<AAA/>
+        \t<![CDATA[A story about <coding> & "logic". The <tags> inside here are ignored by the parser.]]>
+        \t<AAA/>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml.read(file_name)
+    xml.write()
+    result = file_name.read_text()
+    assert result == src
+

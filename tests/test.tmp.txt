@@ -1,27 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<students>
-	<student id="S001">
-		<firstName>Alice</firstName>
-		<lastName>Cohen</lastName>
-		<age>20</age>
-		<grade>90</grade>
-		<email>alice.cohen@example.com</email>
-	</student>
-	<!-- Bob is out -->
-	<!--
-		<student id="S002">
-			<firstName>Bob</firstName>
-			<lastName>Levi</lastName>
-			<age>22</age>
-			<grade>85</grade>
-			<email>bob.levi@example.com</email>
-		</student>
-	-->
-	<student id="S003">
-		<firstName>Noa</firstName>
-		<lastName>Shalev</lastName>
-		<age>19</age>
-		<grade>95</grade>
-		<email>noa.shalev@example.com</email>
-	</student>
-</students>
+<root>
+	<AAA/>
+	<![CDATA[A story about <coding> & "logic". The <tags> inside here are ignored by the parser.]]>
+	<AAA/>
+</root>

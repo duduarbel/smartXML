@@ -1,3 +1,6 @@
+## 1.0.4
+- fix a bug in read()
+
 ## 1.0.3
 - Add changelog
 

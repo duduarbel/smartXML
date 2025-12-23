@@ -150,7 +150,12 @@ class SmartXML:
         Read and parse the XML file into an element tree.
         :param file_name: Path to the XML file
         """
-        self.read(file_name)
+        if not isinstance(file_name, Path):
+            raise TypeError("file_name must be a pathlib.Path object")
+        if not file_name.exists():
+            raise FileNotFoundError(f"File {file_name} does not exist")
+
+        self._tree, self._doctype = self._read(file_name)
 
     def _read(self, file_name: Path) -> tuple[Any, None] | tuple[Any, Any]:
         self._file_name = file_name
@@ -268,6 +273,9 @@ class SmartXML:
 
         if file_name:
             self._file_name = file_name
+        if not self._file_name:
+            raise ValueError("File name is not specified")
+
         with open(self._file_name, "w") as file:
             if self._declaration:
                 file.write(f"<?xml {self._declaration}?>\n")
