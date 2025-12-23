@@ -1,6 +1,6 @@
 from typing import Union
 
-from smartXML._elements_utils import (
+from ._elements_utils import (
     _find_one,
     _find_all,
 )
@@ -15,6 +15,10 @@ class ElementBase:
     def is_comment(self) -> bool:
         return False
 
+    @property
+    def parent(self):
+        """Get the parent of the element."""
+        return self._parent
     @property
     def name(self) -> str:
         """Get the name of the element."""
@@ -42,6 +46,24 @@ class ElementBase:
             elements.append(current._name)
             current = current._parent
         return "|".join(reversed(elements))
+
+    def add_before(self, sibling: "Element"):
+        """Add this element before the given sibling element."""
+        parent = sibling._parent
+        if parent is None:
+            raise ValueError(f"Element {sibling.name} has no parent")
+        index = parent._sons.index(sibling)
+        parent._sons.insert(index, self)
+        self._parent = parent
+
+    def add_after(self, sibling: "Element"):
+        """Add this element after the given sibling element."""
+        parent = sibling._parent
+        if parent is None:
+            raise ValueError(f"Element {sibling.name} has no parent")
+        index = parent._sons.index(sibling)
+        parent._sons.insert(index + 1, self)
+        self._parent = parent
 
     def add_as_son_of(self, parent: "Element"):
         """Add this element as a son of the given parent element."""

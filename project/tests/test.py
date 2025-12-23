@@ -1,7 +1,7 @@
 import textwrap
 
-from smartXML.element import Element, TextOnlyComment
 from smartXML.xmltree import SmartXML, BadXMLFormat
+from smartXML.element import Element, TextOnlyComment
 from pathlib import Path
 import pytest
 import random
@@ -31,34 +31,6 @@ def __create_file(content: str) -> Path:
     f.close()
 
     return Path(file_name)
-
-
-def __test_one_liner(line: str):
-    file_name = __create_file(line)
-    xml = SmartXML(file_name)
-    xml.write(False)
-
-    result = file_name.read_text()
-
-    assert result == line
-
-
-@pytest.mark.all
-def _test_one_liner():
-    __test_one_liner('<root><user id="42"><name>Dudu</name><x>12</x></user></root>')
-
-    __test_one_liner('<log level="info" timestamp="2025-12-06T09:30:00Z">Startup complete</log>')
-
-    __test_one_liner('<task id="314" status="running"><resources cpu="2" mem="4GB"/><progress percent="68"/></task>')
-
-    __test_one_liner(
-        '<sensor id="S9" type="temperature"><reading at="2025-12-06T12:01:22Z">21.4</reading><reading at="2025-12-06T12:02:22Z">21.5</reading></sensor>'
-    )
-    __test_one_liner("<root/>")
-
-    __test_one_liner(
-        '<sensor id="S9" type="temperature"><reading at="2025-12-06T12:01:22Z">21.4</reading><reading at="2025-12-06T12:02:22Z">21.5</reading></sensor>'
-    )
 
 
 @pytest.mark.all
@@ -1525,13 +1497,70 @@ def test_bad_format_12():
     assert badXMLFormat.type is BadXMLFormat
 
 
+
+@pytest.mark.all
+@pytest.mark.one
+def test_read_me_example():
+    input_file = Path('./readme_example.xml')
+
+    xml = SmartXML(input_file)
+    names = xml.find('students|student|firstName', only_one=False)
+    for name in names:
+        if name.content == 'Bob':
+            bob = name.parent
+            bob.comment_out()
+            header = TextOnlyComment('Bob is out')
+            header.add_before(bob)
+
+    output_file = Path("./test.tmp.txt")
+    xml.write(output_file)
+    result = output_file.read_text()
+
+    dst = textwrap.dedent(
+        """\
+<?xml version="1.0" encoding="UTF-8"?>
+<students>
+\t<student id="S001">
+\t\t<firstName>Alice</firstName>
+\t\t<lastName>Cohen</lastName>
+\t\t<age>20</age>
+\t\t<grade>90</grade>
+\t\t<email>alice.cohen@example.com</email>
+\t</student>
+\t<!-- Bob is out -->
+\t<!--
+\t\t<student id="S002">
+\t\t\t<firstName>Bob</firstName>
+\t\t\t<lastName>Levi</lastName>
+\t\t\t<age>22</age>
+\t\t\t<grade>85</grade>
+\t\t\t<email>bob.levi@example.com</email>
+\t\t</student>
+\t-->
+\t<student id="S003">
+\t\t<firstName>Noa</firstName>
+\t\t<lastName>Shalev</lastName>
+\t\t<age>19</age>
+\t\t<grade>95</grade>
+\t\t<email>noa.shalev@example.com</email>
+\t</student>
+</students>
+"""
+    )
+
+    assert result == dst
+
+
+
 @pytest.mark.all
 def test_build_tree():
     dst = textwrap.dedent(
         """\
         <head version="1.0">This is the head
         \t<tag1></tag1>
+        \t<!-- tag4 comment -->
         \t<!-- <tag2></tag2> -->
+        \t<tag5></tag5>
         \t<tag3/>
         </head>
         """
@@ -1547,9 +1576,13 @@ def test_build_tree():
     tag1 = Element("tag1")
     tag2 = Element("tag2")
     tag3 = Element("tag3")
+    tag4 = TextOnlyComment("tag4 comment")
+    tag5 = Element("tag5")
     head.set_as_parent_of(tag1)
     tag2.add_as_son_of(head)
     tag3.add_as_son_of(head)
+    tag4.add_before(tag2)
+    tag5.add_after(tag2)
     tag2.comment_out()
     tag3._is_empty = True
 
@@ -1861,7 +1894,6 @@ def test_c_data_2():
 
 
 @pytest.mark.all
-@pytest.mark.one
 def test_c_data_3():
     src = textwrap.dedent(
         """\
