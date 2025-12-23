@@ -2,4 +2,4 @@
 - Initial release
 
 ## 1.0.1
-- Fix a bug in find with contect
+- Fix a bug in find with content
