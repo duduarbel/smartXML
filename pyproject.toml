@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "smartXML"
 version = "1.0.0"
 description = "smartXML package enables you to read, search, manipulate, and write XML files with ease"
-readme = "README"
+readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 
