@@ -6,7 +6,7 @@ cmake-build-*/
 *.so
 *.o
 *.out
-test.tmp.txt
+test.tmp.xml
 __pycache__/
 venv/
 smartXML.egg-info/

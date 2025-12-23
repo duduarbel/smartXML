@@ -7,6 +7,8 @@ import pytest
 import random
 
 
+test_file_name = "./files/test.tmp.xml"
+
 def _test_tree_integrity(xml_tree: SmartXML):
 
     def node_tree_integrity(xml: SmartXML, element: Element, name: str):
@@ -25,12 +27,11 @@ def _test_tree_integrity(xml_tree: SmartXML):
 
 
 def __create_file(content: str) -> Path:
-    file_name = "./test.tmp.txt"
-    f = open(file_name, "w")
+    f = open(test_file_name, "w")
     f.write(content)
     f.close()
 
-    return Path(file_name)
+    return Path(test_file_name)
 
 
 @pytest.mark.all
@@ -988,7 +989,7 @@ def test_complex_comment_2():
 
 @pytest.mark.all
 def test_file_test_1():
-    file_name = Path("./test_1.xml")
+    file_name = Path("./files/test_1.xml")
     xml = SmartXML(file_name)
     _test_tree_integrity(xml)
     tag = xml.find("lib:title")
@@ -998,10 +999,10 @@ def test_file_test_1():
 
 @pytest.mark.all
 def test_file_test_2():
-    file_name = Path("./test_2.xml")
+    file_name = Path("./files/test_2.xml")
     xml = SmartXML(file_name)
     _test_tree_integrity(xml)
-    xml.write(Path("./test.tmp.txt"))
+    xml.write(Path(test_file_name))
     pass
 
 
@@ -1426,7 +1427,7 @@ def test_bad_format_12():
 @pytest.mark.all
 def test_read_me_example():
     # README example test
-    input_file = Path('./readme_example.xml')
+    input_file = Path('./files/readme_example.xml')
 
     xml = SmartXML(input_file)
     firstName = xml.find('students|student|firstName', with_content='Bob')
@@ -1435,7 +1436,7 @@ def test_read_me_example():
     header = TextOnlyComment('Bob is out')
     header.add_before(bob)
 
-    output_file = Path("./test.tmp.txt")
+    output_file = Path(test_file_name)
     xml.write(output_file)
     result = output_file.read_text()
 
@@ -1547,7 +1548,7 @@ def test_find_all_with_content():
 
 @pytest.mark.all
 def test_read_me_example_ver1():
-    input_file = Path('./readme_example.xml')
+    input_file = Path('./files/readme_example.xml')
 
     xml = SmartXML(input_file)
     names = xml.find('students|student|firstName', only_one=False)
@@ -1558,7 +1559,7 @@ def test_read_me_example_ver1():
             header = TextOnlyComment('Bob is out')
             header.add_before(bob)
 
-    output_file = Path("./test.tmp.txt")
+    output_file = Path(test_file_name)
     xml.write(output_file)
     result = output_file.read_text()
 
@@ -1632,7 +1633,7 @@ def test_build_tree():
 
     _test_tree_integrity(xml)
 
-    file_name = Path("./test.tmp.txt")
+    file_name = Path(test_file_name)
     xml.write(file_name)
     result = file_name.read_text()
     assert result == dst
