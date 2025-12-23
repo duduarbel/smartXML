@@ -1132,7 +1132,6 @@ def test_find_name_2():
 
 
 @pytest.mark.all
-@pytest.mark.one
 def test_find_1():
     src = textwrap.dedent(
         """\
@@ -1425,6 +1424,7 @@ def test_bad_format_12():
 
 
 @pytest.mark.all
+@pytest.mark.one
 def test_read_me_example():
     # README example test
     input_file = Path('./readme_example.xml')

@@ -122,7 +122,7 @@ class SmartXML:
             self._tree, self._doctype = self._read(self._file_name)
 
     @property
-    def tree(self) -> str:
+    def tree(self) -> ElementBase:
         """Get the root element of the XML tree."""
         return self._tree
 
