@@ -15,14 +15,10 @@ from smartxml import SmartXML, TextOnlyComment
 input_file = Path('./example.xml')
 xml = SmartXML(input_file)
 
-names = xml.find('students|student|firstName', only_one=False)
-
-for name in names:
-    if name.content == 'Bob':
-        bob = name.parent
-        bob.comment_out()
-
-        header = TextOnlyComment('Bob is out')
-        header.add_before(bob)
+firstName = xml.find('students|student|firstName', with_content='Bob')
+bob = firstName.parent
+bob.comment_out()
+header = TextOnlyComment('Bob is out')
+header.add_before(bob)
 
 xml.write()

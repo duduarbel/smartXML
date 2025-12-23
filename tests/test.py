@@ -493,7 +493,6 @@ def test_nested_comment_3():
 
 
 @pytest.mark.all
-@pytest.mark.one
 def test_nested_comment_sons():
     src = textwrap.dedent(
         """\
@@ -1133,6 +1132,7 @@ def test_find_name_2():
 
 
 @pytest.mark.all
+@pytest.mark.one
 def test_find_1():
     src = textwrap.dedent(
         """\
@@ -1426,6 +1426,117 @@ def test_bad_format_12():
 
 @pytest.mark.all
 def test_read_me_example():
+    # README example test
+    input_file = Path('./readme_example.xml')
+
+    xml = SmartXML(input_file)
+    firstName = xml.find('students|student|firstName', with_content='Bob')
+    bob = firstName.parent
+    bob.comment_out()
+    header = TextOnlyComment('Bob is out')
+    header.add_before(bob)
+
+    output_file = Path("./test.tmp.txt")
+    xml.write(output_file)
+    result = output_file.read_text()
+
+    dst = textwrap.dedent(
+        """\
+<?xml version="1.0" encoding="UTF-8"?>
+<students>
+\t<student id="S001">
+\t\t<firstName>Alice</firstName>
+\t\t<lastName>Cohen</lastName>
+\t\t<age>20</age>
+\t\t<grade>90</grade>
+\t\t<email>alice.cohen@example.com</email>
+\t</student>
+\t<!-- Bob is out -->
+\t<!--
+\t\t<student id="S002">
+\t\t\t<firstName>Bob</firstName>
+\t\t\t<lastName>Levi</lastName>
+\t\t\t<age>22</age>
+\t\t\t<grade>85</grade>
+\t\t\t<email>bob.levi@example.com</email>
+\t\t</student>
+\t-->
+\t<student id="S003">
+\t\t<firstName>Noa</firstName>
+\t\t<lastName>Shalev</lastName>
+\t\t<age>19</age>
+\t\t<grade>95</grade>
+\t\t<email>noa.shalev@example.com</email>
+\t</student>
+</students>
+"""
+    )
+
+    assert result == dst
+
+
+@pytest.mark.all
+def test_find_with_content():
+    src = textwrap.dedent(
+        """\
+        <head version="1.0">This is the head
+            <tag1></tag1>
+            <!-- <tag2 id="1">content 1</tag2> -->
+            <!-- <tag2 id="2">content 2</tag2> -->
+            <tag2 id="3">content 3
+                <tag2 id="4">content 4
+                </tag2>
+            </tag2>
+            <tag3/>
+        </head>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    head = xml.find("head", with_content="This is the head")
+    assert head
+    tag2_1 = xml.find("tag2", with_content="content 1")
+    assert tag2_1
+    assert tag2_1.attributes["id"] == "1"
+    tag2_2 = xml.find("tag2", with_content="content 2")
+    assert tag2_2
+    assert tag2_2.attributes["id"] == "2"
+    tag2_3 = xml.find("tag2", with_content="content 3")
+    assert tag2_3
+    assert tag2_3.attributes["id"] == "3"
+    tag2_4 = xml.find("tag2", with_content="content 4")
+    assert tag2_4
+    assert tag2_4.attributes["id"] == "4"
+
+@pytest.mark.all
+def test_find_all_with_content():
+    src = textwrap.dedent(
+        """\
+        <head version="1.0">This is the head
+            <tag1></tag1>
+            <!-- <tag2 id="1">content</tag2> -->
+            <!-- <tag2 id="2">content</tag2> -->
+            <tag2 id="3">content
+                <tag2 id="4">content
+                </tag2>
+            </tag2>
+            <tag3/>
+        </head>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    tags = xml.find("tag2", with_content="content", only_one=False)
+    assert len(tags) == 4
+    for index in range(4):
+        assert tags[index].attributes["id"] == str(index + 1)
+
+@pytest.mark.all
+def test_read_me_example_ver1():
     input_file = Path('./readme_example.xml')
 
     xml = SmartXML(input_file)
@@ -1474,8 +1585,6 @@ def test_read_me_example():
     )
 
     assert result == dst
-
-
 
 @pytest.mark.all
 def test_build_tree():
