@@ -292,7 +292,7 @@ class SmartXML:
 
     def find(
         self,
-        name: str = None,
+        name: str = "",
         only_one: bool = True,
         with_content: str = None,
     ) -> Element | list[Element] | None:
@@ -305,6 +305,6 @@ class SmartXML:
                 if found, return the elements that match the last name in the path,
                 if not found, return None if only_one is True, else return empty list
         """
-        if name is None and with_content is None:
+        if not name and with_content is None:
             raise ValueError("At least one search criteria must be provided")
         return self._tree.find(name, only_one, with_content)

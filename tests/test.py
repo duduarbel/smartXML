@@ -1522,6 +1522,7 @@ def test_find_all_with_content():
                 </tag2>
             </tag2>
             <tag3/>
+            <tag4>xxx</tag4>
         </head>
         """
     )
@@ -1533,6 +1534,16 @@ def test_find_all_with_content():
     assert len(tags) == 4
     for index in range(4):
         assert tags[index].attributes["id"] == str(index + 1)
+
+    tag4 = xml.find(with_content="xxx")
+    assert tag4
+    assert tag4.name == "tag4"
+
+    tag4 = xml.find(with_content="xxx", only_one=False)
+    assert len(tag4) == 1
+    assert tag4[0].name == "tag4"
+
+
 
 @pytest.mark.all
 def test_read_me_example_ver1():
