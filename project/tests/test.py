@@ -1,7 +1,7 @@
 import textwrap
 
-from xmlutil.element import Element, TextOnlyComment
-from xmlutil.xmltree import SmartXML, BadXMLFormat
+from smartXML.element import Element, TextOnlyComment
+from smartXML.xmltree import SmartXML, BadXMLFormat
 from pathlib import Path
 import pytest
 import random

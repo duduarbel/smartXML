@@ -1,6 +1,6 @@
 from typing import Union
 
-from xmlutil._elements_utils import (
+from smartXML._elements_utils import (
     _find_one,
     _find_all,
 )

@@ -3,7 +3,7 @@ from enum import Enum
 import re
 from typing import Any
 
-from xmlutil.element import ElementBase, Element, Comment, CData, Doctype, TextOnlyComment
+from smartXML.element import ElementBase, Element, Comment, CData, Doctype, TextOnlyComment
 
 
 class BadXMLFormat(Exception):
