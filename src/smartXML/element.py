@@ -38,15 +38,21 @@ class ElementBase:
             raise ValueError(f"Invalid tag name '{new_name}'")
         self._name = new_name
 
-    def to_string(self, indentation: str) -> str:
-        """Convert the element and its sons to a string representation of XML."""
+    def to_string(self, indentation: str = "\t") -> str:
+        """
+        Convert the XML tree to a string.
+        :param indentation: string used for indentation, default is tab character
+        :return: XML string
+        """
         return self._to_string(0, indentation)
 
     def _to_string(self, index: int, indentation: str) -> str:
         pass
 
     def get_path(self) -> str:
-        """Get the full path of the element, from the root of the XML tree, separated by |."""
+        """ Get the full path of the element
+        returns: the path as a string from the root of the XML tree, separated by |.
+        """
         elements = []
         current = self
         while current is not None:
@@ -144,7 +150,7 @@ class Element(ElementBase):
 
     def comment_out(self):
         """Convert this element into a comment.
-        raises IllegalOperation, if a parent is a comment
+        raises IllegalOperation, if any parent or any descended is a comment
         """
         def find_comment_son(element: "Element") -> bool:
             if element.is_comment():

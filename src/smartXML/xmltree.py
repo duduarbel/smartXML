@@ -273,7 +273,12 @@ class SmartXML:
                 file.write(f"<?xml {self._declaration}?>\n")
             file.write(self.to_string(indentation))
 
-    def to_string(self, indentation: str) -> str:
+    def to_string(self, indentation: str = "\t") -> str:
+        """
+        Convert the XML tree to a string.
+        :param indentation: string used for indentation, default is tab character
+        :return: XML string
+        """
         result = self._doctype.to_string(indentation) if self._doctype else ""
         return result + self._tree.to_string(indentation)
 
