@@ -193,6 +193,9 @@ class SmartXML:
                     depth -= 1
 
                 elif data.startswith("!--"):
+                    if incomplete_nodes and isinstance(incomplete_nodes[-1], Comment):
+                        raise BadXMLFormat("Nested comments are not allowed")
+
                     if data.endswith("--"):
                         element = TextOnlyComment(data[3:-2].strip())
                         _add_ready_token(ready_nodes, element, depth + 1)
@@ -215,6 +218,8 @@ class SmartXML:
                         depth += 1
 
             elif token_type == TokenType.comment_start:
+                if incomplete_nodes and isinstance(incomplete_nodes[-1], Comment):
+                    raise BadXMLFormat("Nested comments are not allowed")
                 count_comment_start += 1
                 if data != "!--":
                     raise BadXMLFormat("Malformed comment closure")

@@ -1,7 +1,7 @@
 import textwrap
 
 from smartXML.xmltree import SmartXML, BadXMLFormat
-from smartXML.element import Element, TextOnlyComment
+from smartXML.element import Element, TextOnlyComment, IllegalOperation
 from pathlib import Path
 import pytest
 import random
@@ -432,72 +432,95 @@ def test_one_line_comment():
 
 
 @pytest.mark.all
-def test_complex_comment():
+def test_nested_comment_1():
     src = textwrap.dedent(
         """\
         <root>
-            <user>
-                <!-- <tag1>t1</tag1> -->
-                <!-- 
-                    <tag2/>
-                    <tag3>
-                        <subtag>
-                            <subtag1>
-                                <sssss/>
-                            </subtag1>
-                        </subtag>
-                        <!-- nested comment -->
-                        <!-- <subtag2>value2</subtag2> -->
-                        <tag4>
-                            <tag5>
-                                <!--
-                                    <subtag3>value2</subtag3>
-                                    <subtag4>value2</subtag4>
-                                -->
-                            </tag5>
-                        </tag4>
-                    </tag3>
-                -->
-            </user>
+        <!-- 
+            <tag2>
+                <!-- nested comment -->
+            </tag2>
+        -->
         </root>
         """
     )
 
-    dst = textwrap.dedent(
+    file_name = __create_file(src)
+
+    with pytest.raises(BadXMLFormat) as badXMLFormat:
+        SmartXML(file_name)
+    assert str(badXMLFormat.value) == "Nested comments are not allowed"
+    assert badXMLFormat.type is BadXMLFormat
+
+@pytest.mark.all
+def test_nested_comment_2():
+    src = textwrap.dedent(
         """\
         <root>
-        \t<user>
-        \t\t<!-- <tag1>t1</tag1> -->
-        \t\t<!-- <tag2/> -->
-        \t\t<!--
-        \t\t\t<tag3>
-        \t\t\t\t<subtag>
-        \t\t\t\t\t<subtag1>
-        \t\t\t\t\t\t<sssss/>
-        \t\t\t\t\t</subtag1>
-        \t\t\t\t</subtag>
-        \t\t\t\t<!-- nested comment -->
-        \t\t\t\t<!-- <subtag2>value2</subtag2> -->
-        \t\t\t\t<tag4>
-        \t\t\t\t\t<tag5>
-        \t\t\t\t\t\t<!-- <subtag3>value2</subtag3> -->
-        \t\t\t\t\t\t<!-- <subtag4>value2</subtag4> -->
-        \t\t\t\t\t</tag5>
-        \t\t\t\t</tag4>
-        \t\t\t</tag3>
-        \t\t-->
-        \t</user>
+        <!-- 
+            <tag2>
+                <!-- <tag111><tag33/></tag111> -->
+            </tag2>
+        -->
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+
+    with pytest.raises(BadXMLFormat) as badXMLFormat:
+        SmartXML(file_name)
+    assert str(badXMLFormat.value) == "Nested comments are not allowed"
+    assert badXMLFormat.type is BadXMLFormat
+
+
+@pytest.mark.all
+def test_nested_comment_3():
+    src = textwrap.dedent(
+        """\
+        <root>
+        <!-- tag2><!-- <tag111><tag33/></tag111> --></tag2 -->
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+
+    with pytest.raises(BadXMLFormat) as badXMLFormat:
+        SmartXML(file_name)
+    assert str(badXMLFormat.value) == "Nested comments are not allowed"
+    assert badXMLFormat.type is BadXMLFormat
+
+
+@pytest.mark.all
+@pytest.mark.one
+def test_nested_comment_sons():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <tag1> 
+                <tag2>
+                    <tag3>
+                        <tag4/>
+                        <tag6/>
+                        <tag7>
+                            <!-- <lastTag/> -->
+                        </tag7>
+                    </tag3>
+                </tag2>
+            </tag1>
         </root>
         """
     )
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst
-    _test_tree_integrity(xml)
+    tag1 = xml.find("tag1")
 
+    with pytest.raises(IllegalOperation) as badXMLFormat:
+        tag1.comment_out()
+    assert str(badXMLFormat.value) == "Cannot comment out an element whose descended is a comment"
+    assert badXMLFormat.type is IllegalOperation
 
 @pytest.mark.all
 def test_comment_1():
@@ -827,120 +850,6 @@ def test_comment6():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
-def test_comment7():
-    src = textwrap.dedent(
-        """\
-        <root>
-        \t\t\t<tag1> id="1"
-        \t\t\t\t<tag2>bbb</tag2><tag3>ccc</tag3>
-        \t\t\t<!--<tag4/>-->
-        </tag1>
-        </root>
-        """
-    )
-    dst1 = textwrap.dedent(
-        """\
-        <root>
-        \t<tag1>id="1"
-        \t\t<tag2>bbb</tag2>
-        \t\t<tag3>ccc</tag3>
-        \t\t<!-- <tag4/> -->
-        \t</tag1>
-        </root>
-        """
-    )
-    dst2 = textwrap.dedent(
-        """\
-        <root>
-        \t<!--
-        \t\t<tag1>id="1"
-        \t\t\t<tag2>bbb</tag2>
-        \t\t\t<tag3>ccc</tag3>
-        \t\t\t<!-- <tag4/> -->
-        \t\t</tag1>
-        \t-->
-        </root>
-        """
-    )
-    dst3 = textwrap.dedent(
-        """\
-        <root>
-        \t<!--
-        \t\t<tag1>id="1"
-        \t\t\t<tag2>bbb</tag2>
-        \t\t\t<tag3>ccc</tag3>
-        \t\t\t<tag4/>
-        \t\t</tag1>
-        \t-->
-        </root>
-        """
-    )
-
-    file_name = __create_file(src)
-    xml = SmartXML(file_name)
-
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst1
-
-    tag1 = xml.find("tag1")
-
-    tag1.comment_out()
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst2
-
-    tag4 = xml.find("tag4")
-    tag4.uncomment()
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst3
-    _test_tree_integrity(xml)
-
-
-@pytest.mark.all
-def test_comment8():
-    src = textwrap.dedent(
-        """\
-        <root>
-        \t<!--
-        \t\t<tag1>id="1"
-        \t\t\t<tag2>bbb</tag2>
-        \t\t\t<tag3>ccc</tag3>
-        \t\t</tag1>
-        \t-->
-        </root>
-        """
-    )
-    dst = textwrap.dedent(
-        """\
-        <root>
-        \t<!--
-        \t\t<tag1>id="1"
-        \t\t\t<tag2>bbb</tag2>
-        \t\t\t<!-- <tag3>ccc</tag3> -->
-        \t\t</tag1>
-        \t-->
-        </root>
-        """
-    )
-
-    file_name = __create_file(src)
-    xml = SmartXML(file_name)
-
-    tag3 = xml.find("tag3")
-    tag3.comment_out()
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst
-
-    tag3.uncomment()
-    xml.write()
-    result = file_name.read_text()
-    assert result == src
-    _test_tree_integrity(xml)
-
 
 @pytest.mark.all
 def test_comment_stress():
@@ -1035,13 +944,11 @@ def test_complex_comment_2():
         \t<!--
         \t\t<tag1>
         \t\t\t<tag2/>
-        \t\t\t<!--
-        \t\t\t\t<tag3>
-        \t\t\t\t\t<tag4>
-        \t\t\t\t\t\t<tag5/>
-        \t\t\t\t\t</tag4>
-        \t\t\t\t</tag3>
-        \t\t\t-->
+        \t\t\t<tag3>
+        \t\t\t\t<tag4>
+        \t\t\t\t\t<tag5/>
+        \t\t\t\t</tag4>
+        \t\t\t</tag3>
         \t\t</tag1>
         \t-->
         </root>
@@ -1052,9 +959,28 @@ def test_complex_comment_2():
     xml = SmartXML(file_name)
 
     tag0 = xml.find("tag0")
-    tag0.comment_out()
+    tag1 = xml.find("tag1")
     tag3 = xml.find("tag3")
+
+    tag0.comment_out() # Ok, as it is out of any comment
+
+
+    with pytest.raises(IllegalOperation) as badXMLFormat:
+        tag3.comment_out()
+    assert str(badXMLFormat.value) == "Cannot comment out an element whose parent is a comment"
+    assert badXMLFormat.type is IllegalOperation
+
+    tag1.uncomment()
     tag3.comment_out()
+
+    with pytest.raises(IllegalOperation) as badXMLFormat:
+        tag1.comment_out()
+    assert str(badXMLFormat.value) == "Cannot comment out an element whose descended is a comment"
+    assert badXMLFormat.type is IllegalOperation
+
+    tag3.uncomment()
+    tag1.comment_out()
+
     xml.write()
     result = file_name.read_text()
     assert result == dst1
@@ -1499,7 +1425,6 @@ def test_bad_format_12():
 
 
 @pytest.mark.all
-@pytest.mark.one
 def test_read_me_example():
     input_file = Path('./readme_example.xml')
 
@@ -1930,4 +1855,4 @@ def test_c_data_3():
     assert result == src
 
 
-# TODO add tests for read()
+# TODO add tests for read() and write

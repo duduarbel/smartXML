@@ -5,6 +5,12 @@ from ._elements_utils import (
     _find_all,
 )
 
+class IllegalOperation(Exception):
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
+
+
 
 class ElementBase:
     def __init__(self, name: str):
@@ -137,7 +143,27 @@ class Element(ElementBase):
         self._is_empty = False  # whether the element is self-closing
 
     def comment_out(self):
-        """Convert this element into a comment."""
+        """Convert this element into a comment.
+        raises IllegalOperation, if a parent is a comment
+        """
+        def find_comment_son(element: "Element") -> bool:
+            if element.is_comment():
+                return True
+            for son in element._sons:
+                if find_comment_son(son):
+                    return True
+            return False
+
+        parent = self.parent
+        while parent:
+            if parent.is_comment():
+                raise IllegalOperation("Cannot comment out an element whose parent is a comment")
+            parent = parent.parent
+
+        for son in self._sons:
+            if find_comment_son(son):
+                raise IllegalOperation("Cannot comment out an element whose descended is a comment")
+
         self.__class__ = Comment
 
     def _to_string(self, index: int, indentation: str, with_endl=True) -> str:
