@@ -45,7 +45,7 @@ header.add_before(bob)
 
 xml.write()
 ```
-result:
+result (example.xml):
 ```xml
 <students>
   <!-- Bob is out -->
