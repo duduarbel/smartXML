@@ -1,3 +1,6 @@
+## 1.0.5
+- fix a bug in find with with_content only
+
 ## 1.0.4
 - fix a bug in read()
 
