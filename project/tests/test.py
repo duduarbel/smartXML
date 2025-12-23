@@ -1928,3 +1928,6 @@ def test_c_data_3():
     xml.write()
     result = file_name.read_text()
     assert result == src
+
+
+# TODO add tests for read()

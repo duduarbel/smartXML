@@ -119,16 +119,16 @@ class SmartXML:
         self._tree = None
         self._doctype = None
         if data:
-            self._tree, self._doctype = self.read(self._file_name)
+            self._tree, self._doctype = self._read(self._file_name)
 
     @property
     def tree(self) -> str:
-        """Get the name of the element."""
+        """Get the root element of the XML tree."""
         return self._tree
 
     @property
     def declaration(self) -> str:
-        """Get the name of the element."""
+        """Get the XML declaration."""
         return self._declaration
 
     def _parse_declaration(self, file_content: str):
@@ -145,7 +145,14 @@ class SmartXML:
 
         return file_content
 
-    def read(self, file_name) -> tuple[Any, None] | tuple[Any, Any]:
+    def read(self, file_name: Path) -> None:
+        """
+        Read and parse the XML file into an element tree.
+        :param file_name: Path to the XML file
+        """
+        self.read(file_name)
+
+    def _read(self, file_name: Path) -> tuple[Any, None] | tuple[Any, Any]:
         self._file_name = file_name
         ready_nodes = {}  # depth -> list of elements
         incomplete_nodes = []
@@ -248,7 +255,12 @@ class SmartXML:
         raise BadXMLFormat("xml contains more than one outer element")
 
     def write(self, file_name: Path = None, indentation: str = "\t") -> str | None:
-        """Write the XML tree back to the file."""
+        """Write the XML tree back to the file.
+        :param file_name: Path to the XML file, if None, overwrite the original file
+        :param indentation: string used for indentation, default is tab character
+        :return: XML string if file_name is None, else None
+        """
+
         if file_name:
             self._file_name = file_name
         with open(self._file_name, "w") as file:

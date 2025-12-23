@@ -13,6 +13,7 @@ class ElementBase:
         self._parent = None
 
     def is_comment(self) -> bool:
+        """Check if the element is a comment."""
         return False
 
     @property
@@ -39,7 +40,7 @@ class ElementBase:
         pass
 
     def get_path(self) -> str:
-        """Get the full path of the element in the XML tree, separated by |."""
+        """Get the full path of the element, from the root of the XML tree, separated by |."""
         elements = []
         current = self
         while current is not None:
@@ -82,6 +83,7 @@ class ElementBase:
 
 
 class TextOnlyComment(ElementBase):
+    """A comment that only contains text, not other elements."""
     def __init__(self, text: str):
         super().__init__("")
         self._text = text
@@ -95,6 +97,7 @@ class TextOnlyComment(ElementBase):
 
 
 class CData(ElementBase):
+    """A CDATA section that contains text."""
     def __init__(self, text: str):
         super().__init__("")
         self._text = text
@@ -105,6 +108,7 @@ class CData(ElementBase):
 
 
 class Doctype(ElementBase):
+    """A DOCTYPE declaration."""
     def __init__(self, text: str):
         super().__init__("")
         self._text = text
@@ -125,6 +129,7 @@ class Doctype(ElementBase):
 
 
 class Element(ElementBase):
+    """An XML element that can contain attributes, content, and child elements."""
     def __init__(self, name: str):
         super().__init__(name)
         self.content = ""
@@ -132,6 +137,7 @@ class Element(ElementBase):
         self._is_empty = False  # whether the element is self-closing
 
     def comment_out(self):
+        """Convert this element into a comment."""
         self.__class__ = Comment
 
     def _to_string(self, index: int, indentation: str, with_endl=True) -> str:
@@ -182,6 +188,7 @@ class Element(ElementBase):
 
 
 class Comment(Element):
+    """An XML comment that can contain other elements."""
     def __init__(self, name: str):
         super().__init__(name)
 
@@ -189,6 +196,7 @@ class Comment(Element):
         return True
 
     def uncomment(self):
+        """Convert this comment back into a normal element."""
         self.__class__ = Element
 
     def _to_string(self, index: int, indentation: str) -> str:
