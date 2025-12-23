@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smartXML"
+version = "1.0.0"
+description = "smartXML package enables you to read, search, manipulate, and write XML files with ease"
+readme = "README"
+requires-python = ">=3.10"
+license = "MIT"
+
+authors = [
+    { name = "Dudu Arbel", email = "duduarbel@gmail.com" }
+]
+
+keywords = ["python", "example"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "mypy>=1.8",
+    "ruff>=0.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourname/your-package"
+Repository = "https://github.com/yourname/your-package"
+Issues = "https://github.com/yourname/your-package/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
