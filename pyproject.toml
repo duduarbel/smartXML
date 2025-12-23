@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "smartXML"
-version = "1.0.2"
+version = "1.0.3"
 description = "smartXML package enables you to read, search, manipulate, and write XML files with ease"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.urls]
-Changelog = "https://github.com/duduarbel/smartXML/changelog.md"
+Changelog = "https://github.com/duduarbel/smartXML/blob/main/changelog.md"
 
 [project.optional-dependencies]
 dev = [
