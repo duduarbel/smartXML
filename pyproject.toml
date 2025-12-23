@@ -35,11 +35,6 @@ dev = [
     "ruff>=0.3",
 ]
 
-[project.urls]
-Homepage = "https://github.com/yourname/your-package"
-Repository = "https://github.com/yourname/your-package"
-Issues = "https://github.com/yourname/your-package/issues"
-
 [tool.setuptools]
 package-dir = { "" = "src" }
 
