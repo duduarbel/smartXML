@@ -28,6 +28,9 @@ dependencies = [
     "requests>=2.31",
 ]
 
+[project.urls]
+Changelog = "https://github.com/duduarbel/smartXML/changelog.md"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
