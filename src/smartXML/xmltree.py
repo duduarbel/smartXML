@@ -149,6 +149,10 @@ class SmartXML:
         """
         Read and parse the XML file into an element tree.
         :param file_name: Path to the XML file
+        :raises:
+            TypeError: if file_name is not a pathlib.Path object
+            FileNotFoundError: if file_name does not exist
+            BadXMLFormat: if the XML format is invalid
         """
         if not isinstance(file_name, Path):
             raise TypeError("file_name must be a pathlib.Path object")
@@ -269,6 +273,10 @@ class SmartXML:
         :param file_name: Path to the XML file, if None, overwrite the original file
         :param indentation: string used for indentation, default is tab character
         :return: XML string if file_name is None, else None
+        :raises:
+            ValueError: if file name is not specified
+            TypeError: if file_name is not a pathlib.Path object
+            FileNotFoundError: if file_name does not exist
         """
 
         if file_name:
@@ -304,6 +312,9 @@ class SmartXML:
         :return: the elements found,
                 if found, return the elements that match the last name in the path,
                 if not found, return None if only_one is True, else return empty list
+        :raises:
+            ValueError: if neither name nor with_content is provided
+
         """
         if not name and with_content is None:
             raise ValueError("At least one search criteria must be provided")

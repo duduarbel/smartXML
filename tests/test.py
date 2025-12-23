@@ -2021,6 +2021,13 @@ def test_read():
     assert str(error.value) == "file_name must be a pathlib.Path object"
     assert error.type is TypeError
 
+    with pytest.raises(FileNotFoundError) as error:
+        xml.read(Path('ssss'))
+    assert str(error.value) == "File ssss does not exist"
+    assert error.type is FileNotFoundError
+
+
+
     src = textwrap.dedent(
         """\
         <root>
