@@ -1,6 +1,10 @@
 
+## 1.0.7
+- Add support for Python 3.9
+
 ## 1.0.6
 - fix an import in the README example
+
 ## 1.0.5
 - deprecate `Element.add_as_son_of` and `Element.set_as_parent_of` 
   - It is unclear where the element is added in case of multiple children with the same name.
