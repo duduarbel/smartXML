@@ -1,3 +1,6 @@
+## 1.0.10
+- Add support for Python 3.9
+
 ## 1.0.9
 - Add support for Python 3.9
 

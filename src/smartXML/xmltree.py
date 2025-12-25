@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pathlib import Path
 from enum import Enum
 import re
@@ -268,7 +269,7 @@ class SmartXML:
             return ready_nodes[1][1], ready_nodes[1][0]
         raise BadXMLFormat("xml contains more than one outer element")
 
-    def write(self, file_name: Path = None, indentation: str = "\t") -> str | None:
+    def write(self, file_name: Path = None, indentation: str = "\t") -> str:
         """Write the XML tree back to the file.
         :param file_name: Path to the XML file, if None, overwrite the original file
         :param indentation: string used for indentation, default is tab character
