@@ -1,3 +1,6 @@
+## 1.0.11
+- Add `uncomment()` to `Element`
+
 ## 1.0.10
 - Add support for Python 3.9
 

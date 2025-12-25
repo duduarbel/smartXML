@@ -160,6 +160,9 @@ class Element(ElementBase):
         self.attributes = {}
         self._is_empty = False  # whether the element is self-closing
 
+    def uncomment(self):
+        pass
+
     def comment_out(self):
         """Convert this element into a comment.
         raises IllegalOperation, if any parent or any descended is a comment
