@@ -32,7 +32,7 @@ The package includes a `SmartXML` representing the XML file, and `ElementBase` r
 
 ```python
 from pathlib import Path
-from smartxml import SmartXML, TextOnlyComment
+from smartXML.xmltree import SmartXML, TextOnlyComment
 
 input_file = Path('./example.xml')
 xml = SmartXML(input_file)

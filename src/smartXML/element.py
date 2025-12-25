@@ -1,4 +1,5 @@
 from typing import Union
+import warnings
 
 from ._elements_utils import (
     _find_one,
@@ -80,11 +81,21 @@ class ElementBase:
 
     def add_as_son_of(self, parent: "Element"):
         """Add this element as a son of the given parent element."""
+        warnings.warn(
+            "add_as_son_of() is deprecated and will be removed in version 1.1.0 . add_before() ot add_after() instead.",
+            category=DeprecationWarning,
+            stacklevel=2
+        )
         parent._sons.append(self)
         self._parent = parent
 
     def set_as_parent_of(self, son: "Element"):
         """Set this element as the parent of the given son element."""
+        warnings.warn(
+            "set_as_parent_of() is deprecated and will be removed in version 1.1.0 . add_before() ot add_after() instead.",
+            category=DeprecationWarning,
+            stacklevel=2
+        )
         self._sons.append(son)
         son._parent = self
 
