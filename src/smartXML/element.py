@@ -201,7 +201,7 @@ class Element(ElementBase):
             children_str = "".join(son._to_string(index + 1, indentation) for son in self._sons)
 
             if children_str:
-                result = f"{indent}{opening_tag}" f"{self.content}" f"{"\n"}" f"{children_str}{indent}{closing_tag}"
+                result = f"{indent}{opening_tag}{self.content}\n{children_str}{indent}{closing_tag}"
             else:
                 result = f"{indent}{opening_tag}{self.content}{closing_tag}"
 
