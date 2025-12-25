@@ -161,7 +161,7 @@ class SmartXML:
 
         self._tree, self._doctype = self._read(file_name)
 
-    def _read(self, file_name: Path) -> tuple[Any, None] | tuple[Any, Any]:
+    def _read(self, file_name: Path) -> tuple[Any, Any]:
         self._file_name = file_name
         ready_nodes = {}  # depth -> list of elements
         incomplete_nodes = []
