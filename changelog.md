@@ -1,3 +1,6 @@
+## 1.0.12
+- Add line number to bad format xml exceptions
+
 ## 1.0.11
 - Add `uncomment()` to `Element`
 

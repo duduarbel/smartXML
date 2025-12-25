@@ -21,12 +21,18 @@ class TokenType(Enum):
     c_data = 5
     doctype = 6
 
+class Token:
+    def __init__(self, token_type: TokenType, data: str, line_number: int):
+        self.token_type = token_type
+        self.data = data
+        self.line_number = line_number
 
 def _divide_to_tokens(file_content):
     tokens = []
 
     last_char = ""
     last_index = 0
+    line_number = 1
 
     index = 0
     while index < len(file_content):
@@ -39,7 +45,7 @@ def _divide_to_tokens(file_content):
                 if cdata_end == -1:
                     raise BadXMLFormat("Malformed CDATA section")
                 cdata_content = file_content[index + 8 : cdata_end]
-                tokens.append((TokenType.c_data, cdata_content))
+                tokens.append(Token(TokenType.c_data, cdata_content,line_number))
                 last_index = cdata_end + 2
                 last_char = ">"
                 index = last_index + 1
@@ -49,7 +55,7 @@ def _divide_to_tokens(file_content):
                 if start == -1:
                     raise BadXMLFormat("Malformed DOCTYPE declaration")
                 doctype = file_content[index:start]
-                tokens.append((TokenType.doctype, doctype))
+                tokens.append(Token(TokenType.doctype, doctype, line_number))
 
                 last_char = ""
                 last_index = start + 1
@@ -58,21 +64,24 @@ def _divide_to_tokens(file_content):
 
         if char == ">":
             if last_char == "<":
-                tokens.append((TokenType.full, file_content[last_index + 1 : index].strip()))
+                tokens.append(Token(TokenType.full, file_content[last_index + 1 : index].strip(), line_number))
             else:
-                tokens.append((TokenType.closing, file_content[last_index + 1 : index].strip()))
+                tokens.append(Token(TokenType.closing, file_content[last_index + 1 : index].strip(), line_number))
             last_char = char
             last_index = index
         elif char == "<":
             if last_char == "<":
                 # this is a case of opening a comment of type <!-- TAG>...</TAG --> (or bad format)
-                tokens.append((TokenType.comment_start, file_content[last_index + 1 : index].strip()))
+                tokens.append(Token(TokenType.comment_start, file_content[last_index + 1 : index].strip(), line_number))
             if last_char == ">":
                 text = file_content[last_index + 1 : index - 1].strip()
                 if text:
-                    tokens.append((TokenType.content, file_content[last_index + 1 : index].strip()))
+                    tokens.append(Token(TokenType.content, file_content[last_index + 1 : index].strip(), line_number))
             last_char = char
             last_index = index
+        elif char == "\n":
+            line_number += 1
+
         index += 1
 
     return tokens
@@ -177,8 +186,9 @@ class SmartXML:
         tokens = _divide_to_tokens(file_content)
 
         for token in tokens:
-            token_type = token[0]
-            data = token[1]
+            token_type = token.token_type
+            data = token.data
+            line_number = token.line_number
 
             if token_type == TokenType.full:
                 if data.endswith("/"):
@@ -198,13 +208,13 @@ class SmartXML:
                         count_comment_end += 1
 
                     if element.name != data:
-                        raise BadXMLFormat(f"Mismatched XML tags, opening: {element.name}, closing: {data}")
+                        raise BadXMLFormat(f"Mismatched XML tags, opening: {element.name}, closing: {data}, in line {line_number}")
                     _add_ready_token(ready_nodes, element, depth)
                     depth -= 1
 
                 elif data.startswith("!--"):
                     if incomplete_nodes and isinstance(incomplete_nodes[-1], Comment):
-                        raise BadXMLFormat("Nested comments are not allowed")
+                        raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
 
                     if data.endswith("--"):
                         element = TextOnlyComment(data[3:-2].strip())
@@ -229,10 +239,10 @@ class SmartXML:
 
             elif token_type == TokenType.comment_start:
                 if incomplete_nodes and isinstance(incomplete_nodes[-1], Comment):
-                    raise BadXMLFormat("Nested comments are not allowed")
+                    raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
                 count_comment_start += 1
                 if data != "!--":
-                    raise BadXMLFormat("Malformed comment closure")
+                    raise BadXMLFormat(f"Malformed comment closure in line {line_number}")
                 element = Comment(data)  # This is a placeholder, indicating future soms are in a comment
                 incomplete_nodes.append(element)
 

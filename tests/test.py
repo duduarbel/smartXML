@@ -450,7 +450,7 @@ def test_nested_comment_1():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Nested comments are not allowed"
+    assert str(badXMLFormat.value) == "Nested comments are not allowed in line 4"
     assert badXMLFormat.type is BadXMLFormat
 
 @pytest.mark.all
@@ -471,11 +471,12 @@ def test_nested_comment_2():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Nested comments are not allowed"
+    assert str(badXMLFormat.value) == "Nested comments are not allowed in line 4"
     assert badXMLFormat.type is BadXMLFormat
 
 
 @pytest.mark.all
+@pytest.mark.one
 def test_nested_comment_3():
     src = textwrap.dedent(
         """\
@@ -489,7 +490,7 @@ def test_nested_comment_3():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Nested comments are not allowed"
+    assert str(badXMLFormat.value) == "Nested comments are not allowed in line 2"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -1216,7 +1217,7 @@ def test_bad_format_1():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Mismatched XML tags, opening: B, closing: start"
+    assert str(badXMLFormat.value) == "Mismatched XML tags, opening: B, closing: start, in line 2"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -1252,7 +1253,7 @@ def test_bad_format_3():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Mismatched XML tags, opening: email, closing: user"
+    assert str(badXMLFormat.value) == "Mismatched XML tags, opening: email, closing: user, in line 4"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -1268,7 +1269,7 @@ def test_bad_format_4():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Mismatched XML tags, opening: i, closing: b"
+    assert str(badXMLFormat.value) == "Mismatched XML tags, opening: i, closing: b, in line 2"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -1345,7 +1346,7 @@ def test_bad_format_8():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Mismatched XML tags, opening: tag1, closing: tag2"
+    assert str(badXMLFormat.value) == "Mismatched XML tags, opening: tag1, closing: tag2, in line 2"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -1419,7 +1420,7 @@ def test_bad_format_12():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Malformed comment closure"
+    assert str(badXMLFormat.value) == "Malformed comment closure in line 4"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -2006,7 +2007,6 @@ def test_to_string():
     assert tag1_str == dst1
 
 @pytest.mark.all
-@pytest.mark.one
 def test_read():
 
     xml = SmartXML()
