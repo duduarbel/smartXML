@@ -1,4 +1,5 @@
 import textwrap
+from readme_example import test_readme_example
 
 from smartXML.xmltree import SmartXML, BadXMLFormat
 from smartXML.element import Element, TextOnlyComment, IllegalOperation
@@ -34,7 +35,7 @@ def __create_file(content: str) -> Path:
     return Path(test_file_name)
 
 
-@pytest.mark.all
+
 def test_trimming():
     src = textwrap.dedent(
         """\
@@ -75,7 +76,8 @@ def test_trimming():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
+@pytest.mark.one
 def test_read_comment1():
     src = textwrap.dedent(
         """\
@@ -97,7 +99,7 @@ def test_read_comment1():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_read_comment2():
     src = textwrap.dedent(
         """\
@@ -119,7 +121,7 @@ def test_read_comment2():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_read_comment3():
     src = textwrap.dedent(
         """\
@@ -169,7 +171,7 @@ def test_read_comment3():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_read_comment4():
     src = textwrap.dedent(
         """\
@@ -210,7 +212,7 @@ def test_read_comment4():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_simple_find_and_get_path():
     file_name = __create_file("<A><B><C><D><D1></D1><D2/><X/></D></C></B><X/></A>")
     xml = SmartXML(file_name)
@@ -254,7 +256,7 @@ def test_simple_find_and_get_path():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_complex_find_and_get_path():
     src = textwrap.dedent(
         """\
@@ -330,7 +332,7 @@ def test_complex_find_and_get_path():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_parent_son():
     src = textwrap.dedent(
         """\
@@ -364,7 +366,7 @@ def test_parent_son():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_one_line_comment():
     src = textwrap.dedent(
         """\
@@ -432,7 +434,7 @@ def test_one_line_comment():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_nested_comment_1():
     src = textwrap.dedent(
         """\
@@ -453,7 +455,7 @@ def test_nested_comment_1():
     assert str(badXMLFormat.value) == "Nested comments are not allowed in line 4"
     assert badXMLFormat.type is BadXMLFormat
 
-@pytest.mark.all
+
 def test_nested_comment_2():
     src = textwrap.dedent(
         """\
@@ -475,8 +477,7 @@ def test_nested_comment_2():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
-@pytest.mark.one
+
 def test_nested_comment_3():
     src = textwrap.dedent(
         """\
@@ -494,7 +495,7 @@ def test_nested_comment_3():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_nested_comment_sons():
     src = textwrap.dedent(
         """\
@@ -523,7 +524,7 @@ def test_nested_comment_sons():
     assert str(badXMLFormat.value) == "Cannot comment out an element whose descended is a comment"
     assert badXMLFormat.type is IllegalOperation
 
-@pytest.mark.all
+
 def test_comment_1():
     src = textwrap.dedent(
         """\
@@ -572,7 +573,7 @@ def test_comment_1():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_comment_2():
     src = textwrap.dedent(
         """\
@@ -639,7 +640,7 @@ def test_comment_2():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_one_line_comment2():
     src = textwrap.dedent(
         """\
@@ -690,7 +691,7 @@ def test_one_line_comment2():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_one_line_comment3():
     src = textwrap.dedent(
         """\
@@ -743,7 +744,7 @@ def test_one_line_comment3():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_one_line_comment4():
     src = textwrap.dedent(
         """\
@@ -777,7 +778,7 @@ def test_one_line_comment4():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_one_line_comment5():
     src = textwrap.dedent(
         """\
@@ -814,7 +815,7 @@ def test_one_line_comment5():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_comment6():
     src = textwrap.dedent(
         """\
@@ -852,7 +853,7 @@ def test_comment6():
 
 
 
-@pytest.mark.all
+
 def test_comment_stress():
     src = textwrap.dedent(
         """\
@@ -917,7 +918,7 @@ def test_comment_stress():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_complex_comment_2():
     src = textwrap.dedent(
         """\
@@ -988,7 +989,7 @@ def test_complex_comment_2():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_file_test_1():
     file_name = Path("./files/test_1.xml")
     xml = SmartXML(file_name)
@@ -998,7 +999,7 @@ def test_file_test_1():
     assert tag.content == "The Algorithm's Muse"
 
 
-@pytest.mark.all
+
 def test_file_test_2():
     file_name = Path("./files/test_2.xml")
     xml = SmartXML(file_name)
@@ -1007,7 +1008,7 @@ def test_file_test_2():
     pass
 
 
-@pytest.mark.all
+
 def test_find_duplication():
     file_name = __create_file('<settings><A id="1"><A id="2"><A id="3"/></A></A></settings>')
     xml = SmartXML(file_name)
@@ -1025,7 +1026,7 @@ def test_find_duplication():
     assert a.attributes["id"] == "1"
 
 
-@pytest.mark.all
+
 def test_attributes():
     src = textwrap.dedent(
         """\
@@ -1044,7 +1045,7 @@ def test_attributes():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_find_name():
     src = textwrap.dedent(
         """\
@@ -1089,7 +1090,7 @@ def test_find_name():
     # TOTO - complete
 
 
-@pytest.mark.all
+
 def test_find_name_2():
     src = textwrap.dedent(
         """\
@@ -1133,7 +1134,7 @@ def test_find_name_2():
     assert len(abcdb) == 0
 
 
-@pytest.mark.all
+
 def test_find_1():
     src = textwrap.dedent(
         """\
@@ -1185,7 +1186,7 @@ def test_find_1():
     assert b.attributes["id"] == "B2"
 
 
-@pytest.mark.all
+
 def test_bad_find():
     src = textwrap.dedent(
         """\
@@ -1204,7 +1205,7 @@ def test_bad_find():
     assert valueError.type is ValueError
 
 
-@pytest.mark.all
+
 def test_bad_format_1():
     src = textwrap.dedent(
         """\
@@ -1221,7 +1222,7 @@ def test_bad_format_1():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_bad_format_2():
     src = textwrap.dedent(
         """\
@@ -1238,7 +1239,7 @@ def test_bad_format_2():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_bad_format_3():
     src = textwrap.dedent(
         """\
@@ -1257,7 +1258,7 @@ def test_bad_format_3():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_bad_format_4():
     src = textwrap.dedent(
         """
@@ -1273,7 +1274,7 @@ def test_bad_format_4():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_bad_format_5():
     src = textwrap.dedent(
         """
@@ -1290,7 +1291,7 @@ def test_bad_format_5():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_bad_format_6():
     src = textwrap.dedent(
         """\
@@ -1311,7 +1312,7 @@ def test_bad_format_6():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_bad_format_7():
     src = textwrap.dedent(
         """\
@@ -1332,7 +1333,7 @@ def test_bad_format_7():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_bad_format_8():
     src = textwrap.dedent(
         """\
@@ -1350,7 +1351,7 @@ def test_bad_format_8():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_bad_format_9():
     src = textwrap.dedent(
         """\
@@ -1368,7 +1369,7 @@ def test_bad_format_9():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_bad_format_10():
     src = textwrap.dedent(
         """\
@@ -1386,7 +1387,7 @@ def test_bad_format_10():
     assert badXMLFormat.type is BadXMLFormat
 
 
-@pytest.mark.all
+
 def test_ok_comment_format():
     src = textwrap.dedent(
         """\
@@ -1403,7 +1404,7 @@ def test_ok_comment_format():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_bad_format_12():
     src = textwrap.dedent(
         """\
@@ -1424,11 +1425,12 @@ def test_bad_format_12():
     assert badXMLFormat.type is BadXMLFormat
 
 
+TEST_FOLDER = Path(__file__).resolve().parent
 
-@pytest.mark.all
+
 def test_read_me_example():
     # README example test
-    input_file = Path('./files/readme_example.xml')
+    input_file = TEST_FOLDER / Path('files/students.xml')
 
     xml = SmartXML(input_file)
     firstName = xml.find('students|student|firstName', with_content='Bob')
@@ -1476,7 +1478,7 @@ def test_read_me_example():
     assert result == dst
 
 
-@pytest.mark.all
+
 def test_find_with_content():
     src = textwrap.dedent(
         """\
@@ -1511,7 +1513,7 @@ def test_find_with_content():
     assert tag2_4
     assert tag2_4.attributes["id"] == "4"
 
-@pytest.mark.all
+
 def test_find_all_with_content():
     src = textwrap.dedent(
         """\
@@ -1547,9 +1549,9 @@ def test_find_all_with_content():
 
 
 
-@pytest.mark.all
+
 def test_read_me_example_ver1():
-    input_file = Path('./files/readme_example.xml')
+    input_file = TEST_FOLDER / Path('./files/students.xml')
 
     xml = SmartXML(input_file)
     names = xml.find('students|student|firstName', only_one=False)
@@ -1598,7 +1600,7 @@ def test_read_me_example_ver1():
 
     assert result == dst
 
-@pytest.mark.all
+
 def test_build_tree():
     dst = textwrap.dedent(
         """\
@@ -1640,7 +1642,7 @@ def test_build_tree():
     assert result == dst
 
 
-@pytest.mark.all
+
 def test_declaration():
     src = textwrap.dedent(
         """\
@@ -1662,7 +1664,7 @@ def test_declaration():
     assert src == result
 
 
-@pytest.mark.all
+
 def test_remove():
     src = textwrap.dedent(
         """\
@@ -1716,7 +1718,7 @@ def test_remove():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_remove2():
     src = textwrap.dedent(
         """\
@@ -1746,7 +1748,7 @@ def test_remove2():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_tag_manipulations():
     src = textwrap.dedent(
         """\
@@ -1798,7 +1800,7 @@ def test_tag_manipulations():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.all
+
 def test_indentation():
     src = textwrap.dedent(
         """\
@@ -1896,7 +1898,7 @@ def test_indentation():
     assert result == dst4
 
 
-@pytest.mark.all
+
 def test_c_data():
     src = textwrap.dedent(
         """\
@@ -1915,7 +1917,7 @@ def test_c_data():
     assert result == src
 
 
-@pytest.mark.all
+
 def test_c_data_2():
     src = textwrap.dedent(
         """\
@@ -1939,7 +1941,7 @@ def test_c_data_2():
     assert result == src
 
 
-@pytest.mark.all
+
 def test_c_data_3():
     src = textwrap.dedent(
         """\
@@ -1976,7 +1978,7 @@ def test_c_data_3():
     assert result == src
 
 
-@pytest.mark.all
+
 def test_to_string():
     src = textwrap.dedent(
         """\
@@ -2006,7 +2008,7 @@ def test_to_string():
     tag1_str = tag1.to_string()
     assert tag1_str == dst1
 
-@pytest.mark.all
+
 def test_read():
 
     xml = SmartXML()
