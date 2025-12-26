@@ -34,11 +34,11 @@ The package includes a `SmartXML` representing the XML file, and `ElementBase` r
 from pathlib import Path
 from smartXML.xmltree import SmartXML, TextOnlyComment
 
-input_file = Path('./example.xml')
+input_file = Path('files/students.xml')
 xml = SmartXML(input_file)
 
-firstName = xml.find('students|student|firstName', with_content='Bob')
-bob = firstName.parent
+first_name = xml.find('students|student|firstName', with_content='Bob')
+bob = first_name.parent
 bob.comment_out()
 header = TextOnlyComment('Bob is out')
 header.add_before(bob)
