@@ -1,6 +1,5 @@
 import textwrap
 from readme_example import test_readme_example
-from test_huge_xml import test_huge_xml
 
 from smartXML.xmltree import SmartXML, BadXMLFormat
 from smartXML.element import Element, TextOnlyComment, IllegalOperation
@@ -2064,6 +2063,7 @@ def test_test_comment_more_than_one_line():
     result = file_name.read_text()
     assert result == src
 
+@pytest.mark.one
 def test_test_comment_with_small_sign():
     src = textwrap.dedent(
         """\
@@ -2110,5 +2110,3 @@ def test_test_comment_with_bad_elements():
 def test_readme():
     test_readme_example()
 
-def test_huge_xml_1():
-    test_huge_xml()
