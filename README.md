@@ -23,8 +23,7 @@ The package includes a `SmartXML` representing the XML file, and `ElementBase` r
     - `comment_out`: comments out the current element
     - `add_before`: adds an element before the current element
     - `add_after`: adds an element after the current element
-    - `add_as_son_of`: adds an element as a son of the current element
-    - `set_as_parent_of`: sets the current element as the parent of another element
+    - `add_as_last_son_of`: adds an element as the last son of the current element
     - `to_string`: converts the current element to a string
 
 
