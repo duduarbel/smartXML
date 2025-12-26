@@ -9,7 +9,7 @@ def test_readme_example():
     first_name = xml.find('students|student|firstName', with_content='Bob')
     bob = first_name.parent
     bob.comment_out()
-    header = TextOnlyComment('Bob is out')
+    header = TextOnlyComment(' Bob is out ')
     header.add_before(bob)
 
     xml.write()

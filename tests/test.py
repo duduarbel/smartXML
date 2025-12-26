@@ -1,5 +1,6 @@
 import textwrap
 from readme_example import test_readme_example
+from test_huge_xml import test_huge_xml
 
 from smartXML.xmltree import SmartXML, BadXMLFormat
 from smartXML.element import Element, TextOnlyComment, IllegalOperation
@@ -77,7 +78,6 @@ def test_trimming():
 
 
 
-@pytest.mark.one
 def test_read_comment1():
     src = textwrap.dedent(
         """\
@@ -1436,7 +1436,7 @@ def test_read_me_example():
     firstName = xml.find('students|student|firstName', with_content='Bob')
     bob = firstName.parent
     bob.comment_out()
-    header = TextOnlyComment('Bob is out')
+    header = TextOnlyComment(' Bob is out ')
     header.add_before(bob)
 
     output_file = Path(test_file_name)
@@ -1559,7 +1559,7 @@ def test_read_me_example_ver1():
         if name.content == 'Bob':
             bob = name.parent
             bob.comment_out()
-            header = TextOnlyComment('Bob is out')
+            header = TextOnlyComment(' Bob is out ')
             header.add_before(bob)
 
     output_file = Path(test_file_name)
@@ -1624,7 +1624,7 @@ def test_build_tree():
     tag1 = Element("tag1")
     tag2 = Element("tag2")
     tag3 = Element("tag3")
-    tag4 = TextOnlyComment("tag4 comment")
+    tag4 = TextOnlyComment(" tag4 comment ")
     tag5 = Element("tag5")
     head.set_as_parent_of(tag1)
     tag2.add_as_son_of(head)
@@ -2046,3 +2046,70 @@ def test_read():
     result = file_name.read_text()
     assert result == src
 
+def test_test_comment_more_than_one_line():
+    src = textwrap.dedent(
+        """\
+        <root>
+        \t<!--
+        \tA story about coding logic.
+        \tA story about coding logic.
+        \t-->
+        </root>
+        """
+    )
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    xml.write()
+    result = file_name.read_text()
+    assert result == src
+
+@pytest.mark.one
+def test_test_comment_with_small_sign():
+    src = textwrap.dedent(
+        """\
+        <root>
+        \t<!--
+        \tA story about <coding> & "logic".
+        \tA story about <coding> & "logic".
+        \t-->
+        </root>
+        """
+    )
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    xml.write()
+    result = file_name.read_text()
+    assert result == src
+
+def test_test_comment_with_bad_elements():
+    src = textwrap.dedent(
+        """\
+        <root>
+        \t<!--
+        \t<tag1> A story about</tag1>
+        \t<tag2> Node: tag2 is not closed!!!! </tag2
+        \t-->
+        </root>
+        """
+    )
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    xml.write()
+    result = file_name.read_text()
+    assert result == src
+
+    with pytest.raises(ValueError) as error:
+        xml.tree._sons[0].uncomment()
+    assert str(error.value) == "File name is not specified"
+    assert error.type is ValueError
+
+
+
+def test_readme():
+    test_readme_example()
+
+def test_huge_xml_1():
+    test_huge_xml()

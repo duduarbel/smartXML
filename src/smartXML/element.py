@@ -117,7 +117,7 @@ class TextOnlyComment(ElementBase):
 
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index
-        return f"{indent}<!-- {self._text} -->\n"
+        return f"{indent}<!--{self._text}-->\n"
 
 
 class CData(ElementBase):

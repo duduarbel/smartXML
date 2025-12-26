@@ -128,8 +128,8 @@ class SmartXML:
         self._declaration = ""
         self._tree = None
         self._doctype = None
-        if data:
-            self._tree, self._doctype = self._read(self._file_name)
+        if self._file_name:
+            self.read(self._file_name)
 
     @property
     def tree(self) -> ElementBase:
@@ -169,10 +169,24 @@ class SmartXML:
         if not file_name.exists():
             raise FileNotFoundError(f"File {file_name} does not exist")
 
-        self._tree, self._doctype = self._read(file_name)
-
-    def _read(self, file_name: Path) -> tuple[Any, Any]:
         self._file_name = file_name
+        file_content = self._file_name.read_text()
+        self._read_xml(file_content)
+
+    def _read_xml(self, text:str):
+        text = self._parse_declaration(text)
+        elements = self._read_elements(text)
+
+        if len(elements) == 1:
+            self._tree = elements[0]
+        elif len(elements) == 2 and isinstance(elements[0], Doctype) and isinstance(elements[1], Element):
+            self._doctype = elements[0]
+            self._tree = elements[1]
+        else:
+            raise BadXMLFormat("xml contains more than one outer element")
+
+
+    def _read_elements(self, text:str) -> list[Element]:
         ready_nodes = {}  # depth -> list of elements
         incomplete_nodes = []
         depth = 0
@@ -180,10 +194,7 @@ class SmartXML:
         count_comment_start = 0
         count_comment_end = 0
 
-        file_content = self._file_name.read_text()
-        file_content = self._parse_declaration(file_content)
-
-        tokens = _divide_to_tokens(file_content)
+        tokens = _divide_to_tokens(text)
 
         for token in tokens:
             token_type = token.token_type
@@ -217,7 +228,7 @@ class SmartXML:
                         raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
 
                     if data.endswith("--"):
-                        element = TextOnlyComment(data[3:-2].strip())
+                        element = TextOnlyComment(data[3:-2])
                         _add_ready_token(ready_nodes, element, depth + 1)
                     else:
                         # this is a case of opening a comment of type <!-- TAG>...</TAG -->
@@ -266,18 +277,13 @@ class SmartXML:
                 element = CData(data)
                 _add_ready_token(ready_nodes, element, depth + 1)
 
+        # TODO - consider moving this from here
         if count_comment_start != count_comment_end:
             raise BadXMLFormat("Mismatched comment tags")
 
-        if len(ready_nodes.get(1, [])) == 1:
-            return ready_nodes[1][0], None
-        if (
-            len(ready_nodes.get(1, [])) == 2
-            and isinstance(ready_nodes[1][0], Doctype)
-            and isinstance(ready_nodes[1][1], Element)
-        ):
-            return ready_nodes[1][1], ready_nodes[1][0]
-        raise BadXMLFormat("xml contains more than one outer element")
+        if ready_nodes != {1: ready_nodes.get(1)}:
+            raise BadXMLFormat("xml contains more than one outer element")
+        return ready_nodes[1]
 
     def write(self, file_name: Path = None, indentation: str = "\t") -> str:
         """Write the XML tree back to the file.
