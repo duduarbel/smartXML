@@ -80,20 +80,24 @@ class ElementBase:
         parent._sons.insert(index + 1, self)
         self._parent = parent
 
+    def add_as_last_son_of(self, parent: "Element"):
+        """Add this element as a son of the given parent element."""
+        parent._sons.append(self)
+        self._parent = parent
+
     def add_as_son_of(self, parent: "Element"):
         """Add this element as a son of the given parent element."""
         warnings.warn(
-            "add_as_son_of() is deprecated and will be removed in version 1.1.0 . add_before() ot add_after() instead.",
+            "add_as_son_of() is deprecated and will be removed in version 1.1.0 . add_as_last_son_of instead.",
             category=DeprecationWarning,
             stacklevel=2
         )
-        parent._sons.append(self)
-        self._parent = parent
+        self.add_as_last_son_of(parent)
 
     def set_as_parent_of(self, son: "Element"):
         """Set this element as the parent of the given son element."""
         warnings.warn(
-            "set_as_parent_of() is deprecated and will be removed in version 1.1.0 . add_before() ot add_after() instead.",
+            "set_as_parent_of() is deprecated and will be removed in version 1.1.0 . add_before() or add_after() or add_as_last_son_of instead.",
             category=DeprecationWarning,
             stacklevel=2
         )

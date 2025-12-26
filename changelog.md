@@ -1,3 +1,6 @@
+## 1.0.14
+- Add `Element`'s method `add_as_last_son_of`
+
 ## 1.0.13
 - Improve support for comments 
 
