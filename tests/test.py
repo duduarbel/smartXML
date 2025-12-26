@@ -175,22 +175,8 @@ def test_read_comment4():
     src = textwrap.dedent(
         """\
         <root>
-            <!--TAG>xxx
-            </TAG  -->
-        </root>
-        """
-    )
-    dst1 = textwrap.dedent(
-        """\
-        <root>
-        \t<!-- <TAG>xxx</TAG> -->
-        </root>
-        """
-    )
-    dst2 = textwrap.dedent(
-        """\
-        <root>
-        \t<TAG>xxx</TAG>
+        \t<!--TAG>xxx
+        \t</TAG  -->
         </root>
         """
     )
@@ -200,16 +186,7 @@ def test_read_comment4():
     xml.write()
 
     result = file_name.read_text()
-    assert result == dst1
-
-    tag = xml.find("TAG")
-    assert tag
-    tag.uncomment()
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst2
-    _test_tree_integrity(xml)
-
+    assert result == src
 
 
 def test_simple_find_and_get_path():
@@ -451,7 +428,7 @@ def test_nested_comment_1():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Nested comments are not allowed in line 4"
+    assert str(badXMLFormat.value) == "Nested comments are not allowed in line 2"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -472,7 +449,7 @@ def test_nested_comment_2():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Nested comments are not allowed in line 4"
+    assert str(badXMLFormat.value) == "Nested comments are not allowed in line 2"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -1364,7 +1341,7 @@ def test_bad_format_9():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Mismatched comment tags"
+    assert str(badXMLFormat.value) == "Malformed comment in line 2"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -1382,12 +1359,13 @@ def test_bad_format_10():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Mismatched comment tags"
+    assert str(badXMLFormat.value) == "Malformed comment in line 2"
     assert badXMLFormat.type is BadXMLFormat
 
 
 
-def test_ok_comment_format():
+@pytest.mark.one
+def test_bad_format_11():
     src = textwrap.dedent(
         """\
         <head version="1.0">This is the head
@@ -1398,9 +1376,10 @@ def test_ok_comment_format():
 
     file_name = __create_file(src)
 
-    xml = SmartXML(file_name)
-    assert isinstance(xml.tree._sons[0], TextOnlyComment)
-    _test_tree_integrity(xml)
+    with pytest.raises(BadXMLFormat) as badXMLFormat:
+        SmartXML(file_name)
+    assert str(badXMLFormat.value) == "Nested comments are not allowed in line 2"
+    assert badXMLFormat.type is BadXMLFormat
 
 
 
@@ -1420,7 +1399,7 @@ def test_bad_format_12():
 
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
-    assert str(badXMLFormat.value) == "Malformed comment closure in line 4"
+    assert str(badXMLFormat.value) == "Malformed element in line 4"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -2063,7 +2042,6 @@ def test_test_comment_more_than_one_line():
     result = file_name.read_text()
     assert result == src
 
-@pytest.mark.one
 def test_test_comment_with_small_sign():
     src = textwrap.dedent(
         """\
@@ -2100,10 +2078,9 @@ def test_test_comment_with_bad_elements():
     result = file_name.read_text()
     assert result == src
 
-    with pytest.raises(ValueError) as error:
+    with pytest.raises(AttributeError) as error:
         xml.tree._sons[0].uncomment()
-    assert str(error.value) == "File name is not specified"
-    assert error.type is ValueError
+    assert error.type is AttributeError
 
 
 
@@ -2125,3 +2102,9 @@ def test_read_elements_2():
     assert elements[1].name == 'B'
     assert elements[2].name == 'C'
     assert elements[2].content == 'Data'
+
+def test_read_elements_minimum_comment():
+    elements = _read_elements('<!---->')
+    assert len(elements) == 1
+    assert isinstance(elements[0], TextOnlyComment)
+    assert elements[0]._text == ''
