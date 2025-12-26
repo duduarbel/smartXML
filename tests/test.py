@@ -1,7 +1,7 @@
 import textwrap
 from readme_example import test_readme_example
 
-from smartXML.xmltree import SmartXML, BadXMLFormat, _read_elements
+from smartXML.xmltree import SmartXML, BadXMLFormat, _read_elements, _parse_element
 from smartXML.element import Element, TextOnlyComment, IllegalOperation
 from pathlib import Path
 import pytest
@@ -1251,6 +1251,7 @@ def test_bad_format_4():
 
 
 
+@pytest.mark.one
 def test_bad_format_5():
     src = textwrap.dedent(
         """
@@ -1263,7 +1264,7 @@ def test_bad_format_5():
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
         pass
-    assert str(badXMLFormat.value) == "Tag 1st_place can not starts with a number"
+    assert str(badXMLFormat.value) == "Attribute name 1st_place must start with a letter in line 2"
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -1364,7 +1365,6 @@ def test_bad_format_10():
 
 
 
-@pytest.mark.one
 def test_bad_format_11():
     src = textwrap.dedent(
         """\
@@ -2108,3 +2108,30 @@ def test_read_elements_minimum_comment():
     assert len(elements) == 1
     assert isinstance(elements[0], TextOnlyComment)
     assert elements[0]._text == ''
+
+
+def test_parse_element():
+    element = _parse_element('name id="43" role="admin"')
+    assert element.name == 'name'
+    assert element.attributes['id'] == '43'
+    assert element.attributes['role'] == 'admin'
+
+    element = _parse_element('   name   id   =   " 4 3 "    role = " admin" ')
+    assert element.name == 'name'
+    assert element.attributes['id'] == ' 4 3 '
+    assert element.attributes['role'] == ' admin'
+
+    element = _parse_element(' name ')
+    assert element.name == 'name'
+    assert element.attributes == {}
+
+    element = _parse_element('abc id=""')
+    assert element.name == 'abc'
+    assert element.attributes['id'] == ''
+
+    with pytest.raises(Exception):
+        _parse_element('name  id="43" role="admin')
+
+    with pytest.raises(Exception):
+        _parse_element('  id="43" role="admin"')
+

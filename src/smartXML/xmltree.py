@@ -1,8 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
 from enum import Enum
-import re
-from typing import Any
 
 from .element import ElementBase, Element, Comment, CData, Doctype, TextOnlyComment
 
@@ -111,22 +109,62 @@ def _add_ready_token(ready_nodes, element: ElementBase, depth: int):
             son._parent = element
 
 
-def _parse_element(data: str) -> Element:
-    if data[0] == "!":
-        return Element(data)
-    tag_name_match = re.match(r"(\S+)\s*(.*)", data)
+def _parse_element(text: str) -> Element:
+    if text[0] == "!":
+        return Element(text)
 
-    if not tag_name_match:
-        raise BadXMLFormat(f'Could not parse tag name and attributes from line: "{data}"')
-    name = tag_name_match.group(1)
-    if not name[0].isalpha():
-        raise BadXMLFormat(f"Tag {name} can not starts with a number")
-    attributes_string = tag_name_match.group(2).strip()
-    attributes = {}
+    index = 0
+    text = text.strip()
+    length = len(text)
 
-    for match in re.compile(r"(\S+)\s*=\s*([^\s=]+|\"[^\"]*\"|\'[^\']*\')").finditer(attributes_string):
-        attr_name, attr_value = match.groups()
-        attributes[attr_name] = attr_value.strip().strip('"')
+    def find_next_word():
+        nonlocal index
+        word = ""
+        while text[index].isspace():
+            index+=1
+        while index < length and not text[index].isspace() and text[index] != "=":
+            word += text[index]
+            index+=1
+        return word
+
+    def find_next_assignment_sign():
+        nonlocal index
+        while text[index].isspace():
+            index+=1
+        if text[index] != "=":
+            raise BadXMLFormat(f'Expected "=" in element definition: "{text}"')
+        index+=1
+
+
+    def find_next_string():
+        nonlocal index
+        word = ""
+        while text[index].isspace():
+            index+=1
+        if text[index] != '"':
+            raise BadXMLFormat(f'Expected "=" in element definition: "{text}"')
+        index+=1
+
+        while text[index] != '"':
+            word += text[index]
+            index+=1
+
+        index+=1
+
+        return word
+
+    name = find_next_word()
+
+    attributes: dict[str, str] = {}
+
+    while index < length:
+        key = find_next_word()
+        find_next_assignment_sign()
+        value = find_next_string()
+
+        if not key:
+            raise BadXMLFormat(f'Could not parse attribute name in element definition: "{text}"')
+        attributes[key] = value
 
     element = Element(name)
     element.attributes = attributes
@@ -162,8 +200,12 @@ def _read_elements(text:str) -> list[Element]:
                 depth -= 1
 
             else:
-                element = _parse_element(data)
                 parent_is_doctype = incomplete_nodes and isinstance(incomplete_nodes[-1], Doctype)
+                element = _parse_element(data)
+                if not element.name[0].isalpha():
+                    if not parent_is_doctype:
+                        raise BadXMLFormat(f'Attribute name {element.name} must start with a letter in line {line_number}')
+
                 if parent_is_doctype:
                     _add_ready_token(ready_nodes, element, depth + 1)
                 else:
