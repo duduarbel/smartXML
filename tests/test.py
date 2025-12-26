@@ -1,7 +1,7 @@
 import textwrap
 from readme_example import test_readme_example
 
-from smartXML.xmltree import SmartXML, BadXMLFormat
+from smartXML.xmltree import SmartXML, BadXMLFormat, _read_elements
 from smartXML.element import Element, TextOnlyComment, IllegalOperation
 from pathlib import Path
 import pytest
@@ -2110,3 +2110,18 @@ def test_test_comment_with_bad_elements():
 def test_readme():
     test_readme_example()
 
+def test_read_elements():
+    elements = _read_elements('<A><B></B><C/></A>')
+    assert len(elements) == 1
+    assert elements[0].name == 'A'
+    assert len(elements[0]._sons) == 2
+    assert elements[0]._sons[0].name == 'B'
+    assert elements[0]._sons[1].name == 'C'
+
+def test_read_elements_2():
+    elements = _read_elements('<A/><B/><C>Data</C>')
+    assert len(elements) == 3
+    assert elements[0].name == 'A'
+    assert elements[1].name == 'B'
+    assert elements[2].name == 'C'
+    assert elements[2].content == 'Data'

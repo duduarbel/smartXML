@@ -122,6 +122,106 @@ def _parse_element(data: str) -> Element:
     return element
 
 
+def _read_elements(text:str) -> list[Element]:
+    ready_nodes = {}  # depth -> list of elements
+    incomplete_nodes = []
+    depth = 0
+
+    count_comment_start = 0
+    count_comment_end = 0
+
+    tokens = _divide_to_tokens(text)
+
+    for token in tokens:
+        token_type = token.token_type
+        data = token.data
+        line_number = token.line_number
+
+        if token_type == TokenType.full:
+            if data.endswith("/"):
+                data = data[:-1].strip()
+                element = _parse_element(data)
+                element._is_empty = True
+                if incomplete_nodes and incomplete_nodes[-1].name == "!--":
+                    element.comment_out()
+                _add_ready_token(ready_nodes, element, depth + 1)
+
+            elif data.startswith("/"):
+                data = data[1:].strip()
+                element = incomplete_nodes.pop()
+                if data.endswith("--"):
+                    # this is a case of closing a comment of type <!-- TAG>...</TAG -->
+                    data = data[:-2].strip()
+                    count_comment_end += 1
+
+                if element.name != data:
+                    raise BadXMLFormat(f"Mismatched XML tags, opening: {element.name}, closing: {data}, in line {line_number}")
+                _add_ready_token(ready_nodes, element, depth)
+                depth -= 1
+
+            elif data.startswith("!--"):
+                if incomplete_nodes and isinstance(incomplete_nodes[-1], Comment):
+                    raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
+
+                if data.endswith("--"):
+                    element = TextOnlyComment(data[3:-2])
+                    _add_ready_token(ready_nodes, element, depth + 1)
+                else:
+                    # this is a case of opening a comment of type <!-- TAG>...</TAG -->
+                    count_comment_start += 1
+                    name = data[3:].strip()
+                    incomplete_nodes.append(Comment(name))
+                    depth += 1
+
+            else:
+                element = _parse_element(data)
+                if incomplete_nodes and incomplete_nodes[-1].name == "!--":
+                    element.comment_out()
+                parent_is_doctype = incomplete_nodes and isinstance(incomplete_nodes[-1], Doctype)
+                if parent_is_doctype:
+                    _add_ready_token(ready_nodes, element, depth + 1)
+                else:
+                    incomplete_nodes.append(element)
+                    depth += 1
+
+        elif token_type == TokenType.comment_start:
+            if incomplete_nodes and isinstance(incomplete_nodes[-1], Comment):
+                raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
+            count_comment_start += 1
+            if data != "!--":
+                raise BadXMLFormat(f"Malformed comment closure in line {line_number}")
+            element = Comment(data)  # This is a placeholder, indicating future soms are in a comment
+            incomplete_nodes.append(element)
+
+        elif token_type == TokenType.closing:
+            element = incomplete_nodes.pop()
+            if data == "--":
+                count_comment_end += 1
+            if isinstance(element, Doctype):
+                _add_ready_token(ready_nodes, element, depth)
+                depth -= 1
+
+        elif token_type == TokenType.content:
+            incomplete_nodes[-1].content = data
+
+        elif token_type == TokenType.doctype:
+            element = Doctype(data)
+            incomplete_nodes.append(element)
+            depth += 1
+
+        elif token_type == TokenType.c_data:
+            element = CData(data)
+            _add_ready_token(ready_nodes, element, depth + 1)
+
+    # TODO - consider moving this from here
+    if count_comment_start != count_comment_end:
+        raise BadXMLFormat("Mismatched comment tags")
+
+    if ready_nodes != {1: ready_nodes.get(1)}:
+        raise BadXMLFormat("xml contains more than one outer element")
+    return ready_nodes[1]
+
+
 class SmartXML:
     def __init__(self, data: Path = None):
         self._file_name = data
@@ -175,7 +275,7 @@ class SmartXML:
 
     def _read_xml(self, text:str):
         text = self._parse_declaration(text)
-        elements = self._read_elements(text)
+        elements = _read_elements(text)
 
         if len(elements) == 1:
             self._tree = elements[0]
@@ -184,106 +284,6 @@ class SmartXML:
             self._tree = elements[1]
         else:
             raise BadXMLFormat("xml contains more than one outer element")
-
-
-    def _read_elements(self, text:str) -> list[Element]:
-        ready_nodes = {}  # depth -> list of elements
-        incomplete_nodes = []
-        depth = 0
-
-        count_comment_start = 0
-        count_comment_end = 0
-
-        tokens = _divide_to_tokens(text)
-
-        for token in tokens:
-            token_type = token.token_type
-            data = token.data
-            line_number = token.line_number
-
-            if token_type == TokenType.full:
-                if data.endswith("/"):
-                    data = data[:-1].strip()
-                    element = _parse_element(data)
-                    element._is_empty = True
-                    if incomplete_nodes[-1].name == "!--":
-                        element.comment_out()
-                    _add_ready_token(ready_nodes, element, depth + 1)
-
-                elif data.startswith("/"):
-                    data = data[1:].strip()
-                    element = incomplete_nodes.pop()
-                    if data.endswith("--"):
-                        # this is a case of closing a comment of type <!-- TAG>...</TAG -->
-                        data = data[:-2].strip()
-                        count_comment_end += 1
-
-                    if element.name != data:
-                        raise BadXMLFormat(f"Mismatched XML tags, opening: {element.name}, closing: {data}, in line {line_number}")
-                    _add_ready_token(ready_nodes, element, depth)
-                    depth -= 1
-
-                elif data.startswith("!--"):
-                    if incomplete_nodes and isinstance(incomplete_nodes[-1], Comment):
-                        raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
-
-                    if data.endswith("--"):
-                        element = TextOnlyComment(data[3:-2])
-                        _add_ready_token(ready_nodes, element, depth + 1)
-                    else:
-                        # this is a case of opening a comment of type <!-- TAG>...</TAG -->
-                        count_comment_start += 1
-                        name = data[3:].strip()
-                        incomplete_nodes.append(Comment(name))
-                        depth += 1
-
-                else:
-                    element = _parse_element(data)
-                    if incomplete_nodes and incomplete_nodes[-1].name == "!--":
-                        element.comment_out()
-                    parent_is_doctype = incomplete_nodes and isinstance(incomplete_nodes[-1], Doctype)
-                    if parent_is_doctype:
-                        _add_ready_token(ready_nodes, element, depth + 1)
-                    else:
-                        incomplete_nodes.append(element)
-                        depth += 1
-
-            elif token_type == TokenType.comment_start:
-                if incomplete_nodes and isinstance(incomplete_nodes[-1], Comment):
-                    raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
-                count_comment_start += 1
-                if data != "!--":
-                    raise BadXMLFormat(f"Malformed comment closure in line {line_number}")
-                element = Comment(data)  # This is a placeholder, indicating future soms are in a comment
-                incomplete_nodes.append(element)
-
-            elif token_type == TokenType.closing:
-                element = incomplete_nodes.pop()
-                if data == "--":
-                    count_comment_end += 1
-                if isinstance(element, Doctype):
-                    _add_ready_token(ready_nodes, element, depth)
-                    depth -= 1
-
-            elif token_type == TokenType.content:
-                incomplete_nodes[-1].content = data
-
-            elif token_type == TokenType.doctype:
-                element = Doctype(data)
-                incomplete_nodes.append(element)
-                depth += 1
-
-            elif token_type == TokenType.c_data:
-                element = CData(data)
-                _add_ready_token(ready_nodes, element, depth + 1)
-
-        # TODO - consider moving this from here
-        if count_comment_start != count_comment_end:
-            raise BadXMLFormat("Mismatched comment tags")
-
-        if ready_nodes != {1: ready_nodes.get(1)}:
-            raise BadXMLFormat("xml contains more than one outer element")
-        return ready_nodes[1]
 
     def write(self, file_name: Path = None, indentation: str = "\t") -> str:
         """Write the XML tree back to the file.
