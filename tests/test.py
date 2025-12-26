@@ -2064,7 +2064,6 @@ def test_test_comment_more_than_one_line():
     result = file_name.read_text()
     assert result == src
 
-@pytest.mark.one
 def test_test_comment_with_small_sign():
     src = textwrap.dedent(
         """\
