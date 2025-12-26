@@ -1,3 +1,6 @@
+## 1.0.13
+- Improve support for comments 
+
 ## 1.0.12
 - Add line number to bad format xml exceptions
 
