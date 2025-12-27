@@ -110,7 +110,7 @@ def _add_ready_token(ready_nodes, element: ElementBase, depth: int):
 
 
 def _parse_element(text: str) -> Element:
-    if text[0] == "!":
+    if text[0] == "!": # This is inner Doctype element
         return Element(text)
 
     index = 0
@@ -154,6 +154,8 @@ def _parse_element(text: str) -> Element:
         return word
 
     name = find_next_word()
+    if not name[0].isalpha():
+        raise BadXMLFormat(f'Element name must start with a letter in element definition: "{text}"')
 
     attributes: dict[str, str] = {}
 
@@ -162,7 +164,7 @@ def _parse_element(text: str) -> Element:
         find_next_assignment_sign()
         value = find_next_string()
 
-        if not key:
+        if not key or not key[0].isalpha():
             raise BadXMLFormat(f'Could not parse attribute name in element definition: "{text}"')
         attributes[key] = value
 

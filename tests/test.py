@@ -1264,7 +1264,7 @@ def test_bad_format_5():
     with pytest.raises(BadXMLFormat) as badXMLFormat:
         SmartXML(file_name)
         pass
-    assert str(badXMLFormat.value) == "Attribute name 1st_place must start with a letter in line 2"
+    assert str(badXMLFormat.value) == 'Element name must start with a letter in element definition: "1st_place"'
     assert badXMLFormat.type is BadXMLFormat
 
 
@@ -2134,4 +2134,10 @@ def test_parse_element():
 
     with pytest.raises(Exception):
         _parse_element('  id="43" role="admin"')
+
+    with pytest.raises(Exception):
+        _parse_element('aaa  id="43" 12role="admin"')
+
+    with pytest.raises(Exception):
+        _parse_element('1aaa  id="43" role="admin"')
 
