@@ -36,7 +36,25 @@ def _divide_to_tokens(file_content):
     while index < len(file_content):
         char = file_content[index]
 
-        if char == "!" and index < len(file_content) + 10:
+        if char == ">":
+            if last_char == "<":
+                tokens.append(Token(TokenType.full, file_content[last_index + 1 : index].strip(), line_number))
+            else:
+                tokens.append(Token(TokenType.closing, file_content[last_index + 1 : index].strip(), line_number))
+            last_char = char
+            last_index = index
+        elif char == "<":
+            if last_char == "<":
+                raise BadXMLFormat(f"Malformed element in line {line_number}")
+            if last_char == ">":
+                text = file_content[last_index + 1 : index - 1].strip()
+                if text:
+                    tokens.append(Token(TokenType.content, file_content[last_index + 1 : index].strip(), line_number))
+            last_char = char
+            last_index = index
+        elif char == "\n":
+            line_number += 1
+        elif char == "!" and index < len(file_content) + 10:
             if file_content[index : index + 8] == "![CDATA[" and last_char == "<":
                 cdata_end = file_content.find("]]>", index)
                 if cdata_end == -1:
@@ -58,8 +76,7 @@ def _divide_to_tokens(file_content):
                 last_index = start + 1
                 index = start + 1
                 continue
-            else:
-                if file_content.find('!--', index) == index:
+            elif file_content[index+1] == '-' and file_content[index+2] == '-':
                     # comment
                     comment_end_index = file_content.find("-->", index)
                     if comment_end_index == -1:
@@ -71,25 +88,6 @@ def _divide_to_tokens(file_content):
                     last_char = ""
                     last_index = comment_end_index + 3
                     index = comment_end_index + 3
-
-        if char == ">":
-            if last_char == "<":
-                tokens.append(Token(TokenType.full, file_content[last_index + 1 : index].strip(), line_number))
-            else:
-                tokens.append(Token(TokenType.closing, file_content[last_index + 1 : index].strip(), line_number))
-            last_char = char
-            last_index = index
-        elif char == "<":
-            if last_char == "<":
-                raise BadXMLFormat(f"Malformed element in line {line_number}")
-            if last_char == ">":
-                text = file_content[last_index + 1 : index - 1].strip()
-                if text:
-                    tokens.append(Token(TokenType.content, file_content[last_index + 1 : index].strip(), line_number))
-            last_char = char
-            last_index = index
-        elif char == "\n":
-            line_number += 1
 
         index += 1
 
@@ -187,8 +185,7 @@ def _read_elements(text:str) -> list[Element]:
 
         if token_type == TokenType.full:
             if data.endswith("/"):
-                data = data[:-1].strip()
-                element = _parse_element(data)
+                element = _parse_element(data[:-1])
                 element._is_empty = True
                 _add_ready_token(ready_nodes, element, depth + 1)
 
@@ -204,9 +201,6 @@ def _read_elements(text:str) -> list[Element]:
             else:
                 parent_is_doctype = incomplete_nodes and isinstance(incomplete_nodes[-1], Doctype)
                 element = _parse_element(data)
-                if not element.name[0].isalpha():
-                    if not parent_is_doctype:
-                        raise BadXMLFormat(f'Attribute name {element.name} must start with a letter in line {line_number}')
 
                 if parent_is_doctype:
                     _add_ready_token(ready_nodes, element, depth + 1)
@@ -224,7 +218,7 @@ def _read_elements(text:str) -> list[Element]:
                     comment.comment_out()
                     _add_ready_token(ready_nodes, comment, depth + 1)
             except Exception:
-                # The content of the comment is not xml elements - so handle this as plain text
+                # The content of the comment can not be parsed, so handle this as plain text
                 _add_ready_token(ready_nodes, TextOnlyComment(data), depth + 1)
 
         elif token_type == TokenType.closing:
