@@ -119,13 +119,13 @@ def _parse_element(text: str) -> Element:
 
     def find_next_word():
         nonlocal index
-        word = ""
         while text[index].isspace():
             index+=1
+        start = index
         while index < length and not text[index].isspace() and text[index] != "=":
-            word += text[index]
             index+=1
-        return word
+
+        return text[start:index]
 
     def find_next_assignment_sign():
         nonlocal index
@@ -138,17 +138,17 @@ def _parse_element(text: str) -> Element:
 
     def find_next_string():
         nonlocal index
-        word = ""
         while text[index].isspace():
             index+=1
         if text[index] != '"':
             raise BadXMLFormat(f'Expected "=" in element definition: "{text}"')
         index+=1
 
+        start = index
         while text[index] != '"':
-            word += text[index]
             index+=1
 
+        word = text[start:index]
         index+=1
 
         return word

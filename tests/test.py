@@ -2141,3 +2141,8 @@ def test_parse_element():
     with pytest.raises(Exception):
         _parse_element('1aaa  id="43" role="admin"')
 
+    with pytest.raises(Exception):
+        _parse_element('1aaa  id')
+
+    with pytest.raises(Exception):
+        _parse_element('1aaa  id kjjkj =')
