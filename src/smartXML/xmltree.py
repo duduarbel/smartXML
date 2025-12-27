@@ -2,7 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 from enum import Enum
 
-from .element import ElementBase, Element, Comment, CData, Doctype, TextOnlyComment
+from .element import ElementBase, Element, CData, Doctype, TextOnlyComment
 
 
 class BadXMLFormat(Exception):
@@ -55,7 +55,19 @@ def _divide_to_tokens(file_content):
         elif char == "\n":
             line_number += 1
         elif char == "!" and index < len(file_content) + 10:
-            if file_content[index : index + 8] == "![CDATA[" and last_char == "<":
+            if file_content[index+1] == '-' and file_content[index+2] == '-':
+                # comment
+                comment_end_index = file_content.find("-->", index)
+                if comment_end_index == -1:
+                    raise BadXMLFormat(f"Malformed comment in line {line_number}")
+
+                comment = file_content[index+3:comment_end_index]
+                tokens.append(Token(TokenType.comment, comment, line_number))
+
+                last_char = ""
+                last_index = comment_end_index + 3
+                index = comment_end_index + 3
+            elif file_content[index : index + 8] == "![CDATA[" and last_char == "<":
                 cdata_end = file_content.find("]]>", index)
                 if cdata_end == -1:
                     raise BadXMLFormat(f"Malformed CDATA section in line {line_number}")
@@ -76,18 +88,6 @@ def _divide_to_tokens(file_content):
                 last_index = start + 1
                 index = start + 1
                 continue
-            elif file_content[index+1] == '-' and file_content[index+2] == '-':
-                    # comment
-                    comment_end_index = file_content.find("-->", index)
-                    if comment_end_index == -1:
-                        raise BadXMLFormat(f"Malformed comment in line {line_number}")
-
-                    comment = file_content[index+3:comment_end_index]
-                    tokens.append(Token(TokenType.comment, comment, line_number))
-
-                    last_char = ""
-                    last_index = comment_end_index + 3
-                    index = comment_end_index + 3
 
         index += 1
 
