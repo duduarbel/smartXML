@@ -1114,7 +1114,14 @@ def test_find_name_2():
 def test_find_1():
     src = textwrap.dedent(
         """\
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <start>
+            <!DOCTYPE note [
+                <!ELEMENT note (to, from, body)>
+                <!ATTLIST to (#PCDATA)>
+                <!ENTITY from (#PCDATA)>
+                <!NOTATION body (#PCDATA)>
+            ]>
             <A id="A1">
                 <B id="B1">
                     <C id="C1">
@@ -1122,6 +1129,7 @@ def test_find_1():
                             <E id="E1"/>
                         </D>
                         <A>
+                            <!-- fsdfsd -->
                             <B id="B2">BBB</B>
                         </A>
                     </C>
@@ -2146,3 +2154,31 @@ def test_parse_element():
 
     with pytest.raises(Exception):
         _parse_element('1aaa  id kjjkj =')
+
+
+def test_find_2():
+    src = textwrap.dedent(
+        """\
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <start>
+            <!DOCTYPE note [
+                <!ELEMENT note (to, from, body)>
+                <!ATTLIST to (#PCDATA)>
+                <!ENTITY from (#PCDATA)>
+                <!NOTATION body (#PCDATA)>
+            ]>
+            <!-- AAA-->
+            <!-- <A/ -->
+            <!-- <B> -->
+        </start>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    xx = xml.find(with_content="234543" )
+    assert xx is None
+
+    b = xml.find("B")
+    assert b is None

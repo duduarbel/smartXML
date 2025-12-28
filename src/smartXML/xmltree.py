@@ -312,7 +312,7 @@ class SmartXML:
         else:
             raise BadXMLFormat("xml contains more than one outer element")
 
-    def write(self, file_name: Path = None, indentation: str = "\t") -> str:
+    def write(self, file_name: Path = None, indentation: str = "\t") -> str| None:
         """Write the XML tree back to the file.
         :param file_name: Path to the XML file, if None, overwrite the original file
         :param indentation: string used for indentation, default is tab character

@@ -2,15 +2,16 @@ from __future__ import annotations
 from typing import Union
 import warnings
 
-from ._elements_utils import (
-    _find_one,
-    _find_all,
-)
-
 class IllegalOperation(Exception):
     def __init__(self, message: str):
         self.message = message
         super().__init__(self.message)
+
+
+def _check_match(element: ElementBase, names: str) -> bool:
+    if names and element.name != names:
+        return False
+    return True
 
 
 
@@ -18,7 +19,8 @@ class ElementBase:
     def __init__(self, name: str):
         self._name = name
         self._sons = []
-        self._parent = None
+        self._parent:"ElementBase|None" = None
+        self.content = ""
 
     def is_comment(self) -> bool:
         """Check if the element is a comment."""
@@ -110,6 +112,75 @@ class ElementBase:
         self._parent = None
 
 
+    def _find_one_in_sons(self,
+                          names_list: list[str],
+                          with_content: str = None,
+                          ) -> ElementBase | None:
+        if not names_list:
+            return self
+        for name in names_list:
+            for son in self._sons:
+                if _check_match(son, name):
+                    found = son._find_one_in_sons(names_list[1:], with_content)
+                    if found:
+                        if with_content is None or found.content == with_content:
+                            return found
+        return None
+    def _find_one(self, names: str, with_content: str) -> ElementBase | None:
+
+        if _check_match(self, names):
+            if with_content is None or self.content == with_content:
+                return self
+
+        names_list = names.split("|")
+
+        if len(names_list) > 1:
+            if self.name == names_list[0]:
+                found = self._find_one_in_sons(names_list[1:], with_content)
+                if found:
+                    return found
+
+        for son in self._sons:
+            found = son._find_one(names, with_content)
+            if found:
+                return found
+        return None
+
+
+    def _find_all(self, names: str, with_content: str) -> list[Element]:
+        results = []
+        if _check_match(self, names=names):
+            if with_content is None or self.content == with_content:
+                results.extend([self])
+                for son in self._sons:
+                    results.extend(son._find_all(names, with_content))
+                return results
+
+        names_list = names.split("|")
+
+        if _check_match(self, names_list[0]):
+            if with_content is None or self.content == with_content:
+                sons = []
+                sons.extend(self._sons)
+                match = []
+                for index, name in enumerate(names_list[1:]):
+                    for son in sons:
+                        if son.name == name:
+                            if index == len(names_list) - 2:
+                                results.append(son)
+                            else:
+                                match.extend(son._sons)
+                    sons.clear()
+                    sons.extend(match)
+                    match.clear()
+
+        for son in self._sons:
+            results.extend(son._find_all(names, with_content))
+
+        return results
+
+
+
 class TextOnlyComment(ElementBase):
     """A comment that only contains text, not other elements."""
     def __init__(self, text: str):
@@ -160,7 +231,6 @@ class Element(ElementBase):
     """An XML element that can contain attributes, content, and child elements."""
     def __init__(self, name: str):
         super().__init__(name)
-        self.content = ""
         self.attributes = {}
         self._is_empty = False  # whether the element is self-closing
 
@@ -174,8 +244,8 @@ class Element(ElementBase):
         def find_comment_son(element: "Element") -> bool:
             if element.is_comment():
                 return True
-            for son in element._sons:
-                if find_comment_son(son):
+            for a_son in element._sons:
+                if find_comment_son(a_son):
                     return True
             return False
 
@@ -191,7 +261,7 @@ class Element(ElementBase):
 
         self.__class__ = Comment
 
-    def _to_string(self, index: int, indentation: str, with_endl=True) -> str:
+    def _to_string(self, index: int, indentation: str, with_end_line=True) -> str:
         indent = indentation * index
 
         attributes_str = " ".join(
@@ -213,7 +283,7 @@ class Element(ElementBase):
             else:
                 result = f"{indent}{opening_tag}{self.content}{closing_tag}"
 
-        if with_endl:
+        if with_end_line:
             result += "\n"
         return result
 
@@ -233,9 +303,9 @@ class Element(ElementBase):
                 if not found, return None if only_one is True, else return empty list
         """
         if only_one:
-            return _find_one(self, name, with_content=with_content)
+            return self._find_one(name, with_content=with_content)
         else:
-            return _find_all(self, name, with_content=with_content)
+            return self._find_all(name, with_content=with_content)
 
 
 class Comment(Element):

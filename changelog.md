@@ -1,3 +1,6 @@
+## 1.0.15
+- Fixed a bug causing a crash when searching an XML with DocType element in it
+
 ## 1.0.14
 - Add `Element`'s method `add_as_last_son_of`
 
