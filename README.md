@@ -6,12 +6,13 @@ The API is designed to be simple, but it will be enhanced according to usage and
 The package includes a `SmartXML` representing the XML file, and `ElementBase` representing each element in the XML tree
 ### SmartXML:
 - properties:
-    - `root`: the root element of the XML file
+    - `tree`: the root element of the XML file
     - `declaration`: the XML declaration (e.g., `<?xml version="1.0" encoding="UTF-8"?>`)
 - methods:
     - `read`: reads the XML file from the root element
     - `write`: writes the XML to a file
     - `find`: finds elements from the root element
+    - `to_string`: converts the entire XML tree to a string
 
 ### ElementBase: (base class for Element, Comment, TextOnlyComment, CData, and Doctype)
 - properties:
@@ -25,7 +26,8 @@ The package includes a `SmartXML` representing the XML file, and `ElementBase` r
     - `add_after`: adds an element after the current element
     - `add_as_last_son_of`: adds an element as the last son of the current element
     - `to_string`: converts the current element to a string
-
+    - `get_path`: gets the path as a string from the root of the XML tree, separated by |
+    - `is_comment` : returns True if the element is a comment
 
 ### Usage Example
 
@@ -44,7 +46,7 @@ header.add_before(bob)
 
 xml.write()
 ```
-result (example.xml):
+result (files/students.xml):
 ```xml
 <students>
   <!-- Bob is out -->
