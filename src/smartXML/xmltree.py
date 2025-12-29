@@ -58,7 +58,7 @@ def _divide_to_tokens(file_content):
             last_index = index
         elif char == "\n":
             line_number += 1
-        elif char == "!" and index < len(file_content) + 10:
+        elif char == "!":
             if file_content[index+1] == '-' and file_content[index+2] == '-':
                 # comment
                 comment_end_index = file_content.find("-->", index)
