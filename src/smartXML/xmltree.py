@@ -105,9 +105,7 @@ def _divide_to_tokens(file_content):
                 # !DOCTYPE
                 start = file_content.find("[", index)
                 if start == -1:
-                    raise BadXMLFormat(
-                        f"Malformed DOCTYPE declaration in line {line_number}"
-                    )
+                    raise BadXMLFormat(f"Malformed DOCTYPE declaration in line {line_number}")
                 doctype = file_content[index:start]
                 tokens.append(Token(TokenType.doctype, doctype, line_number))
 
@@ -176,9 +174,7 @@ def _parse_element(text: str) -> Element:
 
     name = find_next_word()
     if not name[0].isalpha():
-        raise BadXMLFormat(
-            f'Element name must start with a letter in element definition: "{text}"'
-        )
+        raise BadXMLFormat(f'Element name must start with a letter in element definition: "{text}"')
 
     attributes: dict[str, str] = {}
 
@@ -188,9 +184,7 @@ def _parse_element(text: str) -> Element:
         value = find_next_string()
 
         if not key or not key[0].isalpha():
-            raise BadXMLFormat(
-                f'Could not parse attribute name in element definition: "{text}"'
-            )
+            raise BadXMLFormat(f'Could not parse attribute name in element definition: "{text}"')
         attributes[key] = value
 
     element = Element(name)
@@ -239,9 +233,7 @@ def _read_elements(text: str) -> list[Element]:
 
         elif token_type == TokenType.comment:
             if data.find("!--") != -1:
-                raise BadXMLFormat(
-                    f"Nested comments are not allowed in line {line_number}"
-                )
+                raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
 
             try:
                 elements_in_comment = _read_elements(data)
@@ -337,11 +329,7 @@ class SmartXML:
 
         if len(elements) == 1:
             self._tree = elements[0]
-        elif (
-            len(elements) == 2
-            and isinstance(elements[0], Doctype)
-            and isinstance(elements[1], Element)
-        ):
+        elif len(elements) == 2 and isinstance(elements[0], Doctype) and isinstance(elements[1], Element):
             self._doctype = elements[0]
             self._tree = elements[1]
         else:

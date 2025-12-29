@@ -257,16 +257,12 @@ class Element(ElementBase):
         parent = self.parent
         while parent:
             if parent.is_comment():
-                raise IllegalOperation(
-                    "Cannot comment out an element whose parent is a comment"
-                )
+                raise IllegalOperation("Cannot comment out an element whose parent is a comment")
             parent = parent.parent
 
         for son in self._sons:
             if find_comment_son(son):
-                raise IllegalOperation(
-                    "Cannot comment out an element whose descended is a comment"
-                )
+                raise IllegalOperation("Cannot comment out an element whose descended is a comment")
 
         self.__class__ = Comment
 
@@ -274,8 +270,7 @@ class Element(ElementBase):
         indent = indentation * index
 
         attributes_str = " ".join(
-            f'{key}="{value}"'
-            for key, value in self.attributes.items()  # f-string formats the pair as key="value"
+            f'{key}="{value}"' for key, value in self.attributes.items()  # f-string formats the pair as key="value"
         )
 
         attributes_part = f" {attributes_str}" if attributes_str else ""
@@ -286,9 +281,7 @@ class Element(ElementBase):
             opening_tag = f"<{self.name}{attributes_part}>"
             closing_tag = f"</{self.name}>"
 
-            children_str = "".join(
-                son._to_string(index + 1, indentation) for son in self._sons
-            )
+            children_str = "".join(son._to_string(index + 1, indentation) for son in self._sons)
 
             if children_str:
                 result = f"{indent}{opening_tag}{self.content}\n{children_str}{indent}{closing_tag}"
