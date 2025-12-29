@@ -38,7 +38,8 @@ def _divide_to_tokens(file_content):
     line_number = 1
 
     index = 0
-    while index < len(file_content):
+    length = len(file_content)
+    while index < length:
         char = file_content[index]
 
         if char == ">":
