@@ -13,17 +13,21 @@ class BadXMLFormat(Exception):
 
 class TokenType(Enum):
     comment = 1
-    full = 2
+    full_tag_name = 2
     closing = 3
     content = 4
     c_data = 5
     doctype = 6
+
 
 class Token:
     def __init__(self, token_type: TokenType, data: str, line_number: int):
         self.token_type = token_type
         self.data = data
         self.line_number = line_number
+
+    def __repr__(self):
+        return f'{self.token_type.name}: {self.data}'
 
 def _divide_to_tokens(file_content):
     tokens = []
@@ -38,7 +42,7 @@ def _divide_to_tokens(file_content):
 
         if char == ">":
             if last_char == "<":
-                tokens.append(Token(TokenType.full, file_content[last_index + 1 : index].strip(), line_number))
+                tokens.append(Token(TokenType.full_tag_name, file_content[last_index + 1 : index].strip(), line_number))
             else:
                 tokens.append(Token(TokenType.closing, file_content[last_index + 1 : index].strip(), line_number))
             last_char = char
@@ -108,9 +112,6 @@ def _add_ready_token(ready_nodes, element: ElementBase, depth: int):
 
 
 def _parse_element(text: str) -> Element:
-    if text[0] == "!": # This is inner Doctype element
-        return Element(text)
-
     index = 0
     text = text.strip()
     length = len(text)
@@ -183,7 +184,8 @@ def _read_elements(text:str) -> list[Element]:
         data = token.data
         line_number = token.line_number
 
-        if token_type == TokenType.full:
+        if token_type == TokenType.full_tag_name:
+            # this token is anything that is between < and >
             if data.endswith("/"):
                 element = _parse_element(data[:-1])
                 element._is_empty = True
@@ -199,12 +201,11 @@ def _read_elements(text:str) -> list[Element]:
                 depth -= 1
 
             else:
-                parent_is_doctype = incomplete_nodes and isinstance(incomplete_nodes[-1], Doctype)
-                element = _parse_element(data)
-
-                if parent_is_doctype:
+                if incomplete_nodes and isinstance(incomplete_nodes[-1], Doctype):
+                    element = Element(data)
                     _add_ready_token(ready_nodes, element, depth + 1)
                 else:
+                    element = _parse_element(data)
                     incomplete_nodes.append(element)
                     depth += 1
 
