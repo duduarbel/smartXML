@@ -27,7 +27,8 @@ class Token:
         self.line_number = line_number
 
     def __repr__(self):
-        return f'{self.token_type.name}: {self.data}'
+        return f"{self.token_type.name}: {self.data}"
+
 
 def _divide_to_tokens(file_content):
     tokens = []
@@ -42,9 +43,21 @@ def _divide_to_tokens(file_content):
 
         if char == ">":
             if last_char == "<":
-                tokens.append(Token(TokenType.full_tag_name, file_content[last_index + 1 : index].strip(), line_number))
+                tokens.append(
+                    Token(
+                        TokenType.full_tag_name,
+                        file_content[last_index + 1 : index].strip(),
+                        line_number,
+                    )
+                )
             else:
-                tokens.append(Token(TokenType.closing, file_content[last_index + 1 : index].strip(), line_number))
+                tokens.append(
+                    Token(
+                        TokenType.closing,
+                        file_content[last_index + 1 : index].strip(),
+                        line_number,
+                    )
+                )
             last_char = char
             last_index = index
         elif char == "<":
@@ -53,38 +66,48 @@ def _divide_to_tokens(file_content):
             if last_char == ">":
                 text = file_content[last_index + 1 : index - 1].strip()
                 if text:
-                    tokens.append(Token(TokenType.content, file_content[last_index + 1 : index].strip(), line_number))
+                    tokens.append(
+                        Token(
+                            TokenType.content,
+                            file_content[last_index + 1 : index].strip(),
+                            line_number,
+                        )
+                    )
             last_char = char
             last_index = index
         elif char == "\n":
             line_number += 1
         elif char == "!":
-            if file_content[index+1] == '-' and file_content[index+2] == '-':
-                # comment
+            if file_content[index + 1] == "-":
+                # !--
                 comment_end_index = file_content.find("-->", index)
                 if comment_end_index == -1:
                     raise BadXMLFormat(f"Malformed comment in line {line_number}")
 
-                comment = file_content[index+3:comment_end_index]
+                comment = file_content[index + 3 : comment_end_index]
                 tokens.append(Token(TokenType.comment, comment, line_number))
 
                 last_char = ""
                 last_index = comment_end_index + 3
                 index = comment_end_index + 3
-            elif file_content[index : index + 8] == "![CDATA[" and last_char == "<":
+            elif file_content[index + 1] == "[":
+                # ![CDATA[
                 cdata_end = file_content.find("]]>", index)
                 if cdata_end == -1:
                     raise BadXMLFormat(f"Malformed CDATA section in line {line_number}")
                 cdata_content = file_content[index + 8 : cdata_end]
-                tokens.append(Token(TokenType.c_data, cdata_content,line_number))
+                tokens.append(Token(TokenType.c_data, cdata_content, line_number))
                 last_index = cdata_end + 2
                 last_char = ">"
                 index = last_index + 1
                 continue
-            elif file_content[index : index + 8] == "!DOCTYPE":
+            elif file_content[index + 1] == "D":
+                # !DOCTYPE
                 start = file_content.find("[", index)
                 if start == -1:
-                    raise BadXMLFormat(f"Malformed DOCTYPE declaration in line {line_number}")
+                    raise BadXMLFormat(
+                        f"Malformed DOCTYPE declaration in line {line_number}"
+                    )
                 doctype = file_content[index:start]
                 tokens.append(Token(TokenType.doctype, doctype, line_number))
 
@@ -119,42 +142,43 @@ def _parse_element(text: str) -> Element:
     def find_next_word():
         nonlocal index
         while text[index].isspace():
-            index+=1
+            index += 1
         start = index
         while index < length and not text[index].isspace() and text[index] != "=":
-            index+=1
+            index += 1
 
         return text[start:index]
 
     def find_next_assignment_sign():
         nonlocal index
         while text[index].isspace():
-            index+=1
+            index += 1
         if text[index] != "=":
             raise BadXMLFormat(f'Expected "=" in element definition: "{text}"')
-        index+=1
-
+        index += 1
 
     def find_next_string():
         nonlocal index
         while text[index].isspace():
-            index+=1
+            index += 1
         if text[index] != '"':
             raise BadXMLFormat(f'Expected "=" in element definition: "{text}"')
-        index+=1
+        index += 1
 
         start = index
         while text[index] != '"':
-            index+=1
+            index += 1
 
         word = text[start:index]
-        index+=1
+        index += 1
 
         return word
 
     name = find_next_word()
     if not name[0].isalpha():
-        raise BadXMLFormat(f'Element name must start with a letter in element definition: "{text}"')
+        raise BadXMLFormat(
+            f'Element name must start with a letter in element definition: "{text}"'
+        )
 
     attributes: dict[str, str] = {}
 
@@ -164,7 +188,9 @@ def _parse_element(text: str) -> Element:
         value = find_next_string()
 
         if not key or not key[0].isalpha():
-            raise BadXMLFormat(f'Could not parse attribute name in element definition: "{text}"')
+            raise BadXMLFormat(
+                f'Could not parse attribute name in element definition: "{text}"'
+            )
         attributes[key] = value
 
     element = Element(name)
@@ -172,7 +198,7 @@ def _parse_element(text: str) -> Element:
     return element
 
 
-def _read_elements(text:str) -> list[Element]:
+def _read_elements(text: str) -> list[Element]:
     ready_nodes = {}  # depth -> list of elements
     incomplete_nodes = []
     depth = 0
@@ -196,7 +222,9 @@ def _read_elements(text:str) -> list[Element]:
                 element = incomplete_nodes.pop()
 
                 if element.name != data:
-                    raise BadXMLFormat(f"Mismatched XML tags, opening: {element.name}, closing: {data}, in line {line_number}")
+                    raise BadXMLFormat(
+                        f"Mismatched XML tags, opening: {element.name}, closing: {data}, in line {line_number}"
+                    )
                 _add_ready_token(ready_nodes, element, depth)
                 depth -= 1
 
@@ -211,7 +239,9 @@ def _read_elements(text:str) -> list[Element]:
 
         elif token_type == TokenType.comment:
             if data.find("!--") != -1:
-                raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
+                raise BadXMLFormat(
+                    f"Nested comments are not allowed in line {line_number}"
+                )
 
             try:
                 elements_in_comment = _read_elements(data)
@@ -301,19 +331,23 @@ class SmartXML:
         file_content = self._file_name.read_text()
         self._read_xml(file_content)
 
-    def _read_xml(self, text:str):
+    def _read_xml(self, text: str):
         text = self._parse_declaration(text)
         elements = _read_elements(text)
 
         if len(elements) == 1:
             self._tree = elements[0]
-        elif len(elements) == 2 and isinstance(elements[0], Doctype) and isinstance(elements[1], Element):
+        elif (
+            len(elements) == 2
+            and isinstance(elements[0], Doctype)
+            and isinstance(elements[1], Element)
+        ):
             self._doctype = elements[0]
             self._tree = elements[1]
         else:
             raise BadXMLFormat("xml contains more than one outer element")
 
-    def write(self, file_name: Path = None, indentation: str = "\t") -> str| None:
+    def write(self, file_name: Path = None, indentation: str = "\t") -> str | None:
         """Write the XML tree back to the file.
         :param file_name: Path to the XML file, if None, overwrite the original file
         :param indentation: string used for indentation, default is tab character

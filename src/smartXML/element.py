@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Union
 import warnings
 
+
 class IllegalOperation(Exception):
     def __init__(self, message: str):
         self.message = message
@@ -14,12 +15,11 @@ def _check_match(element: ElementBase, names: str) -> bool:
     return True
 
 
-
 class ElementBase:
     def __init__(self, name: str):
         self._name = name
         self._sons = []
-        self._parent:"ElementBase|None" = None
+        self._parent: "ElementBase|None" = None
         self.content = ""
 
     def is_comment(self) -> bool:
@@ -30,6 +30,7 @@ class ElementBase:
     def parent(self):
         """Get the parent of the element."""
         return self._parent
+
     @property
     def name(self) -> str:
         """Get the name of the element."""
@@ -54,7 +55,7 @@ class ElementBase:
         pass
 
     def get_path(self) -> str:
-        """ Get the full path of the element
+        """Get the full path of the element
         returns: the path as a string from the root of the XML tree, separated by |.
         """
         elements = []
@@ -92,7 +93,7 @@ class ElementBase:
         warnings.warn(
             "add_as_son_of() is deprecated and will be removed in version 1.1.0 . add_as_last_son_of instead.",
             category=DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         self.add_as_last_son_of(parent)
 
@@ -101,7 +102,7 @@ class ElementBase:
         warnings.warn(
             "set_as_parent_of() is deprecated and will be removed in version 1.1.0 . add_before() or add_after() or add_as_last_son_of instead.",
             category=DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         self._sons.append(son)
         son._parent = self
@@ -111,11 +112,11 @@ class ElementBase:
         self._parent._sons.remove(self)
         self._parent = None
 
-
-    def _find_one_in_sons(self,
-                          names_list: list[str],
-                          with_content: str = None,
-                          ) -> ElementBase | None:
+    def _find_one_in_sons(
+        self,
+        names_list: list[str],
+        with_content: str = None,
+    ) -> ElementBase | None:
         if not names_list:
             return self
         for name in names_list:
@@ -126,6 +127,7 @@ class ElementBase:
                         if with_content is None or found.content == with_content:
                             return found
         return None
+
     def _find_one(self, names: str, with_content: str) -> ElementBase | None:
 
         if _check_match(self, names):
@@ -145,7 +147,6 @@ class ElementBase:
             if found:
                 return found
         return None
-
 
     def _find_all(self, names: str, with_content: str) -> list[Element]:
         results = []
@@ -180,9 +181,9 @@ class ElementBase:
         return results
 
 
-
 class TextOnlyComment(ElementBase):
     """A comment that only contains text, not other elements."""
+
     def __init__(self, text: str):
         super().__init__("")
         self._text = text
@@ -197,6 +198,7 @@ class TextOnlyComment(ElementBase):
 
 class CData(ElementBase):
     """A CDATA section that contains text."""
+
     def __init__(self, text: str):
         super().__init__("")
         self._text = text
@@ -208,6 +210,7 @@ class CData(ElementBase):
 
 class Doctype(ElementBase):
     """A DOCTYPE declaration."""
+
     def __init__(self, text: str):
         super().__init__("")
         self._text = text
@@ -229,6 +232,7 @@ class Doctype(ElementBase):
 
 class Element(ElementBase):
     """An XML element that can contain attributes, content, and child elements."""
+
     def __init__(self, name: str):
         super().__init__(name)
         self.attributes = {}
@@ -241,6 +245,7 @@ class Element(ElementBase):
         """Convert this element into a comment.
         raises IllegalOperation, if any parent or any descended is a comment
         """
+
         def find_comment_son(element: "Element") -> bool:
             if element.is_comment():
                 return True
@@ -252,12 +257,16 @@ class Element(ElementBase):
         parent = self.parent
         while parent:
             if parent.is_comment():
-                raise IllegalOperation("Cannot comment out an element whose parent is a comment")
+                raise IllegalOperation(
+                    "Cannot comment out an element whose parent is a comment"
+                )
             parent = parent.parent
 
         for son in self._sons:
             if find_comment_son(son):
-                raise IllegalOperation("Cannot comment out an element whose descended is a comment")
+                raise IllegalOperation(
+                    "Cannot comment out an element whose descended is a comment"
+                )
 
         self.__class__ = Comment
 
@@ -265,7 +274,8 @@ class Element(ElementBase):
         indent = indentation * index
 
         attributes_str = " ".join(
-            f'{key}="{value}"' for key, value in self.attributes.items()  # f-string formats the pair as key="value"
+            f'{key}="{value}"'
+            for key, value in self.attributes.items()  # f-string formats the pair as key="value"
         )
 
         attributes_part = f" {attributes_str}" if attributes_str else ""
@@ -276,7 +286,9 @@ class Element(ElementBase):
             opening_tag = f"<{self.name}{attributes_part}>"
             closing_tag = f"</{self.name}>"
 
-            children_str = "".join(son._to_string(index + 1, indentation) for son in self._sons)
+            children_str = "".join(
+                son._to_string(index + 1, indentation) for son in self._sons
+            )
 
             if children_str:
                 result = f"{indent}{opening_tag}{self.content}\n{children_str}{indent}{closing_tag}"
@@ -310,6 +322,7 @@ class Element(ElementBase):
 
 class Comment(Element):
     """An XML comment that can contain other elements."""
+
     def __init__(self, name: str):
         super().__init__(name)
 
