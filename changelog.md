@@ -1,3 +1,6 @@
+## 1.0.16
+- A small performance improvement
+
 ## 1.0.15
 - Fixed a bug causing a crash when searching an XML with DocType element in it
 
