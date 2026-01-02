@@ -235,9 +235,11 @@ def _read_elements(text: str) -> list[Element]:
         elif token_type == TokenType.comment:
             if data.find("!--") != -1:
                 raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
-
             try:
-                elements_in_comment = _read_elements(data)
+                if data.strip()[0] != "<":
+                    elements_in_comment = _read_elements("<" + data + ">")  # support the case of <!--TAG...-->
+                else:
+                    elements_in_comment = _read_elements(data)
                 for comment in elements_in_comment:
                     comment.comment_out()
                     _add_ready_token(ready_nodes, comment, depth + 1)
@@ -367,16 +369,14 @@ class SmartXML:
         return result + self._tree.to_string(indentation)
 
     def find(
-        self,
-        name: str = "",
-        only_one: bool = True,
-        with_content: str = None,
+        self, name: str = "", only_one: bool = True, with_content: str = None, case_sensitive: bool = True
     ) -> Element | list[Element] | None:
         """
         Find element(s) by name or content or both
         :param name: name of the element to find, can be nested using |, e.g. "parent|child|subchild"
         :param only_one: stop at first find or return all found elements
         :param with_content: filter by content
+        :param case_sensitive: whether the search is case-sensitive, default is True
         :return: the elements found,
                 if found, return the elements that match the last name in the path,
                 if not found, return None if only_one is True, else return empty list
@@ -386,4 +386,4 @@ class SmartXML:
         """
         if not name and with_content is None:
             raise ValueError("At least one search criteria must be provided")
-        return self._tree.find(name, only_one, with_content)
+        return self._tree.find(name, only_one, with_content, case_sensitive)

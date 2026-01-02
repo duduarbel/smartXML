@@ -9,9 +9,14 @@ class IllegalOperation(Exception):
         super().__init__(self.message)
 
 
-def _check_match(element: ElementBase, names: str) -> bool:
-    if names and element.name != names:
-        return False
+def _check_name_match(element: ElementBase, names: str, case_sensitive: bool) -> bool:
+    if names:
+        if case_sensitive:
+            if element.name != names:
+                return False
+        else:
+            if element.name.casefold() != names.casefold():
+                return False
     return True
 
 
@@ -113,24 +118,22 @@ class ElementBase:
         self._parent = None
 
     def _find_one_in_sons(
-        self,
-        names_list: list[str],
-        with_content: str = None,
+        self, names_list: list[str], with_content: str = None, case_sensitive: bool = True
     ) -> ElementBase | None:
         if not names_list:
             return self
         for name in names_list:
             for son in self._sons:
-                if _check_match(son, name):
-                    found = son._find_one_in_sons(names_list[1:], with_content)
+                if _check_name_match(son, name, case_sensitive):
+                    found = son._find_one_in_sons(names_list[1:], with_content, case_sensitive)
                     if found:
                         if with_content is None or found.content == with_content:
                             return found
         return None
 
-    def _find_one(self, names: str, with_content: str) -> ElementBase | None:
+    def _find_one(self, names: str, with_content: str, case_sensitive: bool) -> ElementBase | None:
 
-        if _check_match(self, names):
+        if _check_name_match(self, names, case_sensitive):
             if with_content is None or self.content == with_content:
                 return self
 
@@ -138,28 +141,28 @@ class ElementBase:
 
         if len(names_list) > 1:
             if self.name == names_list[0]:
-                found = self._find_one_in_sons(names_list[1:], with_content)
+                found = self._find_one_in_sons(names_list[1:], with_content, case_sensitive)
                 if found:
                     return found
 
         for son in self._sons:
-            found = son._find_one(names, with_content)
+            found = son._find_one(names, with_content, case_sensitive)
             if found:
                 return found
         return None
 
-    def _find_all(self, names: str, with_content: str) -> list[Element]:
+    def _find_all(self, names: str, with_content: str, case_sensitive: bool) -> list[Element]:
         results = []
-        if _check_match(self, names=names):
+        if _check_name_match(self, names=names, case_sensitive=case_sensitive):
             if with_content is None or self.content == with_content:
                 results.extend([self])
                 for son in self._sons:
-                    results.extend(son._find_all(names, with_content))
+                    results.extend(son._find_all(names, with_content, case_sensitive))
                 return results
 
         names_list = names.split("|")
 
-        if _check_match(self, names_list[0]):
+        if _check_name_match(self, names_list[0], case_sensitive):
             if with_content is None or self.content == with_content:
                 sons = []
                 sons.extend(self._sons)
@@ -176,7 +179,7 @@ class ElementBase:
                     match.clear()
 
         for son in self._sons:
-            results.extend(son._find_all(names, with_content))
+            results.extend(son._find_all(names, with_content, case_sensitive))
 
         return results
 
@@ -293,24 +296,22 @@ class Element(ElementBase):
         return result
 
     def find(
-        self,
-        name: str = None,
-        only_one: bool = True,
-        with_content: str = None,
+        self, name: str = None, only_one: bool = True, with_content: str = None, case_sensitive: bool = True
     ) -> Union["Element", list["Element"], None]:
         """
         Find element(s) by name or content or both
         :param name: name of the element to find, can be nested using |, e.g. "parent|child|subchild"
         :param only_one: stop at first find or return all found elements
         :param with_content: filter by content
+        :param case_sensitive: whether the search is case-sensitive, default is True
         :return: the elements found,
                 if found, return the elements that match the last name in the path,
                 if not found, return None if only_one is True, else return empty list
         """
         if only_one:
-            return self._find_one(name, with_content=with_content)
+            return self._find_one(name, with_content=with_content, case_sensitive=case_sensitive)
         else:
-            return self._find_all(name, with_content=with_content)
+            return self._find_all(name, with_content=with_content, case_sensitive=case_sensitive)
 
 
 class Comment(Element):

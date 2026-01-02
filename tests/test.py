@@ -10,6 +10,7 @@ import random
 
 test_file_name = "./files/test.tmp.xml"
 
+
 def _test_tree_integrity(xml_tree: SmartXML):
 
     def node_tree_integrity(xml: SmartXML, element: Element, name: str):
@@ -33,7 +34,6 @@ def __create_file(content: str) -> Path:
     f.close()
 
     return Path(test_file_name)
-
 
 
 def test_trimming():
@@ -76,7 +76,6 @@ def test_trimming():
     _test_tree_integrity(xml)
 
 
-
 def test_read_comment1():
     src = textwrap.dedent(
         """\
@@ -98,7 +97,6 @@ def test_read_comment1():
     _test_tree_integrity(xml)
 
 
-
 def test_read_comment2():
     src = textwrap.dedent(
         """\
@@ -118,7 +116,6 @@ def test_read_comment2():
 
     assert result == src
     _test_tree_integrity(xml)
-
 
 
 def test_read_comment3():
@@ -170,13 +167,20 @@ def test_read_comment3():
     _test_tree_integrity(xml)
 
 
-
 def test_read_comment4():
     src = textwrap.dedent(
         """\
         <root>
-        \t<!--TAG>xxx
-        \t</TAG  -->
+            <!--TAG>xxx
+            </TAG  -->
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root>
+        \t<!-- <TAG>xxx</TAG> -->
         </root>
         """
     )
@@ -186,7 +190,7 @@ def test_read_comment4():
     xml.write()
 
     result = file_name.read_text()
-    assert result == src
+    assert result == dst
 
 
 def test_simple_find_and_get_path():
@@ -230,7 +234,6 @@ def test_simple_find_and_get_path():
     assert len(elements) == 1
     assert elements[0].name == "D1"
     _test_tree_integrity(xml)
-
 
 
 def test_complex_find_and_get_path():
@@ -308,7 +311,6 @@ def test_complex_find_and_get_path():
     _test_tree_integrity(xml)
 
 
-
 def test_parent_son():
     src = textwrap.dedent(
         """\
@@ -340,7 +342,6 @@ def test_parent_son():
     assert c.name == "C"
     assert c._parent == b
     _test_tree_integrity(xml)
-
 
 
 def test_one_line_comment():
@@ -410,7 +411,6 @@ def test_one_line_comment():
     _test_tree_integrity(xml)
 
 
-
 def test_nested_comment_1():
     src = textwrap.dedent(
         """\
@@ -453,7 +453,6 @@ def test_nested_comment_2():
     assert badXMLFormat.type is BadXMLFormat
 
 
-
 def test_nested_comment_3():
     src = textwrap.dedent(
         """\
@@ -469,7 +468,6 @@ def test_nested_comment_3():
         SmartXML(file_name)
     assert str(badXMLFormat.value) == "Nested comments are not allowed in line 2"
     assert badXMLFormat.type is BadXMLFormat
-
 
 
 def test_nested_comment_sons():
@@ -549,7 +547,6 @@ def test_comment_1():
     _test_tree_integrity(xml)
 
 
-
 def test_comment_2():
     src = textwrap.dedent(
         """\
@@ -616,7 +613,6 @@ def test_comment_2():
     _test_tree_integrity(xml)
 
 
-
 def test_one_line_comment2():
     src = textwrap.dedent(
         """\
@@ -665,7 +661,6 @@ def test_one_line_comment2():
     result = file_name.read_text()
     assert result == dst2
     _test_tree_integrity(xml)
-
 
 
 def test_one_line_comment3():
@@ -720,7 +715,6 @@ def test_one_line_comment3():
     _test_tree_integrity(xml)
 
 
-
 def test_one_line_comment4():
     src = textwrap.dedent(
         """\
@@ -754,7 +748,7 @@ def test_one_line_comment4():
     _test_tree_integrity(xml)
 
 
-
+@pytest.mark.one
 def test_one_line_comment5():
     src = textwrap.dedent(
         """\
@@ -791,7 +785,6 @@ def test_one_line_comment5():
     _test_tree_integrity(xml)
 
 
-
 def test_comment6():
     src = textwrap.dedent(
         """\
@@ -826,8 +819,6 @@ def test_comment6():
     result = file_name.read_text()
     assert result == dst1
     _test_tree_integrity(xml)
-
-
 
 
 def test_comment_stress():
@@ -894,7 +885,6 @@ def test_comment_stress():
     _test_tree_integrity(xml)
 
 
-
 def test_complex_comment_2():
     src = textwrap.dedent(
         """\
@@ -940,8 +930,7 @@ def test_complex_comment_2():
     tag1 = xml.find("tag1")
     tag3 = xml.find("tag3")
 
-    tag0.comment_out() # Ok, as it is out of any comment
-
+    tag0.comment_out()  # Ok, as it is out of any comment
 
     with pytest.raises(IllegalOperation) as badXMLFormat:
         tag3.comment_out()
@@ -965,7 +954,6 @@ def test_complex_comment_2():
     _test_tree_integrity(xml)
 
 
-
 def test_file_test_1():
     file_name = Path("./files/test_1.xml")
     xml = SmartXML(file_name)
@@ -975,14 +963,12 @@ def test_file_test_1():
     assert tag.content == "The Algorithm's Muse"
 
 
-
 def test_file_test_2():
     file_name = Path("./files/test_2.xml")
     xml = SmartXML(file_name)
     _test_tree_integrity(xml)
     xml.write(Path(test_file_name))
     pass
-
 
 
 def test_find_duplication():
@@ -1002,7 +988,6 @@ def test_find_duplication():
     assert a.attributes["id"] == "1"
 
 
-
 def test_attributes():
     src = textwrap.dedent(
         """\
@@ -1019,7 +1004,6 @@ def test_attributes():
     assert user.attributes["role"] == "admin"
     assert user.attributes["xxxxxxxxxxxxxxxxxxxxxxxxx"] == "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     _test_tree_integrity(xml)
-
 
 
 def test_find_name():
@@ -1066,7 +1050,6 @@ def test_find_name():
     # TOTO - complete
 
 
-
 def test_find_name_2():
     src = textwrap.dedent(
         """\
@@ -1108,7 +1091,6 @@ def test_find_name_2():
 
     abcdb = xml.find("A|B|C|D|B", False)
     assert len(abcdb) == 0
-
 
 
 def test_find_1():
@@ -1170,7 +1152,6 @@ def test_find_1():
     assert b.attributes["id"] == "B2"
 
 
-
 def test_bad_find():
     src = textwrap.dedent(
         """\
@@ -1189,7 +1170,6 @@ def test_bad_find():
     assert valueError.type is ValueError
 
 
-
 def test_bad_format_1():
     src = textwrap.dedent(
         """\
@@ -1206,7 +1186,6 @@ def test_bad_format_1():
     assert badXMLFormat.type is BadXMLFormat
 
 
-
 def test_bad_format_2():
     src = textwrap.dedent(
         """\
@@ -1221,7 +1200,6 @@ def test_bad_format_2():
         SmartXML(file_name)
     assert str(badXMLFormat.value) == "xml contains more than one outer element"
     assert badXMLFormat.type is BadXMLFormat
-
 
 
 def test_bad_format_3():
@@ -1242,7 +1220,6 @@ def test_bad_format_3():
     assert badXMLFormat.type is BadXMLFormat
 
 
-
 def test_bad_format_4():
     src = textwrap.dedent(
         """
@@ -1258,8 +1235,6 @@ def test_bad_format_4():
     assert badXMLFormat.type is BadXMLFormat
 
 
-
-@pytest.mark.one
 def test_bad_format_5():
     src = textwrap.dedent(
         """
@@ -1274,7 +1249,6 @@ def test_bad_format_5():
         pass
     assert str(badXMLFormat.value) == 'Element name must start with a letter in element definition: "1st_place"'
     assert badXMLFormat.type is BadXMLFormat
-
 
 
 def test_bad_format_6():
@@ -1297,7 +1271,6 @@ def test_bad_format_6():
     assert badXMLFormat.type is BadXMLFormat
 
 
-
 def test_bad_format_7():
     src = textwrap.dedent(
         """\
@@ -1318,7 +1291,6 @@ def test_bad_format_7():
     assert badXMLFormat.type is BadXMLFormat
 
 
-
 def test_bad_format_8():
     src = textwrap.dedent(
         """\
@@ -1334,7 +1306,6 @@ def test_bad_format_8():
         SmartXML(file_name)
     assert str(badXMLFormat.value) == "Mismatched XML tags, opening: tag1, closing: tag2, in line 2"
     assert badXMLFormat.type is BadXMLFormat
-
 
 
 def test_bad_format_9():
@@ -1354,7 +1325,6 @@ def test_bad_format_9():
     assert badXMLFormat.type is BadXMLFormat
 
 
-
 def test_bad_format_10():
     src = textwrap.dedent(
         """\
@@ -1372,7 +1342,6 @@ def test_bad_format_10():
     assert badXMLFormat.type is BadXMLFormat
 
 
-
 def test_bad_format_11():
     src = textwrap.dedent(
         """\
@@ -1388,7 +1357,6 @@ def test_bad_format_11():
         SmartXML(file_name)
     assert str(badXMLFormat.value) == "Nested comments are not allowed in line 2"
     assert badXMLFormat.type is BadXMLFormat
-
 
 
 def test_bad_format_12():
@@ -1416,13 +1384,13 @@ TEST_FOLDER = Path(__file__).resolve().parent
 
 def test_read_me_example():
     # README example test
-    input_file = TEST_FOLDER / Path('files/students.xml')
+    input_file = TEST_FOLDER / Path("files/students.xml")
 
     xml = SmartXML(input_file)
-    firstName = xml.find('students|student|firstName', with_content='Bob')
+    firstName = xml.find("students|student|firstName", with_content="Bob")
     bob = firstName.parent
     bob.comment_out()
-    header = TextOnlyComment(' Bob is out ')
+    header = TextOnlyComment(" Bob is out ")
     header.add_before(bob)
 
     output_file = Path(test_file_name)
@@ -1462,7 +1430,6 @@ def test_read_me_example():
     )
 
     assert result == dst
-
 
 
 def test_find_with_content():
@@ -1534,18 +1501,16 @@ def test_find_all_with_content():
     assert tag4[0].name == "tag4"
 
 
-
-
 def test_read_me_example_ver1():
-    input_file = TEST_FOLDER / Path('./files/students.xml')
+    input_file = TEST_FOLDER / Path("./files/students.xml")
 
     xml = SmartXML(input_file)
-    names = xml.find('students|student|firstName', only_one=False)
+    names = xml.find("students|student|firstName", only_one=False)
     for name in names:
-        if name.content == 'Bob':
+        if name.content == "Bob":
             bob = name.parent
             bob.comment_out()
-            header = TextOnlyComment(' Bob is out ')
+            header = TextOnlyComment(" Bob is out ")
             header.add_before(bob)
 
     output_file = Path(test_file_name)
@@ -1628,7 +1593,6 @@ def test_build_tree():
     assert result == dst
 
 
-
 def test_declaration():
     src = textwrap.dedent(
         """\
@@ -1648,7 +1612,6 @@ def test_declaration():
 
     assert xml.declaration == 'version="1.0" encoding="UTF-8" standalone="yes"'
     assert src == result
-
 
 
 def test_remove():
@@ -1704,7 +1667,6 @@ def test_remove():
     _test_tree_integrity(xml)
 
 
-
 def test_remove2():
     src = textwrap.dedent(
         """\
@@ -1732,7 +1694,6 @@ def test_remove2():
     result = file_name.read_text()
     assert result == dst
     _test_tree_integrity(xml)
-
 
 
 def test_tag_manipulations():
@@ -1784,7 +1745,6 @@ def test_tag_manipulations():
     result = file_name.read_text()
     assert result == dst
     _test_tree_integrity(xml)
-
 
 
 def test_indentation():
@@ -1884,7 +1844,6 @@ def test_indentation():
     assert result == dst4
 
 
-
 def test_c_data():
     src = textwrap.dedent(
         """\
@@ -1901,7 +1860,6 @@ def test_c_data():
     xml.write()
     result = file_name.read_text()
     assert result == src
-
 
 
 def test_c_data_2():
@@ -1925,7 +1883,6 @@ def test_c_data_2():
     xml.write()
     result = file_name.read_text()
     assert result == src
-
 
 
 def test_c_data_3():
@@ -1962,7 +1919,6 @@ def test_c_data_3():
     xml.write()
     result = file_name.read_text()
     assert result == src
-
 
 
 def test_to_string():
@@ -2005,16 +1961,14 @@ def test_read():
     assert error.type is ValueError
 
     with pytest.raises(TypeError) as error:
-        xml.read('ssss')
+        xml.read("ssss")
     assert str(error.value) == "file_name must be a pathlib.Path object"
     assert error.type is TypeError
 
     with pytest.raises(FileNotFoundError) as error:
-        xml.read(Path('ssss'))
+        xml.read(Path("ssss"))
     assert str(error.value) == "File ssss does not exist"
     assert error.type is FileNotFoundError
-
-
 
     src = textwrap.dedent(
         """\
@@ -2031,6 +1985,7 @@ def test_read():
     xml.write()
     result = file_name.read_text()
     assert result == src
+
 
 def test_test_comment_more_than_one_line():
     src = textwrap.dedent(
@@ -2050,6 +2005,7 @@ def test_test_comment_more_than_one_line():
     result = file_name.read_text()
     assert result == src
 
+
 def test_test_comment_with_small_sign():
     src = textwrap.dedent(
         """\
@@ -2067,6 +2023,7 @@ def test_test_comment_with_small_sign():
     xml.write()
     result = file_name.read_text()
     assert result == src
+
 
 def test_test_comment_with_bad_elements():
     src = textwrap.dedent(
@@ -2091,51 +2048,53 @@ def test_test_comment_with_bad_elements():
     assert error.type is AttributeError
 
 
-
 def test_readme():
     test_readme_example()
 
+
 def test_read_elements():
-    elements = _read_elements('<A><B></B><C/></A>')
+    elements = _read_elements("<A><B></B><C/></A>")
     assert len(elements) == 1
-    assert elements[0].name == 'A'
+    assert elements[0].name == "A"
     assert len(elements[0]._sons) == 2
-    assert elements[0]._sons[0].name == 'B'
-    assert elements[0]._sons[1].name == 'C'
+    assert elements[0]._sons[0].name == "B"
+    assert elements[0]._sons[1].name == "C"
+
 
 def test_read_elements_2():
-    elements = _read_elements('<A/><B/><C>Data</C>')
+    elements = _read_elements("<A/><B/><C>Data</C>")
     assert len(elements) == 3
-    assert elements[0].name == 'A'
-    assert elements[1].name == 'B'
-    assert elements[2].name == 'C'
-    assert elements[2].content == 'Data'
+    assert elements[0].name == "A"
+    assert elements[1].name == "B"
+    assert elements[2].name == "C"
+    assert elements[2].content == "Data"
+
 
 def test_read_elements_minimum_comment():
-    elements = _read_elements('<!---->')
+    elements = _read_elements("<!---->")
     assert len(elements) == 1
     assert isinstance(elements[0], TextOnlyComment)
-    assert elements[0]._text == ''
+    assert elements[0]._text == ""
 
 
 def test_parse_element():
     element = _parse_element('name id="43" role="admin"')
-    assert element.name == 'name'
-    assert element.attributes['id'] == '43'
-    assert element.attributes['role'] == 'admin'
+    assert element.name == "name"
+    assert element.attributes["id"] == "43"
+    assert element.attributes["role"] == "admin"
 
     element = _parse_element('   name   id   =   " 4 3 "    role = " admin" ')
-    assert element.name == 'name'
-    assert element.attributes['id'] == ' 4 3 '
-    assert element.attributes['role'] == ' admin'
+    assert element.name == "name"
+    assert element.attributes["id"] == " 4 3 "
+    assert element.attributes["role"] == " admin"
 
-    element = _parse_element(' name ')
-    assert element.name == 'name'
+    element = _parse_element(" name ")
+    assert element.name == "name"
     assert element.attributes == {}
 
     element = _parse_element('abc id=""')
-    assert element.name == 'abc'
-    assert element.attributes['id'] == ''
+    assert element.name == "abc"
+    assert element.attributes["id"] == ""
 
     with pytest.raises(Exception):
         _parse_element('name  id="43" role="admin')
@@ -2150,10 +2109,10 @@ def test_parse_element():
         _parse_element('1aaa  id="43" role="admin"')
 
     with pytest.raises(Exception):
-        _parse_element('1aaa  id')
+        _parse_element("1aaa  id")
 
     with pytest.raises(Exception):
-        _parse_element('1aaa  id kjjkj =')
+        _parse_element("1aaa  id kjjkj =")
 
 
 def test_find_2():
@@ -2177,8 +2136,74 @@ def test_find_2():
     file_name = __create_file(src)
     xml = SmartXML(file_name)
 
-    xx = xml.find(with_content="234543" )
+    xx = xml.find(with_content="234543")
     assert xx is None
 
     b = xml.find("B")
     assert b is None
+
+
+def test_find_case():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <A>
+                <AA>
+                    <AAA id="AAA"/>
+                </AA>
+                <a/>
+                <aaa id="aaa1"/>
+                <!--aaa id="aaa2"></aaa-->
+                <AaA id="AaA"></AaA>
+            </A>
+        </root>
+
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    AAA = xml.find("AAA")
+    assert AAA.attributes["id"] == "AAA"
+    AAA = xml.find("AAA", case_sensitive=False)
+    assert AAA.attributes["id"] == "AAA"
+    AAA = xml.find("AAA", case_sensitive=True)
+    assert AAA.attributes["id"] == "AAA"
+
+    AAA = xml.find("aaa", case_sensitive=False)
+    assert AAA.attributes["id"] == "AAA"
+
+    none = xml.find("aaA")
+    assert none is None
+    none = xml.find("AAa", case_sensitive=True)
+    assert none is None
+
+    aaa1 = xml.find("aaa")
+    assert aaa1.attributes["id"] == "aaa1"
+
+    aAa = xml.find("AaA")
+    assert aAa.attributes["id"] == "AaA"
+
+    all = xml.find("AAA", only_one=False)
+    assert len(all) == 1
+
+    all = xml.find("aaa", only_one=False)
+    assert len(all) == 2
+
+    all = xml.find("aaA", only_one=False, case_sensitive=False)
+    assert len(all) == 4
+
+
+def test_find_in_comment():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <!--aaa id="yes"></aaa-->
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    aaa = xml.find("aaa")
+    assert aaa.attributes["id"] == "yes"

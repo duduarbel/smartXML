@@ -1,3 +1,6 @@
+## 1.0.17
+- Support case-insensitive search
+
 ## 1.0.16
 - A small performance improvement
 
