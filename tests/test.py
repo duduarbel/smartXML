@@ -748,7 +748,6 @@ def test_one_line_comment4():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.one
 def test_one_line_comment5():
     src = textwrap.dedent(
         """\
@@ -1577,9 +1576,9 @@ def test_build_tree():
     tag3 = Element("tag3")
     tag4 = TextOnlyComment(" tag4 comment ")
     tag5 = Element("tag5")
-    head.set_as_parent_of(tag1)
-    tag2.add_as_son_of(head)
-    tag3.add_as_son_of(head)
+    tag1.add_as_last_son_of(head)
+    tag2.add_as_last_son_of(head)
+    tag3.add_as_last_son_of(head)
     tag4.add_before(tag2)
     tag5.add_after(tag2)
     tag2.comment_out()
@@ -2163,35 +2162,42 @@ def test_find_case():
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
-    AAA = xml.find("AAA")
-    assert AAA.attributes["id"] == "AAA"
-    AAA = xml.find("AAA", case_sensitive=False)
-    assert AAA.attributes["id"] == "AAA"
-    AAA = xml.find("AAA", case_sensitive=True)
-    assert AAA.attributes["id"] == "AAA"
 
-    AAA = xml.find("aaa", case_sensitive=False)
-    assert AAA.attributes["id"] == "AAA"
+    root = xml.find("root")
 
-    none = xml.find("aaA")
-    assert none is None
-    none = xml.find("AAa", case_sensitive=True)
-    assert none is None
+    def find(element):
+        AAA = element.find("AAA")
+        assert AAA.attributes["id"] == "AAA"
+        AAA = element.find("AAA", case_sensitive=False)
+        assert AAA.attributes["id"] == "AAA"
+        AAA = element.find("AAA", case_sensitive=True)
+        assert AAA.attributes["id"] == "AAA"
 
-    aaa1 = xml.find("aaa")
-    assert aaa1.attributes["id"] == "aaa1"
+        AAA = element.find("aaa", case_sensitive=False)
+        assert AAA.attributes["id"] == "AAA"
 
-    aAa = xml.find("AaA")
-    assert aAa.attributes["id"] == "AaA"
+        none = element.find("aaA")
+        assert none is None
+        none = element.find("AAa", case_sensitive=True)
+        assert none is None
 
-    all = xml.find("AAA", only_one=False)
-    assert len(all) == 1
+        aaa1 = element.find("aaa")
+        assert aaa1.attributes["id"] == "aaa1"
 
-    all = xml.find("aaa", only_one=False)
-    assert len(all) == 2
+        aAa = element.find("AaA")
+        assert aAa.attributes["id"] == "AaA"
 
-    all = xml.find("aaA", only_one=False, case_sensitive=False)
-    assert len(all) == 4
+        all = element.find("AAA", only_one=False)
+        assert len(all) == 1
+
+        all = element.find("aaa", only_one=False)
+        assert len(all) == 2
+
+        all = element.find("aaA", only_one=False, case_sensitive=False)
+        assert len(all) == 4
+
+    find(xml)
+    find(root)
 
 
 def test_find_in_comment():
@@ -2207,3 +2213,98 @@ def test_find_in_comment():
     xml = SmartXML(file_name)
     aaa = xml.find("aaa")
     assert aaa.attributes["id"] == "yes"
+
+
+def test_find_case_2():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <abc id="abc">
+                <Abc id="Abc">
+                    <ABC id="ABC"/>
+                    <A> 
+                        <ABc id="ABc"/>
+                    </A> 
+                </Abc>
+            </abc>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    ABC = xml.find("ABC", case_sensitive=True)
+    assert ABC.attributes["id"] == "ABC"
+
+    abc = xml.find("abc|abc", only_one=False, case_sensitive=False)
+    assert len(abc) == 2
+    assert abc[0].attributes["id"] == "Abc"
+    assert abc[1].attributes["id"] == "ABC"
+
+    abc = xml.find("abc|abc", case_sensitive=True)
+    assert abc is None
+
+    abc = xml.find("ABC|abc", case_sensitive=False)
+    assert abc.attributes["id"] == "Abc"
+
+    abc = xml.find("ABC|abc|ABC", case_sensitive=False)
+    assert abc.attributes["id"] == "ABC"
+
+
+@pytest.mark.one
+def test_find_case_content():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <abc id="abc">___abc___
+                <Abc id="Abc">___Abc___
+                    <ABC id="ABC">___abc___</ABC>
+                    <A> 
+                        <ABc id="ABc"/>
+                    </A> 
+                </Abc>
+            </abc>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    a = xml.find(with_content="___abc___", case_sensitive=False, only_one=False)
+    assert len(a) == 3
+
+    a = xml.find(with_content="___abc___", case_sensitive=True)
+    assert a.attributes["id"] == "abc"
+
+    a = xml.find("abc", with_content="___abc___", case_sensitive=True)
+    assert a.attributes["id"] == "abc"
+
+    a = xml.find("ABC", with_content="___abc___", case_sensitive=True)
+    assert a.attributes["id"] == "ABC"
+
+    a = xml.find(with_content="___abc___", only_one=False)
+    assert len(a) == 2
+    assert a[0].attributes["id"] == "abc"
+    assert a[1].attributes["id"] == "ABC"
+
+
+def test_bad_xml():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <abc id="abc">___abc___
+                <Abc id="Abc">___Abc___
+                    <ABC id="ABC"/>___abc___
+                    <A> 
+                        <ABc id="ABc"/>
+                    </A> 
+                </Abc>
+            </abc>
+        </root>
+        """
+    )
+
+
+# TODO- there is no error on <ABC id="ABC"/>___abc___

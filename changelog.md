@@ -1,3 +1,6 @@
+## 1.0.18
+- Support case-insensitive search for content
+
 ## 1.0.17
 - Support case-insensitive search
 
