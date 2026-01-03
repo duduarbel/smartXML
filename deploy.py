@@ -151,18 +151,12 @@ def main() -> int:
     pypi_file = Path(f"{Path.home()}/ex/pypi.txt")
     if not pypi_file.expanduser().is_file():
         raise DeployError(f"Missing PyPI API key file: {pypi_file.expanduser()}")
-    key = pypi_file.read_text()
 
+    # key = pypi_file.read_text()
     # Upload with API token/key
     # Per your request: "using key pypi-1234"
     # This maps to: --api-key pypi-1234
-    twine_command = [sys.executable, "-m", "twine", "upload", "--api-key", key]
-
-    # if args.repository is not None:
-    #     twine_command.extend(["--repository", args.repository])
-
-    twine_command.append("dist/*")
-    # run_command(twine_command)
+    twine_command = [sys.executable, "-m", "twine", "upload", "dist/*"]
     print(twine_command)
 
     print("Done.")

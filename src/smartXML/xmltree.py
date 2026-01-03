@@ -254,7 +254,15 @@ def _read_elements(text: str) -> list[Element]:
                 depth -= 1
 
         elif token_type == TokenType.content:
-            incomplete_nodes[-1].content = data
+            data = data.splitlines()
+            content = incomplete_nodes[-1].content
+            if content:
+                content += "\n" + data[0]
+            else:
+                content += data[0]
+            for d in data[1:]:
+                content += "\n" + d.strip()
+            incomplete_nodes[-1].content = content
 
         elif token_type == TokenType.doctype:
             element = Doctype(data)

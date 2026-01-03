@@ -2252,7 +2252,6 @@ def test_find_case_2():
     assert abc.attributes["id"] == "ABC"
 
 
-@pytest.mark.one
 def test_find_case_content():
     src = textwrap.dedent(
         """\
@@ -2290,21 +2289,51 @@ def test_find_case_content():
     assert a[1].attributes["id"] == "ABC"
 
 
-def test_bad_xml():
+@pytest.mark.one
+def test_mixed_content():
     src = textwrap.dedent(
         """\
         <root>
-            <abc id="abc">___abc___
-                <Abc id="Abc">___Abc___
-                    <ABC id="ABC"/>___abc___
-                    <A> 
-                        <ABc id="ABc"/>
-                    </A> 
-                </Abc>
-            </abc>
+            <tag1 id="abc">abc
+                <tag2 id="Abc">123
+                    456
+                    <tag3 id="ABC"/>789
+                </tag2>
+                <tag3 id="Abc">123
+                    456
+                    789
+                </tag3>
+            </tag1>
         </root>
         """
     )
 
+    dst = textwrap.dedent(
+        """\
+        <root>
+        \t<tag1 id="abc">abc
+        \t\t<tag2 id="Abc">
+        \t\t\t123
+        \t\t\t456
+        \t\t\t789
+        \t\t\t<tag3 id="ABC"/>
+        \t\t</tag2>
+        \t\t<tag3 id="Abc">
+        \t\t\t123
+        \t\t\t456
+        \t\t\t789
+        \t\t</tag3>
+        \t</tag1>
+        </root>
+        """
+    )
 
-# TODO- there is no error on <ABC id="ABC"/>___abc___
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag2 = xml.find("tag2")
+    assert tag2.content == "123\n456\n789"
+
+    xml.write()
+    result = file_name.read_text()
+
+    assert result == dst

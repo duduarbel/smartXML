@@ -300,10 +300,19 @@ class Element(ElementBase):
 
             children_str = "".join(son._to_string(index + 1, indentation) for son in self._sons)
 
-            if children_str:
-                result = f"{indent}{opening_tag}{self.content}\n{children_str}{indent}{closing_tag}"
+            if "\n" in self.content:
+                content = f"\n{indentation * (index + 1)}" + self.content.replace(
+                    "\n", f"\n{indentation * (index + 1)}"
+                )
+                if children_str:
+                    result = f"{indent}{opening_tag}{content}\n{children_str}{indent}{closing_tag}"
+                else:
+                    result = f"{indent}{opening_tag}{content}\n{indent}{closing_tag}"
             else:
-                result = f"{indent}{opening_tag}{self.content}{closing_tag}"
+                if children_str:
+                    result = f"{indent}{opening_tag}{self.content}\n{children_str}{indent}{closing_tag}"
+                else:
+                    result = f"{indent}{opening_tag}{self.content}{closing_tag}"
 
         if with_end_line:
             result += "\n"
