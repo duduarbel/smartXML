@@ -1,36 +1,105 @@
 # smartXML
 
-The **smartXML** package enables you to read, search, manipulate, and write XML files with ease.
+**smartXML** is a lightweight Python package for reading, searching, manipulating, and writing XML files with a clean and intuitive API.
 
-The API is designed to be simple, but it will be enhanced according to usage and requests.
-The package includes a `SmartXML` representing the XML file, and `ElementBase` representing each element in the XML tree
-### SmartXML:
-- properties:
-    - `tree`: the root element of the XML file
-    - `declaration`: the XML declaration (e.g., `<?xml version="1.0" encoding="UTF-8"?>`)
-- methods:
-    - `read`: reads the XML file
-    - `write`: writes the XML to a file
-    - `find`: finds elements, by name and/or content
-    - `to_string`: converts the entire XML tree to a string
+It is designed to make common XML operations straightforward while preserving full control over the XML structure. The API is intentionally minimal and will evolve based on real-world usage and feedback.
 
-### ElementBase: (base class for Element, Comment, TextOnlyComment, CData, and Doctype)
-- properties:
-    - `name`: the name of the element
-    - `parent`: the parent element
-- methods:
-    - `find`: finds elements
-    - `remove`: removes the current element from its parent
-    - `comment_out`: comments out the current element
-    - `uncomment`: un-comment the current element
-    - `is_comment` : returns True if the element is a comment
-    - `to_string`: converts the current element to a string
-    - `get_path`: gets the path as a string from the root, separated by |
-    - `add_before`: adds before the given sibling element
-    - `add_after`: adds after the given sibling element
-    - `add_as_last_son_of`: adds as the last son of the given parent element
+At its core, the package provides:
+- `SmartXML`: a high-level representation of an XML document
+- `ElementBase`: a common base class for all XML node types
 
-### Usage Example
+---
+
+## Core Concepts
+
+### `SmartXML`
+
+`SmartXML` represents an entire XML document, including its declaration and root element.
+
+#### Properties
+- **`tree`**  
+  The root element of the XML document.
+
+- **`declaration`**  
+  The XML declaration string  
+  (e.g. `<?xml version="1.0" encoding="UTF-8"?>`)
+
+#### Methods
+- **`read(path)`**  
+  Read and parse an XML file from disk.
+
+- **`write(path)`**  
+  Write the current XML tree to a file.
+
+- **`find(...)`**  
+  Search for elements by name and/or content.
+
+- **`to_string()`**  
+  Serialize the entire XML document to a string.
+
+---
+
+### `ElementBase`
+
+`ElementBase` is the base class for all node types in the XML tree, including:
+
+- `Element`
+- `Comment`
+- `TextOnlyComment`
+- `CData`
+- `Doctype`
+
+It provides common navigation, manipulation, and serialization functionality.
+
+#### Properties
+- **`name`**  
+  The element name.
+
+- **`parent`**  
+  A reference to the parent element  
+  (`None` if this is the root).
+
+#### Methods
+- **`find(...)`**  
+  Search for descendant elements.
+
+- **`remove()`**  
+  Remove the current element from its parent.
+
+- **`comment_out()`**  
+  Comment out the current element.
+
+- **`uncomment()`**  
+  Restore a previously commented-out element.
+
+- **`is_comment()`**  
+  Return `True` if this element represents a comment.
+
+- **`to_string()`**  
+  Serialize the element (and its children) to a string.
+
+- **`get_path()`**  
+  Return the element’s path from the root, using `|` as a separator.
+
+- **`add_before(sibling)`**  
+  Insert this element before the given sibling.
+
+- **`add_after(sibling)`**  
+  Insert this element after the given sibling.
+
+- **`add_as_last_son_of(parent)`**  
+  Add this element as the last child of the given parent element.
+
+---
+
+## Design Goals
+
+- Simple, readable API
+- Explicit control over XML structure
+- Safe and predictable tree manipulation
+- Easy serialization back to valid XML
+
+## Usage Example
 
 ```python
 from pathlib import Path
