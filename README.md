@@ -9,9 +9,9 @@ The package includes a `SmartXML` representing the XML file, and `ElementBase` r
     - `tree`: the root element of the XML file
     - `declaration`: the XML declaration (e.g., `<?xml version="1.0" encoding="UTF-8"?>`)
 - methods:
-    - `read`: reads the XML file from the root element
+    - `read`: reads the XML file
     - `write`: writes the XML to a file
-    - `find`: finds elements from the root element
+    - `find`: finds elements, by name and/or content
     - `to_string`: converts the entire XML tree to a string
 
 ### ElementBase: (base class for Element, Comment, TextOnlyComment, CData, and Doctype)
@@ -19,16 +19,16 @@ The package includes a `SmartXML` representing the XML file, and `ElementBase` r
     - `name`: the name of the element
     - `parent`: the parent element
 - methods:
-    - `find`: finds elements from the current element
+    - `find`: finds elements
     - `remove`: removes the current element from its parent
     - `comment_out`: comments out the current element
     - `uncomment`: un-comment the current element
     - `is_comment` : returns True if the element is a comment
     - `to_string`: converts the current element to a string
-    - `get_path`: gets the path as a string from the root of the XML tree, separated by |
-    - `add_before`: adds an element before the current element
-    - `add_after`: adds an element after the current element
-    - `add_as_last_son_of`: adds an element as the last son of the current element
+    - `get_path`: gets the path as a string from the root, separated by |
+    - `add_before`: adds before the given sibling element
+    - `add_after`: adds after the given sibling element
+    - `add_as_last_son_of`: adds as the last son of the given parent element
 
 ### Usage Example
 

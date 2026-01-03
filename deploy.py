@@ -18,6 +18,7 @@ import re
 import shutil
 import subprocess
 import sys
+import os
 from pathlib import Path
 
 
@@ -152,12 +153,12 @@ def main() -> int:
     if not pypi_file.expanduser().is_file():
         raise DeployError(f"Missing PyPI API key file: {pypi_file.expanduser()}")
 
-    # key = pypi_file.read_text()
-    # Upload with API token/key
-    # Per your request: "using key pypi-1234"
-    # This maps to: --api-key pypi-1234
+    key = pypi_file.read_text()
+    env = os.environ.copy()
+    env["TWINE_USERNAME"] = "__token__"
+    env["TWINE_PASSWORD"] = key
     twine_command = [sys.executable, "-m", "twine", "upload", "dist/*"]
-    print(twine_command)
+    run_command(twine_command)
 
     print("Done.")
     return 0
