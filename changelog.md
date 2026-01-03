@@ -1,3 +1,6 @@
+## 1.0.20
+- Improve README
+
 ## 1.0.19
 - Support mixed content
 
