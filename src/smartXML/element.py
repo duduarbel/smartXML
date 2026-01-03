@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from operator import truediv
 from typing import Union
 import warnings
+import re
 
 
 class IllegalOperation(Exception):
@@ -39,11 +39,17 @@ class ElementBase:
         self._name = name
         self._sons = []
         self._parent: "ElementBase|None" = None
-        self.content = ""
+        self._content = ""
 
-    def is_comment(self) -> bool:
-        """Check if the element is a comment."""
-        return False
+    @property
+    def content(self) -> str:
+        """Get the content of the element."""
+        return self._content
+
+    @content.setter
+    def content(self, new_content: str):
+        """Set the content of the element."""
+        self._content = new_content
 
     @property
     def parent(self):
@@ -58,9 +64,15 @@ class ElementBase:
     @name.setter
     def name(self, new_name: str):
         """Set the name of the element."""
-        if not new_name or new_name[0].isdigit():
+        _XML_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.:-]*$")
+        if not bool(_XML_NAME_RE.match(new_name)):
             raise ValueError(f"Invalid tag name '{new_name}'")
+
         self._name = new_name
+
+    def is_comment(self) -> bool:
+        """Check if the element is a comment."""
+        return False
 
     def to_string(self, indentation: str = "\t") -> str:
         """

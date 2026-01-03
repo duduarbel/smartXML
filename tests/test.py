@@ -2289,7 +2289,6 @@ def test_find_case_content():
     assert a[1].attributes["id"] == "ABC"
 
 
-@pytest.mark.one
 def test_mixed_content():
     src = textwrap.dedent(
         """\
@@ -2337,3 +2336,184 @@ def test_mixed_content():
     result = file_name.read_text()
 
     assert result == dst
+
+
+def test_preserve_formatting_1():
+    src = textwrap.dedent(
+        """\
+    <students>
+        <student id="S001">
+        <firstName>Alice</firstName>
+        \t\t<lastName>Cohen</lastName>
+        \t\t\t<age>20<old/></age>
+        \t\t\t\t<grade>90</grade>
+        \t\t\t\t\t<email>alice.cohen@example.com</email>
+        \t\t\t\t\t\t</student></students>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+    <students>
+        <student id="S001">
+        <firstName>Alice</firstName>
+        \t\t<lastName>Cohen</lastName>
+        \t\t<age>300
+        \t\t\t<old/>
+        \t\t</age>
+        \t\t\t\t<grade>90</grade>
+        \t\t\t\t\t<email>alice.cohen@example.com</email>
+        \t\t\t\t\t\t</student></students>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == src
+
+    age = xml.find("age")
+    age.content = 300
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_preserve_formatting_2():
+    src = textwrap.dedent(
+        """\
+    <students>
+        <student id="S001">
+        <firstName>Alice</firstName>
+        \t\t<lastName>Cohen</lastName>
+        \t\t\t<age>20<old/></age>
+        \t\t\t\t<grade>90</grade>
+        \t\t\t\t\t<email>alice.cohen@example.com</email>
+        \t\t\t\t\t\t</student></students>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+    <students>
+        <student id="S001">
+        <firstName>Alice</firstName>
+        \t\t<lastName>Cohen</lastName>
+        \t\t<!--
+        \t\t\t<age>20
+        \t\t\t\t<old/>
+        \t\t\t</age>
+        \t\t-->
+        \t\t\t\t<grade>90</grade>
+        \t\t\t\t\t<email>alice.cohen@example.com</email>
+        \t\t\t\t\t\t</student></students>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    age = xml.find("age")
+    age.comment_out()
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_preserve_formatting_3():
+    src = textwrap.dedent(
+        """\
+    <students>
+        <student id="S001">
+        <firstName>Alice</firstName>
+        \t\t<lastName>Cohen</lastName>
+        \t\t\t<age>20<old/>
+        </age>
+        \t\t\t\t<grade>90</grade>
+        \t\t\t\t\t<email>alice.cohen@example.com</email>
+        \t\t\t\t\t\t</student></students>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <student id="S001">
+        <firstName>Alice</firstName>
+        \t\t<lastName>Cohen</lastName>
+        \t\t<!-- tag4 comment -->
+        \t\t\t<age>20<old/>
+        </age>
+        \t\t\t\t<grade>90</grade>
+        \t\t\t\t\t<email>alice.cohen@example.com</email>
+        \t\t\t\t\t\t</student></students>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    age = xml.find("age")
+    tag4 = TextOnlyComment(" tag4 comment ")
+    tag4.add_before(age)
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_preserve_formatting_4():
+    src = textwrap.dedent(
+        """\
+        <students>
+        <student><firstName>Alice</firstName><lastName>Cohen</lastName><age>20</age><grade>90</grade>
+        \t\t\t\t\t<email>alice.cohen@example.com</email>
+        \t\t\t\t\t\t</student></students>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <students>
+        <student><firstName>Alice</firstName><lastName>Cohen</lastName>
+        \t<new_age>20</new_age>
+        <grade>90</grade>
+        \t\t\t\t\t<email>alice.cohen@example.com</email>
+        \t\t\t\t\t\t</student></students>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    age = xml.find("age")
+    age.name = "new_age"
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst
+
+
+@pytest.mark.one
+def test_bad_naming():
+    src = textwrap.dedent(
+        """\
+        <students>
+        <student><firstName>Alice</firstName><lastName>Cohen</lastName><age>20</age><grade>90</grade>
+        \t\t\t\t\t<email>alice.cohen@example.com</email>
+        \t\t\t\t\t\t</student></students>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    age = xml.find("age")
+
+    with pytest.raises(ValueError) as badXMLFormat:
+        age.name = "new age"
+    assert str(badXMLFormat.value) == "Invalid tag name 'new age'"
+    assert badXMLFormat.type is ValueError
