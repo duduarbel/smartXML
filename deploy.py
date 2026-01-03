@@ -141,6 +141,10 @@ def main() -> int:
     if not args.skip_clean:
         clean_dist(dist_dir)
 
+    # add git tag
+    run_command(["git", "tag", args.version.strip()])
+    run_command(["git", "push", "origin", args.version.strip()])
+
     # Build
     run_command([sys.executable, "-m", "build"])
 
