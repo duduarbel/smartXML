@@ -26,9 +26,9 @@ class DeployError(RuntimeError):
     pass
 
 
-def run_command(command: list[str]) -> None:
+def run_command(command: list[str], env: dict[str, str] = None) -> None:
     print(f"+ {' '.join(command)}")
-    completed = subprocess.run(command, text=True)
+    completed = subprocess.run(command, text=True, env=env)
     if completed.returncode != 0:
         raise DeployError(f"Command failed with exit code {completed.returncode}: {' '.join(command)}")
 
@@ -158,7 +158,7 @@ def main() -> int:
     env["TWINE_USERNAME"] = "__token__"
     env["TWINE_PASSWORD"] = key
     twine_command = [sys.executable, "-m", "twine", "upload", "dist/*"]
-    run_command(twine_command)
+    run_command(twine_command, env=env)
 
     print("Done.")
     return 0
