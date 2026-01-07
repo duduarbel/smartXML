@@ -40,6 +40,11 @@ class ElementBase:
         self._sons = []
         self._parent: "ElementBase|None" = None
         self._content = ""
+        self._orig_start_index: int = 0
+        self._orig_end_index: int = 0
+        self._orig_start_line_number: int = 0
+        self._orig_end_line_number: int = 0
+        self._is_modified: bool = False
 
     @property
     def content(self) -> str:
@@ -49,7 +54,8 @@ class ElementBase:
     @content.setter
     def content(self, new_content: str):
         """Set the content of the element."""
-        self._content = new_content
+        self._content = str(new_content)
+        self._is_modified = True
 
     @property
     def parent(self):
@@ -69,6 +75,10 @@ class ElementBase:
             raise ValueError(f"Invalid tag name '{new_name}'")
 
         self._name = new_name
+        self._is_modified = True
+
+    def __repr__(self):
+        return f"{self.name}"
 
     def is_comment(self) -> bool:
         """Check if the element is a comment."""
@@ -104,6 +114,8 @@ class ElementBase:
         index = parent._sons.index(sibling)
         parent._sons.insert(index, self)
         self._parent = parent
+        self._is_modified = True
+        # TODO - update _orig_start_index and _orig_end_index acourding to siblin? of parent if no siblinbs?
 
     def add_after(self, sibling: "Element"):
         """Add this element after the given sibling element."""
@@ -113,11 +125,15 @@ class ElementBase:
         index = parent._sons.index(sibling)
         parent._sons.insert(index + 1, self)
         self._parent = parent
+        self._is_modified = True
 
     def add_as_last_son_of(self, parent: "Element"):
         """Add this element as a son of the given parent element."""
         parent._sons.append(self)
         self._parent = parent
+        self._is_modified = True
+        parent._is_empty = False
+        parent._is_modified = True
 
     def add_as_son_of(self, parent: "Element"):
         """Add this element as a son of the given parent element."""
@@ -137,11 +153,36 @@ class ElementBase:
         )
         self._sons.append(son)
         son._parent = self
+        self._is_modified = True
 
     def remove(self):
         """Remove this element from its parent's sons."""
         self._parent._sons.remove(self)
         self._parent = None
+        self._is_modified = True
+
+    def _get_index_in_parent(self):
+        index = 0
+        for son in self._parent._sons:
+            if son == self:
+                return index
+            index += 1
+
+        return -1
+
+    def _get_element_above(self):
+        index = self._get_index_in_parent()
+        if index > 0:
+            return self._parent._sons[index - 1]
+        else:
+            return self.parent
+
+    def _get_element_below(self):
+        index = self._get_index_in_parent()
+        if index < len(self._parent._sons) - 1:
+            return self._parent._sons[index + 1]
+        else:
+            return self._parent
 
     def _find_one_in_sons(
         self, names_list: list[str], with_content: str = None, case_sensitive: bool = True
@@ -216,6 +257,17 @@ class TextOnlyComment(ElementBase):
     def __init__(self, text: str):
         super().__init__("")
         self._text = text
+
+    @property
+    def text(self) -> str:
+        """Get the content of the element."""
+        return self._text
+
+    @text.setter
+    def text(self, text: str):
+        """Set the content of the element."""
+        self._text = text
+        self._is_modified = True
 
     def is_comment(self) -> bool:
         return True
@@ -294,6 +346,7 @@ class Element(ElementBase):
                 raise IllegalOperation("Cannot comment out an element whose descended is a comment")
 
         self.__class__ = Comment
+        self._is_modified = True
 
     def _to_string(self, index: int, indentation: str, with_end_line=True) -> str:
         indent = indentation * index
@@ -361,6 +414,7 @@ class Comment(Element):
     def uncomment(self):
         """Convert this comment back into a normal element."""
         self.__class__ = Element
+        self._is_modified = True
 
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index

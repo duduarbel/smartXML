@@ -21,13 +21,15 @@ class TokenType(Enum):
 
 
 class Token:
-    def __init__(self, token_type: TokenType, data: str, line_number: int):
+    def __init__(self, token_type: TokenType, data: str, line_number: int, start_index: int, end_index: int):
         self.token_type = token_type
         self.data = data
         self.line_number = line_number
+        self.start_index = start_index
+        self.end_index = end_index
 
     def __repr__(self):
-        return f"{self.token_type.name}: {self.data}"
+        return f"{self.token_type.name}: {self.data} indexes: {self.start_index}-{self.end_index}"
 
 
 def _divide_to_tokens(file_content):
@@ -49,6 +51,8 @@ def _divide_to_tokens(file_content):
                         TokenType.full_tag_name,
                         file_content[last_index + 1 : index].strip(),
                         line_number,
+                        last_index,
+                        index,
                     )
                 )
             else:
@@ -57,6 +61,8 @@ def _divide_to_tokens(file_content):
                         TokenType.closing,
                         file_content[last_index + 1 : index].strip(),
                         line_number,
+                        last_index,
+                        index,
                     )
                 )
             last_char = char
@@ -65,15 +71,9 @@ def _divide_to_tokens(file_content):
             if last_char == "<":
                 raise BadXMLFormat(f"Malformed element in line {line_number}")
             if last_char == ">":
-                text = file_content[last_index + 1 : index - 1].strip()
+                text = file_content[last_index + 1 : index].strip()
                 if text:
-                    tokens.append(
-                        Token(
-                            TokenType.content,
-                            file_content[last_index + 1 : index].strip(),
-                            line_number,
-                        )
-                    )
+                    tokens.append(Token(TokenType.content, text, line_number, last_index, index))
             last_char = char
             last_index = index
         elif char == "\n":
@@ -86,18 +86,18 @@ def _divide_to_tokens(file_content):
                     raise BadXMLFormat(f"Malformed comment in line {line_number}")
 
                 comment = file_content[index + 3 : comment_end_index]
-                tokens.append(Token(TokenType.comment, comment, line_number))
+                tokens.append(Token(TokenType.comment, comment, line_number, last_index, comment_end_index + 2))
 
                 last_char = ""
                 last_index = comment_end_index + 3
-                index = comment_end_index + 3
+                index = comment_end_index + 2
             elif file_content[index + 1] == "[":
                 # ![CDATA[
                 cdata_end = file_content.find("]]>", index)
                 if cdata_end == -1:
                     raise BadXMLFormat(f"Malformed CDATA section in line {line_number}")
                 cdata_content = file_content[index + 8 : cdata_end]
-                tokens.append(Token(TokenType.c_data, cdata_content, line_number))
+                tokens.append(Token(TokenType.c_data, cdata_content, line_number, last_index, index))
                 last_index = cdata_end + 2
                 last_char = ">"
                 index = last_index + 1
@@ -108,7 +108,7 @@ def _divide_to_tokens(file_content):
                 if start == -1:
                     raise BadXMLFormat(f"Malformed DOCTYPE declaration in line {line_number}")
                 doctype = file_content[index:start]
-                tokens.append(Token(TokenType.doctype, doctype, line_number))
+                tokens.append(Token(TokenType.doctype, doctype, line_number, last_index, index))
 
                 last_char = ""
                 last_index = start + 1
@@ -120,20 +120,26 @@ def _divide_to_tokens(file_content):
     return tokens
 
 
-def _add_ready_token(ready_nodes, element: ElementBase, depth: int):
+def _add_ready_token(ready_nodes, element: ElementBase, depth: int, end_index: int, end_line_number: int):
     if depth in ready_nodes:
         ready_nodes[depth].append(element)
     else:
         ready_nodes[depth] = [element]
+
+    element._orig_end_index = end_index
+    element._orig_end_line_number = end_line_number
 
     if depth + 1 in ready_nodes:
         element._sons = ready_nodes[depth + 1]
         del ready_nodes[depth + 1]
         for son in element._sons:
             son._parent = element
+            element._is_modified = False
+
+    element._is_modified = False
 
 
-def _parse_element(text: str) -> Element:
+def _parse_element(text: str, start_index: int, start_line_number: int) -> Element:
     index = 0
     text = text.strip()
     length = len(text)
@@ -190,6 +196,8 @@ def _parse_element(text: str) -> Element:
 
     element = Element(name)
     element.attributes = attributes
+    element._orig_start_index = start_index
+    element._orig_start_line_number = start_line_number
     return element
 
 
@@ -208,9 +216,9 @@ def _read_elements(text: str) -> list[Element]:
         if token_type == TokenType.full_tag_name:
             # this token is anything that is between < and >
             if data.endswith("/"):
-                element = _parse_element(data[:-1])
+                element = _parse_element(data[:-1], token.start_index, line_number)
                 element._is_empty = True
-                _add_ready_token(ready_nodes, element, depth + 1)
+                _add_ready_token(ready_nodes, element, depth + 1, token.end_index, line_number)
 
             elif data.startswith("/"):
                 data = data[1:].strip()
@@ -220,15 +228,15 @@ def _read_elements(text: str) -> list[Element]:
                     raise BadXMLFormat(
                         f"Mismatched XML tags, opening: {element.name}, closing: {data}, in line {line_number}"
                     )
-                _add_ready_token(ready_nodes, element, depth)
+                _add_ready_token(ready_nodes, element, depth, token.end_index, line_number)
                 depth -= 1
 
             else:
                 if incomplete_nodes and isinstance(incomplete_nodes[-1], Doctype):
                     element = Element(data)
-                    _add_ready_token(ready_nodes, element, depth + 1)
+                    _add_ready_token(ready_nodes, element, depth + 1, token.end_index, line_number)
                 else:
-                    element = _parse_element(data)
+                    element = _parse_element(data, token.start_index, line_number)
                     incomplete_nodes.append(element)
                     depth += 1
 
@@ -242,16 +250,22 @@ def _read_elements(text: str) -> list[Element]:
                     elements_in_comment = _read_elements(data)
                 for comment in elements_in_comment:
                     comment.comment_out()
-                    _add_ready_token(ready_nodes, comment, depth + 1)
+                    _add_ready_token(ready_nodes, comment, depth + 1, token.end_index, line_number)
             except Exception:
                 # The content of the comment can not be parsed, so handle this as plain text
-                _add_ready_token(ready_nodes, TextOnlyComment(data), depth + 1)
+                element = TextOnlyComment(data)
+                element._orig_start_index = token.start_index  # TODO really?--->  - 4  # account for <!--
+                element._orig_start_line_number = line_number
+
+                _add_ready_token(
+                    ready_nodes, element, depth + 1, element._orig_start_index + len(data) + 6, line_number
+                )
 
         elif token_type == TokenType.closing:
             element = incomplete_nodes.pop()
-            if isinstance(element, Doctype):
-                _add_ready_token(ready_nodes, element, depth)
-                depth -= 1
+            #            if isinstance(element, Doctype):
+            _add_ready_token(ready_nodes, element, depth, token.end_index, line_number)
+            depth -= 1
 
         elif token_type == TokenType.content:
             data = data.splitlines()
@@ -271,7 +285,7 @@ def _read_elements(text: str) -> list[Element]:
 
         elif token_type == TokenType.c_data:
             element = CData(data)
-            _add_ready_token(ready_nodes, element, depth + 1)
+            _add_ready_token(ready_nodes, element, depth + 1, token.end_index, line_number)
 
     if incomplete_nodes:
         unclosed = incomplete_nodes[-1]
@@ -346,10 +360,11 @@ class SmartXML:
         else:
             raise BadXMLFormat("xml contains more than one outer element")
 
-    def write(self, file_name: Path = None, indentation: str = "\t") -> str | None:
+    def write(self, file_name: Path = None, indentation: str = "\t", preserve_format: bool = False) -> str | None:
         """Write the XML tree back to the file.
         :param file_name: Path to the XML file, if None, overwrite the original file
         :param indentation: string used for indentation, default is tab character
+        :param preserve_format: if True, preserve original formatting (whitespaces and line breaks), except for modified parts
         :return: XML string if file_name is None, else None
         :raises:
             ValueError: if file name is not specified
@@ -362,10 +377,94 @@ class SmartXML:
         if not self._file_name:
             raise ValueError("File name is not specified")
 
+        if not preserve_format:
+            with open(self._file_name, "w") as file:
+                if self._declaration:
+                    file.write(f"<?xml {self._declaration}?>\n")
+                file.write(self.to_string(indentation))
+            return
+
+        # preserve original formatting
+        if self.tree._is_modified:
+            self.write(file_name, indentation)
+            return
+
+        modifications = []
+
+        def count_parents(element: ElementBase) -> int:
+            count = 0
+            parent = element._parent
+            while parent:
+                count += 1
+                parent = parent._parent
+            return count
+
+        def collect_modification(element: ElementBase):
+            if element._is_modified:
+                if element._orig_start_index == 0:
+                    element_above = element._get_element_above()
+                    element._orig_start_index = element._orig_end_index = element_above._orig_end_index
+                modifications.append((element, element._orig_start_index, element._orig_end_index))
+            else:
+                for son in element._sons:
+                    collect_modification(son)
+
+        collect_modification(self._tree)
+        if not modifications:
+            return
+
+        original_content = self._file_name.read_text()
+
         with open(self._file_name, "w") as file:
             if self._declaration:
                 file.write(f"<?xml {self._declaration}?>\n")
-            file.write(self.to_string(indentation))
+            if self._doctype:
+                self._doctype.to_string(indentation)
+
+            index = 0
+            for element, start_index, end_index in modifications:
+                element_above = element._get_element_above()
+                element_below = element._get_element_below()
+
+                if element._orig_end_line_number != 0:
+                    if element._orig_start_line_number == element._orig_end_line_number and len(element._sons) == 0:
+                        if element_above and element_above._orig_end_line_number == element._orig_start_line_number:
+                            if (
+                                not element_below
+                                or element_below._orig_start_line_number == element._orig_end_line_number
+                            ):
+                                text = element._to_string(0, indentation)
+                                xxx = original_content[index:start_index]  # TODO remove
+                                file.write(original_content[index:start_index])
+                                file.write(text[:-1])
+                                index = end_index + 1
+                                continue
+
+                text = element._to_string(count_parents(element), indentation)
+
+                if (
+                    element._orig_end_line_number != 0
+                    and element_above
+                    and element_above._orig_end_line_number == element._orig_start_line_number
+                ):
+                    file.write(original_content[index:start_index])
+                else:
+                    xxx = original_content[index:start_index]
+                    file.write(original_content[index:start_index].rstrip())
+                    file.write("\n")
+
+                # if element._orig_end_line_number == 0:
+                #     file.write(text)
+                # else:
+                file.write(text[:-1])
+                # if not element_below or element_below._orig_start_line_number == element._orig_end_line_number:
+                # file.write(text[:-1])
+                # else:
+                #   file.write(text)
+
+                index = end_index + 1
+
+            file.write(original_content[index:])
 
     def to_string(self, indentation: str = "\t") -> str:
         """
