@@ -1,3 +1,6 @@
+## 1.0.21
+- Safely write the file by writing to a temporary file first and then renaming it.
+
 ## 1.0.20
 - Improve README
 
