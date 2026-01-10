@@ -250,18 +250,21 @@ def _read_elements(text: str) -> list[Element]:
                     elements_in_comment = _read_elements("<" + data + ">")  # support the case of <!--TAG...-->
                 else:
                     elements_in_comment = _read_elements(data)
-                for comment in elements_in_comment:
+                if len(elements_in_comment) == 1:
+                    comment = elements_in_comment[0]
                     comment.comment_out()
+                    comment._orig_start_index = token.start_index
                     _add_ready_token(ready_nodes, comment, depth + 1, token.end_index, line_number)
+                    continue
             except Exception:
                 # The content of the comment can not be parsed, so handle this as plain text
-                element = TextOnlyComment(data)
-                element._orig_start_index = token.start_index
-                element._orig_start_line_number = line_number
+                pass
 
-                _add_ready_token(
-                    ready_nodes, element, depth + 1, element._orig_start_index + len(data) + 6, line_number
-                )
+            element = TextOnlyComment(data)
+            element._orig_start_index = token.start_index
+            element._orig_start_line_number = line_number
+
+            _add_ready_token(ready_nodes, element, depth + 1, element._orig_start_index + len(data) + 6, line_number)
 
         elif token_type == TokenType.closing:
             element = incomplete_nodes.pop()

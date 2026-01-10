@@ -116,6 +116,22 @@ def clean_dist(dist_dir: Path) -> None:
     dist_dir.mkdir(parents=True, exist_ok=True)
 
 
+def get_branch() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "symbolic-ref", "--quiet", "--short", "HEAD"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except subprocess.CalledProcessError:
+        # Detached HEAD or not a git repo
+        return ""
+
+    return result.stdout.strip()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Deploy the package to PyPI.")
     parser.add_argument(
@@ -132,6 +148,10 @@ def main() -> int:
     version = args.version.strip()
     pyproject_path = Path("pyproject.toml")
     changelog_path = Path("changelog.md")
+
+    current_branch = get_branch()
+    if current_branch != "main":
+        raise DeployError(f"Current git branch is '{current_branch}'. Deployments must be made from 'main'branch.")
 
     ensure_tools_available()
     verify_version_in_pyproject(pyproject_path, version)

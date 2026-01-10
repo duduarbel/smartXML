@@ -181,8 +181,7 @@ def test_read_comment4():
     dst = textwrap.dedent(
         """\
         <root>
-        \t<!--TAG>xxx
-        \t</TAG -->
+        \t<!-- <TAG>xxx</TAG> -->
         </root>
         """
     )
@@ -549,7 +548,6 @@ def test_comment_1():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.one
 def test_comment_2():
     src = textwrap.dedent(
         """\
@@ -562,60 +560,24 @@ def test_comment_2():
         </root>
         """
     )
-    dst1 = textwrap.dedent(
-        """\
-        <root>
-        \t<!--
-        \t\t<tag1>tt1</tag1>
-        \t\t<tag2>tt2</tag2>
-        \t\t<tag3>tt3</tag3>
-        \t-->
-        </root>
-        """
-    )
-    dst2 = textwrap.dedent(
-        """\
-        <root>
-        \t<tag1>tt1</tag1>
-        \t<!-- <tag2>tt2</tag2> -->
-        \t<!-- <tag3>tt3</tag3> -->
-        </root>
-        """
-    )
-    dst3 = textwrap.dedent(
-        """\
-        <root>
-        \t<tag1>tt1</tag1>
-        \t<tag2>tt2</tag2>
-        \t<!-- <tag3>tt3</tag3> -->
-        </root>
-        """
-    )
 
     file_name = __create_file(src)
 
     xml = SmartXML(file_name)
     tag1 = xml.find("tag1")
-
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst1
-    tag1.comment_out()
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst1
-
-    tag1.uncomment()
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst2
-
     tag2 = xml.find("tag2")
-    tag2.uncomment()
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst3
-    _test_tree_integrity(xml)
+    tag3 = xml.find("tag3")
+
+    assert tag1 is None
+    assert tag2 is None
+    assert tag3 is None
+
+    comment = xml.tree._sons[0]
+    assert isinstance(comment, TextOnlyComment)
+
+    with pytest.raises(AttributeError) as error:
+        comment.uncomment()
+    assert error.type is AttributeError
 
 
 def test_one_line_comment2():
@@ -624,7 +586,6 @@ def test_one_line_comment2():
         <root>
         \t<user>
         \t\t<!--<tag1>000</tag1>-->
-        \t\t<!--<tag2>aaa</tag2><tag3>bbb</tag3>-->
         \t</user>
         </root>
         """
@@ -634,143 +595,68 @@ def test_one_line_comment2():
         <root>
         \t<user>
         \t\t<!-- <tag1>000</tag1> -->
-        \t\t<tag2>aaa</tag2>
-        \t\t<!-- <tag3>bbb</tag3> -->
         \t</user>
         </root>
         """
     )
+
     dst2 = textwrap.dedent(
         """\
         <root>
         \t<user>
-        \t\t<!-- <tag1>000</tag1> -->
-        \t\t<!-- <tag2>aaa</tag2> -->
-        \t\t<!-- <tag3>bbb</tag3> -->
+        \t\t<tag1>000</tag1>
         \t</user>
         </root>
         """
     )
+
     file_name = __create_file(src)
     xml = SmartXML(file_name)
 
-    tag2 = xml.find("tag2")
-    tag2.uncomment()
     xml.write()
     result = file_name.read_text()
     assert result == dst1
-    _test_tree_integrity(xml)
 
-    tag2.comment_out()
+    tag1 = xml.find("tag1")
+    tag1.uncomment()
+
     xml.write()
     result = file_name.read_text()
     assert result == dst2
     _test_tree_integrity(xml)
 
 
+@pytest.mark.one
 def test_one_line_comment3():
     src = textwrap.dedent(
         """\
-        <root>
-        \t<user>
-        \t\t<!--
-        \t\t\t<tag1>000</tag1>
-        \t\t-->
-        \t\t<!--<tag2>aaa</tag2><tag3>bbb</tag3>-->
-        \t</user>
-        </root>
+        <user>        <!--<tag1>aaa<tag2>bbb<tag3>ccc</tag3></tag2></tag1>-->
+            </user>
         """
     )
     dst1 = textwrap.dedent(
         """\
-        <root>
-        \t<user>
-        \t\t<!-- <tag1>000</tag1> -->
-        \t\t<tag2>aaa</tag2>
-        \t\t<!-- <tag3>bbb</tag3> -->
-        \t</user>
-        </root>
+        <user>
+        \t<!--
+        \t\t<tag1>aaa
+        \t\t\t<tag2>bbb
+        \t\t\t\t<tag3>ccc</tag3>
+        \t\t\t</tag2>
+        \t\t</tag1>
+        \t-->
+        </user>
         """
     )
+
     dst2 = textwrap.dedent(
         """\
-        <root>
-        \t<user>
-        \t\t<!-- <tag1>000</tag1> -->
-        \t\t<!-- <tag2>aaa</tag2> -->
-        \t\t<!-- <tag3>bbb</tag3> -->
-        \t</user>
-        </root>
-        """
-    )
-    file_name = __create_file(src)
-    xml = SmartXML(file_name)
-
-    tag2 = xml.find("tag2")
-    tag2.uncomment()
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst1
-    _test_tree_integrity(xml)
-
-    tag2.comment_out()
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst2
-    _test_tree_integrity(xml)
-
-
-def test_one_line_comment4():
-    src = textwrap.dedent(
-        """\
-        <root>
-        \t\t<!--
-        \t\t\t<tag1>000</tag1>
-        \t\t-->
-        \t\t<!--<tag2>aaa</tag2><tag3>bbb</tag3>-->
-        </root>
-        """
-    )
-    dst = textwrap.dedent(
-        """\
-        <root>
-        \t<!-- <tag1>000</tag1> -->
-        \t<!-- <tag2>aaa</tag2> -->
-        \t<!-- <tag3>bbb</tag3> -->
-        </root>
-        """
-    )
-
-    file_name = __create_file(src)
-    xml = SmartXML(file_name)
-
-    tag2 = xml.find("tag2")
-    tag2.uncomment()
-    tag2.comment_out()
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst
-    _test_tree_integrity(xml)
-
-
-def test_one_line_comment5():
-    src = textwrap.dedent(
-        """\
-        <root>
-        \t\t<!--<tag2>aaa</tag2><tag3>bbb</tag3>-->
-        \t\t<!--
-        \t\t\t<tag1>000</tag1>
-        \t\t-->
-        </root>
-        """
-    )
-    dst = textwrap.dedent(
-        """\
-        <root>
-        \t<!-- <tag2>aaa</tag2> -->
-        \t<!-- <tag3>bbb</tag3> -->
-        \t<!-- <tag1>000</tag1> -->
-        </root>
+        <user>
+        \t<tag1>aaa
+        \t\t<tag2>bbb
+        \t\t\t<tag3>ccc</tag3>
+        \t\t</tag2>
+        \t</tag1>
+        </user>
         """
     )
 
@@ -778,15 +664,28 @@ def test_one_line_comment5():
     xml = SmartXML(file_name)
 
     tag1 = xml.find("tag1")
-    tag3 = xml.find("tag3")
-    tag3.uncomment()
-    tag3.comment_out()
-    tag1.uncomment()
-    tag1.comment_out()
+    assert tag1 is not None
+    tag2 = xml.find("tag2")
+    assert tag2 is not None
+
+    with pytest.raises(IllegalOperation) as error:
+        tag2.uncomment()
+    assert str(error.value) == "Cannot comment out an element whose parent is a comment"
+    assert error.type is IllegalOperation
+
     xml.write()
     result = file_name.read_text()
-    assert result == dst
+    assert result == dst1
     _test_tree_integrity(xml)
+
+    tag1.uncomment()
+    tag2.comment_out()
+    tag2.uncomment()
+    _test_tree_integrity(xml)
+
+    xml.write()
+    result = file_name.read_text()
+    assert result == dst2
 
 
 def test_comment6():
@@ -886,75 +785,6 @@ def test_comment_stress():
     xml.write()
     result = file_name.read_text()
     assert result == no_tags_is_commented
-    _test_tree_integrity(xml)
-
-
-def test_complex_comment_2():
-    src = textwrap.dedent(
-        """\
-        <root>
-        \t<!-- <A/> -->
-        \t<!--
-        \t\t<tag0/>
-        \t\t<tag1>
-        \t\t\t<tag2/>
-        \t\t\t<tag3>
-        \t\t\t\t<tag4>
-        \t\t\t\t\t<tag5/>
-        \t\t\t\t</tag4>
-        \t\t\t</tag3>
-        \t\t</tag1>
-        \t-->
-        </root>
-        """
-    )
-    dst1 = textwrap.dedent(
-        """\
-        <root>
-        \t<!-- <A/> -->
-        \t<!-- <tag0/> -->
-        \t<!--
-        \t\t<tag1>
-        \t\t\t<tag2/>
-        \t\t\t<tag3>
-        \t\t\t\t<tag4>
-        \t\t\t\t\t<tag5/>
-        \t\t\t\t</tag4>
-        \t\t\t</tag3>
-        \t\t</tag1>
-        \t-->
-        </root>
-        """
-    )
-
-    file_name = __create_file(src)
-    xml = SmartXML(file_name)
-
-    tag0 = xml.find("tag0")
-    tag1 = xml.find("tag1")
-    tag3 = xml.find("tag3")
-
-    tag0.comment_out()  # Ok, as it is out of any comment
-
-    with pytest.raises(IllegalOperation) as badXMLFormat:
-        tag3.comment_out()
-    assert str(badXMLFormat.value) == "Cannot comment out an element whose parent is a comment"
-    assert badXMLFormat.type is IllegalOperation
-
-    tag1.uncomment()
-    tag3.comment_out()
-
-    with pytest.raises(IllegalOperation) as badXMLFormat:
-        tag1.comment_out()
-    assert str(badXMLFormat.value) == "Cannot comment out an element whose descended is a comment"
-    assert badXMLFormat.type is IllegalOperation
-
-    tag3.uncomment()
-    tag1.comment_out()
-
-    xml.write()
-    result = file_name.read_text()
-    assert result == dst1
     _test_tree_integrity(xml)
 
 
@@ -2372,15 +2202,12 @@ def test_one_line():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.one
 def test_stam():
     src = textwrap.dedent(
         """\
         <A>
             <!--
                 <B/>
-                <C/>
-                <D/>
             -->
         </A>
         """
@@ -2396,5 +2223,4 @@ def test_stam():
     pass
 
 
-# TODO improve support for comments. must know whether comment is in !-- container
 # TODO - how to find text comment????

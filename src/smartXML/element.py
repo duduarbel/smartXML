@@ -324,7 +324,8 @@ class Element(ElementBase):
         self._is_empty = False  # whether the element is self-closing
 
     def uncomment(self):
-        pass
+        if self.parent.is_comment():
+            raise IllegalOperation("Cannot comment out an element whose parent is a comment")
 
     def comment_out(self):
         """Convert this element into a comment.
@@ -417,6 +418,8 @@ class Comment(Element):
 
     def uncomment(self):
         """Convert this comment back into a normal element."""
+        if self.parent.is_comment():
+            raise IllegalOperation("Cannot uncomment an element whose parent is a comment")
         self.__class__ = Element
         self._is_modified = True
 
