@@ -2388,10 +2388,11 @@ def test_stam():
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
+    _test_tree_integrity(xml)
     pass
 
 
-# TODO - if crash while writing the file - restore the old one!!!!!
+# TODO improve support for comments. must know whether comment is in !-- container
 # TODO - how to find text comment????
 
 # TODO - add multiple modifications
