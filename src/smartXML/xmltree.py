@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import os
 from pathlib import Path
 from enum import Enum
 
@@ -254,7 +256,7 @@ def _read_elements(text: str) -> list[Element]:
             except Exception:
                 # The content of the comment can not be parsed, so handle this as plain text
                 element = TextOnlyComment(data)
-                element._orig_start_index = token.start_index  # TODO really?--->  - 4  # account for <!--
+                element._orig_start_index = token.start_index
                 element._orig_start_line_number = line_number
 
                 _add_ready_token(
@@ -360,11 +362,10 @@ class SmartXML:
         else:
             raise BadXMLFormat("xml contains more than one outer element")
 
-    def write(self, file_name: Path = None, indentation: str = "\t", preserve_format: bool = False) -> str | None:
+    def write(self, file_name: Path = None, indentation: str = "\t") -> str | None:
         """Write the XML tree back to the file.
         :param file_name: Path to the XML file, if None, overwrite the original file
         :param indentation: string used for indentation, default is tab character
-        :param preserve_format: if True, preserve original formatting (whitespaces and line breaks), except for modified parts
         :return: XML string if file_name is None, else None
         :raises:
             ValueError: if file name is not specified
@@ -377,8 +378,15 @@ class SmartXML:
         if not self._file_name:
             raise ValueError("File name is not specified")
 
+        tmp_file = self._file_name.resolve().with_name(self._file_name.name + ".tmp")
+
+        preserve_format = False
+        self._write(tmp_file, indentation, preserve_format)
+        os.replace(tmp_file, self._file_name)
+
+    def _write(self, file_name: Path = None, indentation: str = "\t", preserve_format: bool = False) -> str | None:
         if not preserve_format:
-            with open(self._file_name, "w") as file:
+            with open(file_name, "w") as file:
                 if self._declaration:
                     file.write(f"<?xml {self._declaration}?>\n")
                 file.write(self.to_string(indentation))
@@ -403,7 +411,7 @@ class SmartXML:
             if element._is_modified:
                 if element._orig_start_index == 0:
                     element_above = element._get_element_above()
-                    element._orig_start_index = element._orig_end_index = element_above._orig_end_index
+                    element._orig_start_index = element._orig_end_index = element_above._orig_end_index + 1
                 modifications.append((element, element._orig_start_index, element._orig_end_index))
             else:
                 for son in element._sons:
@@ -415,7 +423,7 @@ class SmartXML:
 
         original_content = self._file_name.read_text()
 
-        with open(self._file_name, "w") as file:
+        with open(file_name, "w") as file:
             if self._declaration:
                 file.write(f"<?xml {self._declaration}?>\n")
             if self._doctype:
@@ -434,7 +442,6 @@ class SmartXML:
                                 or element_below._orig_start_line_number == element._orig_end_line_number
                             ):
                                 text = element._to_string(0, indentation)
-                                xxx = original_content[index:start_index]  # TODO remove
                                 file.write(original_content[index:start_index])
                                 file.write(text[:-1])
                                 index = end_index + 1
@@ -446,17 +453,20 @@ class SmartXML:
                     element._orig_end_line_number != 0
                     and element_above
                     and element_above._orig_end_line_number == element._orig_start_line_number
+                    and text.count("\n") <= 1
                 ):
                     file.write(original_content[index:start_index])
                 else:
-                    xxx = original_content[index:start_index]
                     file.write(original_content[index:start_index].rstrip())
                     file.write("\n")
 
                 # if element._orig_end_line_number == 0:
                 #     file.write(text)
                 # else:
-                file.write(text[:-1])
+                if element_below and "\n" in original_content[end_index + 1 : element_below._orig_start_index]:
+                    file.write(text[:-1])
+                else:
+                    file.write(text)
                 # if not element_below or element_below._orig_start_line_number == element._orig_end_line_number:
                 # file.write(text[:-1])
                 # else:

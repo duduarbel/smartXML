@@ -2548,6 +2548,7 @@ def test_preserve_formatting_5():
     assert result == dst
 
 
+@pytest.mark.one
 def test_preserve_formatting_comment():
     src = textwrap.dedent(
         """\
@@ -2565,10 +2566,26 @@ def test_preserve_formatting_comment():
         """
     )
 
-    dst = textwrap.dedent(
+    dst1 = textwrap.dedent(
         """\
         <root>
-        \t<!-- second comment -->
+        \t<!--A-->
+            <!--
+                <tag1>000</tag1>
+            -->
+            <tag2>000</tag2>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    dst2 = textwrap.dedent(
+        """\
+        <root>
+        \t<!--Option 1: Use double quotes for the literal (recommended)-->
             <!--
                 <tag1>000</tag1>
             -->
@@ -2583,14 +2600,83 @@ def test_preserve_formatting_comment():
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
-
+    tag1 = xml.find("tag1")
     tag2 = xml.find("tag2")
     first_comment = tag2.parent._sons[0]
-    first_comment.text = " second comment "
+    first_comment.text = "A"
 
     xml.write(preserve_format=True)
     result = file_name.read_text()
-    assert result == dst
+    assert result == dst1
+
+    first_comment.text = "Option 1: Use double quotes for the literal (recommended)"
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst2
+
+
+def test_preserve_formatting_change_comment():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <!-- first comment -->
+            <!--
+                <tag1>000</tag1>
+            -->
+            <tag2>000</tag2>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    dst1 = textwrap.dedent(
+        """\
+        <root>
+            <!-- first comment -->
+        \t<!--
+        \t\t<tag1>1234556hljfdghbofdj</tag1>
+        \t-->
+            <tag2>000</tag2>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    dst2 = textwrap.dedent(
+        """\
+        <root>
+        <!--Option 1: Use double quotes for the literal (recommended)-->
+        \t<tag1>1234556hljfdghbofdj</tag1>
+            <tag2>000</tag2>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+    tag1.content = "1234556hljfdghbofdj"
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst1
+
+    tag1.uncomment()
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst2
 
 
 def test_format_text_only():
@@ -2624,7 +2710,6 @@ def test_format_text_only():
     assert result == dst
 
 
-@pytest.mark.one
 def test_format_1():
     src = textwrap.dedent(
         """\
@@ -2634,10 +2719,9 @@ def test_format_1():
     )
     dst = textwrap.dedent(
         """\
-    <students>
-    \t<A>
+    <students><A>
     \t\t<B>
-    \t\t\t<!-- BBBBB -->
+    \t\t\t<!--BBBBB-->
     \t\t</B>
     </A>
     </students>
@@ -2662,10 +2746,85 @@ def test_one_line():
     _test_tree_integrity(xml)
 
 
+def test_preserve_formatting_comment():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <!-- first comment -->
+            <!--
+                <tag1>000</tag1>
+                <tag2>000</tag2>
+                <tag3>000</tag3>
+            -->
+            <tag4>000</tag4>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root>
+            <!-- first comment -->
+            <!--
+                <tag1>000</tag1>
+        \t\t<tag2>000
+        \t\t\t<tag2_1>
+        \t\t\t</tag2_1>
+        \t\t</tag2>
+                <tag3>000</tag3>
+            -->
+            <tag4>000</tag4>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag2 = xml.find("tag2")
+    tag2_1 = Element("tag2_1")
+    tag2_1.add_as_last_son_of(tag2)
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_stam():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <!-- first comment -->
+            <!--
+                <tag1>000</tag1>
+            -->
+            <tag2>000</tag2>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    pass
+
+
 # TODO - if crash while writing the file - restore the old one!!!!!
+# TODO - how to find text comment????
+
 # TODO - add multiple modifications
 # TODO - add comment modificaions
-# TODO - how to find text comment????
 # TODO - add several new tags to unformatted file
 # TODO - reset _orig_start_index when element is moved
 # TODO - add contect to _is_empty tag ???
+# TODO - test format + special indentataion (3 spaces e.g.)
+# TODO change text comment to short/long text

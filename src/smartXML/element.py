@@ -132,8 +132,9 @@ class ElementBase:
         parent._sons.append(self)
         self._parent = parent
         self._is_modified = True
-        parent._is_empty = False
-        parent._is_modified = True
+        if parent._is_empty:
+            parent._is_empty = False
+            parent._is_modified = True
 
     def add_as_son_of(self, parent: "Element"):
         """Add this element as a son of the given parent element."""
@@ -275,6 +276,9 @@ class TextOnlyComment(ElementBase):
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index
         return f"{indent}<!--{self._text}-->\n"
+
+    def __repr__(self):
+        return f"{self.name} text: {self._text}"
 
 
 class CData(ElementBase):
