@@ -8,7 +8,7 @@ cmake-build-*/
 *.out
 *.tmp
 *.copy
-test.tmp.xml
+test.xml
 __pycache__/
 venv/
 smartXML.egg-info/

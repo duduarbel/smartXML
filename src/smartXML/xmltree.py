@@ -365,10 +365,11 @@ class SmartXML:
         else:
             raise BadXMLFormat("xml contains more than one outer element")
 
-    def write(self, file_name: Path = None, indentation: str = "\t") -> str | None:
+    def write(self, file_name: Path = None, indentation: str = "\t", preserve_format: bool = False) -> str | None:
         """Write the XML tree back to the file.
         :param file_name: Path to the XML file, if None, overwrite the original file
         :param indentation: string used for indentation, default is tab character
+        :param preserve_format: whether to preserve the original formatting as much as possible, default is False
         :return: XML string if file_name is None, else None
         :raises:
             ValueError: if file name is not specified
@@ -376,29 +377,36 @@ class SmartXML:
             FileNotFoundError: if file_name does not exist
         """
 
-        if file_name:
-            self._file_name = file_name
-        if not self._file_name:
+        if not file_name:
+            file_name = self._file_name
+        if not file_name:
             raise ValueError("File name is not specified")
 
-        tmp_file = self._file_name.resolve().with_name(self._file_name.name + ".tmp")
+        tmp_file = file_name.resolve().with_name(file_name.name + ".tmp")
 
-        preserve_format = False
-        self._write(tmp_file, indentation, preserve_format)
-        os.replace(tmp_file, self._file_name)
+        result = self.to_string(indentation=indentation, preserve_format=preserve_format)
+        with open(tmp_file, "w", encoding="utf-8") as file:
+            file.write(result)
+        os.replace(tmp_file, file_name)
 
-    def _write(self, file_name: Path = None, indentation: str = "\t", preserve_format: bool = False) -> str | None:
+    def to_string(self, indentation: str = "\t", preserve_format: bool = False) -> str:
+        """
+        Convert the XML tree to a string.
+        :param indentation: string used for indentation, default is tab character
+        :return: XML string
+        """
+        result = ""
+        if self._declaration:
+            result = f"<?xml {self._declaration}?>\n"
+        if self._doctype:
+            result = result + self._doctype.to_string(indentation)
+
         if not preserve_format:
-            with open(file_name, "w") as file:
-                if self._declaration:
-                    file.write(f"<?xml {self._declaration}?>\n")
-                file.write(self.to_string(indentation))
-            return
+            result = result + self._tree.to_string(indentation)
+            return result
 
-        # preserve original formatting
         if self.tree._is_modified:
-            self.write(file_name, indentation)
-            return
+            return self._tree.to_string(0, indentation)
 
         modifications = []
 
@@ -422,71 +430,53 @@ class SmartXML:
 
         collect_modification(self._tree)
         if not modifications:
-            return
+            return self._tree.to_string(0, indentation)
 
         original_content = self._file_name.read_text()
 
-        with open(file_name, "w") as file:
-            if self._declaration:
-                file.write(f"<?xml {self._declaration}?>\n")
-            if self._doctype:
-                self._doctype.to_string(indentation)
+        index = 0
+        for element, start_index, end_index in modifications:
+            element_above = element._get_element_above()
+            element_below = element._get_element_below()
 
-            index = 0
-            for element, start_index, end_index in modifications:
-                element_above = element._get_element_above()
-                element_below = element._get_element_below()
+            if element._orig_end_line_number != 0:
+                if element._orig_start_line_number == element._orig_end_line_number and len(element._sons) == 0:
+                    if element_above and element_above._orig_end_line_number == element._orig_start_line_number:
+                        if not element_below or element_below._orig_start_line_number == element._orig_end_line_number:
+                            text = element._to_string(0, indentation)
+                            result = result + original_content[index:start_index]
+                            result = result + text[:-1]
+                            index = end_index + 1
+                            continue
 
-                if element._orig_end_line_number != 0:
-                    if element._orig_start_line_number == element._orig_end_line_number and len(element._sons) == 0:
-                        if element_above and element_above._orig_end_line_number == element._orig_start_line_number:
-                            if (
-                                not element_below
-                                or element_below._orig_start_line_number == element._orig_end_line_number
-                            ):
-                                text = element._to_string(0, indentation)
-                                file.write(original_content[index:start_index])
-                                file.write(text[:-1])
-                                index = end_index + 1
-                                continue
+            text = element._to_string(count_parents(element), indentation)
 
-                text = element._to_string(count_parents(element), indentation)
+            if (
+                element._orig_end_line_number != 0
+                and element_above
+                and element_above._orig_end_line_number == element._orig_start_line_number
+                and text.count("\n") <= 1
+            ):
+                result = result + original_content[index:start_index]
+            else:
+                result = result + original_content[index:start_index].rstrip() + "\n"
 
-                if (
-                    element._orig_end_line_number != 0
-                    and element_above
-                    and element_above._orig_end_line_number == element._orig_start_line_number
-                    and text.count("\n") <= 1
-                ):
-                    file.write(original_content[index:start_index])
-                else:
-                    file.write(original_content[index:start_index].rstrip())
-                    file.write("\n")
+            # if element._orig_end_line_number == 0:
+            #     file.write(text)
+            # else:
+            if element_below and "\n" in original_content[end_index + 1 : element_below._orig_start_index]:
+                result = result + text[:-1]
+            else:
+                result = result + text
+            # if not element_below or element_below._orig_start_line_number == element._orig_end_line_number:
+            # file.write(text[:-1])
+            # else:
+            #   file.write(text)
 
-                # if element._orig_end_line_number == 0:
-                #     file.write(text)
-                # else:
-                if element_below and "\n" in original_content[end_index + 1 : element_below._orig_start_index]:
-                    file.write(text[:-1])
-                else:
-                    file.write(text)
-                # if not element_below or element_below._orig_start_line_number == element._orig_end_line_number:
-                # file.write(text[:-1])
-                # else:
-                #   file.write(text)
+            index = end_index + 1
 
-                index = end_index + 1
-
-            file.write(original_content[index:])
-
-    def to_string(self, indentation: str = "\t") -> str:
-        """
-        Convert the XML tree to a string.
-        :param indentation: string used for indentation, default is tab character
-        :return: XML string
-        """
-        result = self._doctype.to_string(indentation) if self._doctype else ""
-        return result + self._tree.to_string(indentation)
+        result = result + original_content[index:]
+        return result
 
     def find(
         self, name: str = "", only_one: bool = True, with_content: str = None, case_sensitive: bool = True

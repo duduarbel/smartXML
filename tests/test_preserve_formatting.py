@@ -2,7 +2,10 @@ import textwrap
 
 from smartXML.xmltree import SmartXML
 from smartXML.element import Element, TextOnlyComment
+
 import pytest
+
+from tests.test import __create_file
 
 
 def test_preserve_formatting_1():
@@ -194,7 +197,6 @@ def test_preserve_formatting_5():
     assert result == dst
 
 
-@pytest.mark.one
 def test_preserve_formatting_comment():
     src = textwrap.dedent(
         """\

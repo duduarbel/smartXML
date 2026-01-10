@@ -9,7 +9,7 @@ import pytest
 import random
 
 
-test_file_name = "./files/test.tmp.xml"
+test_file_name = "./files/test.xml"
 
 
 def _test_tree_integrity(xml_tree: SmartXML):
