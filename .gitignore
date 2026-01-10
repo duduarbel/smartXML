@@ -7,6 +7,7 @@ cmake-build-*/
 *.o
 *.out
 *.tmp
+*.copy
 test.tmp.xml
 __pycache__/
 venv/

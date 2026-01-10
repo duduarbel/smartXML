@@ -1,3 +1,4 @@
+import shutil
 import textwrap
 from readme_example import test_readme_example
 
@@ -1381,9 +1382,12 @@ def test_bad_format_12():
 TEST_FOLDER = Path(__file__).resolve().parent
 
 
+@pytest.mark.one
 def test_read_me_example():
     # README example test
-    input_file = TEST_FOLDER / Path("files/students.xml")
+    source_file = TEST_FOLDER / Path("files/students.xml")
+    input_file = TEST_FOLDER / Path("files/students.xml.copy")
+    shutil.copyfile(source_file, input_file)
 
     xml = SmartXML(input_file)
     firstName = xml.find("students|student|firstName", with_content="Bob")
