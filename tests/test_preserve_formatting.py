@@ -434,3 +434,14 @@ def test_preserve_formatting_comment():
     xml.write(preserve_format=True)
     result = file_name.read_text()
     assert result == dst
+
+
+# TODO - add multiple modifications
+# TODO - add comment modificaions
+# TODO - add several new tags to unformatted file
+# TODO - reset _orig_start_index when element is moved
+# TODO - add contect to _is_empty tag ???
+# TODO - test format + special indentataion (3 spaces e.g.)
+# TODO change text comment to short/long text
+# TODO - support removing elements (keep them dead???)
+# TODO - move an element to a new location (check old removed, new added in right place)

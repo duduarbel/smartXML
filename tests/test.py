@@ -146,12 +146,12 @@ def test_read_comment3():
         \t\t<xxx/>
         \t\t<yyy></yyy>
         \t\t<!-- <name0>Dudu</name0> -->
-        \t\t<!-- <x>12</x> -->
-        \t\t<!-- <y>13</y> -->
-        \t\t<!-- <z into="33"/> -->
-        \t\t<!-- <x1>12</x1> -->
-        \t\t<!-- <y1>13</y1> -->
-        \t\t<!-- <z1 into="33"/> -->
+        \t\t<!-- <x>12</x><y>13</y><z into="33"/> -->
+        \t\t<!--
+        \t\t\t<x1>12</x1>
+        \t\t\t<y1>13</y1>
+        \t\t\t<z1 into="33"/>
+        \t\t-->
         \t\t<name3>Dudu</name3>
         \t</user>
         </root>
@@ -172,8 +172,8 @@ def test_read_comment4():
     src = textwrap.dedent(
         """\
         <root>
-            <!--TAG>xxx
-            </TAG  -->
+        \t<!--TAG>xxx
+        \t</TAG -->
         </root>
         """
     )
@@ -181,7 +181,8 @@ def test_read_comment4():
     dst = textwrap.dedent(
         """\
         <root>
-        \t<!-- <TAG>xxx</TAG> -->
+        \t<!--TAG>xxx
+        \t</TAG -->
         </root>
         """
     )
@@ -548,6 +549,7 @@ def test_comment_1():
     _test_tree_integrity(xml)
 
 
+@pytest.mark.one
 def test_comment_2():
     src = textwrap.dedent(
         """\
@@ -563,9 +565,11 @@ def test_comment_2():
     dst1 = textwrap.dedent(
         """\
         <root>
-        \t<!-- <tag1>tt1</tag1> -->
-        \t<!-- <tag2>tt2</tag2> -->
-        \t<!-- <tag3>tt3</tag3> -->
+        \t<!--
+        \t\t<tag1>tt1</tag1>
+        \t\t<tag2>tt2</tag2>
+        \t\t<tag3>tt3</tag3>
+        \t-->
         </root>
         """
     )
@@ -1382,7 +1386,6 @@ def test_bad_format_12():
 TEST_FOLDER = Path(__file__).resolve().parent
 
 
-@pytest.mark.one
 def test_read_me_example():
     # README example test
     source_file = TEST_FOLDER / Path("files/students.xml")
@@ -2369,36 +2372,29 @@ def test_one_line():
     _test_tree_integrity(xml)
 
 
+@pytest.mark.one
 def test_stam():
     src = textwrap.dedent(
         """\
-        <root>
-            <!-- first comment -->
+        <A>
             <!--
-                <tag1>000</tag1>
+                <B/>
+                <C/>
+                <D/>
             -->
-            <tag2>000</tag2>
-            <aaaaa>
-                <bbbbb/>
-                <ccccc></ccccc> 
-            </aaaaa>
-        </root>
+        </A>
         """
     )
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
+    # c = xml.find("C")
+    # c.uncomment()
+    xml.write()
+    result = file_name.read_text()
     _test_tree_integrity(xml)
     pass
 
 
 # TODO improve support for comments. must know whether comment is in !-- container
 # TODO - how to find text comment????
-
-# TODO - add multiple modifications
-# TODO - add comment modificaions
-# TODO - add several new tags to unformatted file
-# TODO - reset _orig_start_index when element is moved
-# TODO - add contect to _is_empty tag ???
-# TODO - test format + special indentataion (3 spaces e.g.)
-# TODO change text comment to short/long text
