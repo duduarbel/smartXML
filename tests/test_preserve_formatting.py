@@ -248,7 +248,6 @@ def test_preserve_formatting_comment():
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
-    tag1 = xml.find("tag1")
     tag2 = xml.find("tag2")
     first_comment = tag2.parent._sons[0]
     first_comment.text = "A"
@@ -388,51 +387,54 @@ def test_format_1():
     assert result == dst
 
 
-def test_preserve_formatting_comment():
+def test_format_all_kinds_of_oneline_changes():
+    file_name = __create_file("<root><tag1>000</tag1><tag2>000</tag2></root>")
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+    tag1.content = "the weals of the bus go round and round"
+    assert (
+        xml.to_string(preserve_format=True)
+        == "<root><tag1>the weals of the bus go round and round</tag1><tag2>000</tag2></root>"
+    )
+    tag1.content = "A"
+    assert xml.to_string(preserve_format=True) == "<root><tag1>A</tag1><tag2>000</tag2></root>"
+    tag1.comment_out()
+    assert xml.to_string(preserve_format=True) == "<root><!-- <tag1>A</tag1> --><tag2>000</tag2></root>"
+    tag1.remove()
+    assert xml.to_string(preserve_format=True) == "<root><tag2>000</tag2></root>"
+
+
+def test_format_sons_changes():
     src = textwrap.dedent(
         """\
-        <root>
-            <!-- first comment -->
-            <!--
-                <tag1>000</tag1>
-                <tag2>000</tag2>
-                <tag3>000</tag3>
-            -->
-            <tag4>000</tag4>
-            <aaaaa>
-                <bbbbb/>
-                <ccccc></ccccc> 
-            </aaaaa>
-        </root>
+        <students><X>
+                <A ></A>
+                <B/  >
+                <C/   >
+                <D/    >
+        </X></students>
         """
     )
-
     dst = textwrap.dedent(
         """\
-        <root>
-            <!-- first comment -->
-            <!--
-                <tag1>000</tag1>
-        \t\t<tag2>000
-        \t\t\t<tag2_1>
-        \t\t\t</tag2_1>
-        \t\t</tag2>
-                <tag3>000</tag3>
-            -->
-            <tag4>000</tag4>
-            <aaaaa>
-                <bbbbb/>
-                <ccccc></ccccc> 
-            </aaaaa>
-        </root>
+        <students><X>
+        \t\t<A>1111</A>
+        \t\t<new_B/>
+                <C/   >
+        \t\t<!-- <D/> -->
+        </X></students>
         """
     )
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
-    tag2 = xml.find("tag2")
-    tag2_1 = Element("tag2_1")
-    tag2_1.add_as_last_son_of(tag2)
+    a = xml.find("A")
+    b = xml.find("B")
+    d = xml.find("D")
+    a.content = "1111"
+    b.name = "new_B"
+    d.comment_out()
+
     xml.write(preserve_format=True)
     result = file_name.read_text()
     assert result == dst
@@ -447,3 +449,4 @@ def test_preserve_formatting_comment():
 # TODO change text comment to short/long text
 # TODO - support removing elements (keep them dead???)
 # TODO - move an element to a new location (check old removed, new added in right place)
+# TODO - many changes/writes

@@ -158,8 +158,7 @@ class ElementBase:
 
     def remove(self):
         """Remove this element from its parent's sons."""
-        self._parent._sons.remove(self)
-        self._parent = None
+        self.__class__ = DeadElement
         self._is_modified = True
 
     def _get_index_in_parent(self):
@@ -250,6 +249,16 @@ class ElementBase:
             results.extend(son._find_all(names, with_content, case_sensitive))
 
         return results
+
+
+class DeadElement(ElementBase):
+    """An element that has been removed from the XML tree."""
+
+    def __init__(self, name: str):
+        super().__init__(name)
+
+    def _to_string(self, index: int, indentation: str) -> str:
+        return ""
 
 
 class TextOnlyComment(ElementBase):

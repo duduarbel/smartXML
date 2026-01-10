@@ -428,11 +428,11 @@ class SmartXML:
                 for son in element._sons:
                     collect_modification(son)
 
+        original_content = self._file_name.read_text()
+
         collect_modification(self._tree)
         if not modifications:
-            return self._tree.to_string(0, indentation)
-
-        original_content = self._file_name.read_text()
+            return original_content
 
         index = 0
         for element, start_index, end_index in modifications:
@@ -461,13 +461,20 @@ class SmartXML:
             else:
                 result = result + original_content[index:start_index].rstrip() + "\n"
 
-            # if element._orig_end_line_number == 0:
-            #     file.write(text)
-            # else:
-            if element_below and "\n" in original_content[end_index + 1 : element_below._orig_start_index]:
-                result = result + text[:-1]
+            add_new_line = True
+            if element_below.parent == element.parent:
+                # brother:
+                if "\n" in original_content[end_index + 1 : element_below._orig_start_index]:
+                    add_new_line = False
             else:
+                # parent
+                if "\n" in original_content[end_index + 1 : element_below._orig_end_index]:
+                    add_new_line = False
+            if add_new_line:
                 result = result + text
+            else:
+                result = result + text[:-1]
+
             # if not element_below or element_below._orig_start_line_number == element._orig_end_line_number:
             # file.write(text[:-1])
             # else:
