@@ -2223,4 +2223,54 @@ def test_stam():
     pass
 
 
+def test_change_content_of_empty_tag():
+    src = textwrap.dedent(
+        """\
+        <user><email/></user>
+        """
+    )
+    dst = textwrap.dedent(
+        """\
+        <user>
+        \t<email>AAA@bbb.com</email>
+        </user>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    email = xml.find("email")
+    email.content = "AAA@bbb.com"
+    xml.write()
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_add_tag_to_empty_tag():
+    src = textwrap.dedent(
+        """\
+        <user><email/></user>
+        """
+    )
+    dst = textwrap.dedent(
+        """\
+        <user>
+        \t<email>
+        \t\t<driver></driver>
+        \t</email>
+        </user>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    email = xml.find("email")
+    driver = Element("driver")
+    driver.add_as_last_son_of(email)
+
+    xml.write()
+    result = file_name.read_text()
+    assert result == dst
+
+
 # TODO - how to find text comment????

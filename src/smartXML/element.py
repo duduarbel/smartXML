@@ -119,13 +119,24 @@ class ElementBase:
 
     def add_after(self, sibling: "Element"):
         """Add this element after the given sibling element."""
-        parent = sibling._parent
-        if parent is None:
+        new_parent = sibling._parent
+        old_parent = self._parent
+        if new_parent is None:
             raise ValueError(f"Element {sibling.name} has no parent")
-        index = parent._sons.index(sibling)
-        parent._sons.insert(index + 1, self)
-        self._parent = parent
+        index = new_parent._sons.index(sibling)
+        new_parent._sons.insert(index + 1, self)
+        self._parent = new_parent
         self._is_modified = True
+
+        if self._orig_start_index != 0:
+            place_holder = DeadElement(old_parent)
+            place_holder._orig_start_index = self._orig_start_index
+            place_holder._orig_end_index = self._orig_end_index
+            old_parent._sons[index] = place_holder
+            self._orig_start_index = 0
+            self._orig_end_index = 0
+        else:
+            del old_parent._sons[index]
 
     def add_as_last_son_of(self, parent: "Element"):
         """Add this element as a son of the given parent element."""
@@ -176,6 +187,13 @@ class ElementBase:
             return self._parent._sons[index - 1]
         else:
             return self.parent
+
+    def _get_lower_sibling(self):
+        index = self._get_index_in_parent()
+        if index < len(self._parent._sons) - 1:
+            return self._parent._sons[index + 1]
+        else:
+            return None
 
     def _get_element_below(self):
         index = self._get_index_in_parent()
@@ -254,8 +272,10 @@ class ElementBase:
 class DeadElement(ElementBase):
     """An element that has been removed from the XML tree."""
 
-    def __init__(self, name: str):
-        super().__init__(name)
+    def __init__(self, parent: ElementBase):
+        super().__init__("")
+        self._is_modified = True
+        self._parent = parent
 
     def _to_string(self, index: int, indentation: str) -> str:
         return ""
@@ -332,6 +352,11 @@ class Element(ElementBase):
         self.attributes = {}
         self._is_empty = False  # whether the element is self-closing
 
+    @ElementBase.content.setter
+    def content(self, new_content: str):
+        self._is_empty = False
+        super(Element, type(self)).content.__set__(self, new_content)
+
     def uncomment(self):
         if self.parent.is_comment():
             raise IllegalOperation("Cannot comment out an element whose parent is a comment")
@@ -362,7 +387,7 @@ class Element(ElementBase):
         self.__class__ = Comment
         self._is_modified = True
 
-    def _to_string(self, index: int, indentation: str, with_end_line=True) -> str:
+    def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index
 
         attributes_str = " ".join(
@@ -393,8 +418,7 @@ class Element(ElementBase):
                 else:
                     result = f"{indent}{opening_tag}{self.content}{closing_tag}"
 
-        if with_end_line:
-            result += "\n"
+        result += "\n"
         return result
 
     def find(
@@ -435,6 +459,6 @@ class Comment(Element):
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index
         if len(self._sons) == 0:
-            return f"{indent}<!-- {super()._to_string(0, indentation, False)} -->\n"
+            return f"{indent}<!-- {super()._to_string(0, indentation)[0:-1]} -->\n"
         else:
-            return f"{indent}<!--\n{super()._to_string(index +1, indentation, False)}\n{indent}-->\n"
+            return f"{indent}<!--\n{super()._to_string(index + 1, indentation)}{indent}-->\n"
