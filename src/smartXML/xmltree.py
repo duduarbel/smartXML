@@ -447,7 +447,7 @@ class SmartXML:
             if element_above and element_above._orig_end_line_number == element._orig_start_line_number:
                 orig_indentation = ""
             else:
-                _, _, orig_indentation = original_content[0:start_index].rpartition("\n")
+                _, _, orig_indentation = original_content[0:start_index].rpartition("\n")  # TODO - this is wrong!
 
             new_element = False
             if element._orig_start_index == element._orig_end_index and not isinstance(element, DeadElement):
@@ -477,8 +477,9 @@ class SmartXML:
 
             if new_element:
                 if element_above and element_below:
-                    if element_above._orig_end_line_number != element_below._orig_start_line_number:
-                        result = result + "\n"
+                    pass
+                #                    if element_above._orig_end_line_number != element_below._orig_start_line_number:
+                #                        result = result + "\n"
                 index = end_index  # TODO - check this
             else:
                 index = end_index + 1

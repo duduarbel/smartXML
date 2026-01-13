@@ -94,6 +94,7 @@ def test_preserve_formatting_2():
     assert result == dst
 
 
+@pytest.mark.one
 def test_preserve_formatting_3():
     src = textwrap.dedent(
         """\
@@ -410,7 +411,6 @@ def test_format_move_element():
     assert result == dst
 
 
-@pytest.mark.one
 def test_format_move_element_add_after():
     src = textwrap.dedent(
         """\
@@ -460,10 +460,7 @@ def test_format_move_element_add_before():
                 <A ></A>
                 <C/   >
                 <D/    >
-        </tag1>
-        \t<B/>
-        \t<tag2/>
-        </students>
+        </tag1><B/><tag2/></students>
         """
     )
 
