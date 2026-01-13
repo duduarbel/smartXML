@@ -94,6 +94,7 @@ def test_preserve_formatting_2():
     assert result == dst
 
 
+@pytest.mark.one
 def test_preserve_formatting_3():
     src = textwrap.dedent(
         """\
@@ -197,7 +198,6 @@ def test_preserve_formatting_5():
     assert result == dst
 
 
-@pytest.mark.one
 def test_preserve_formatting_6():
     src = textwrap.dedent(
         """\
@@ -623,3 +623,5 @@ def test_preserve_formatting_change_comment():
 # TODO - change a parent and add new son
 # TODO - add several new sons
 # TODO - add new to an empty parent
+# TODO - add new and delete it
+# TODO - move element (add_after) to SAME parent

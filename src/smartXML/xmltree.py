@@ -458,6 +458,10 @@ class SmartXML:
                     if element_above._orig_end_index != element_below._orig_start_index:
                         result = result + original_content[start_index : element_below._orig_start_index]
 
+            if isinstance(element, DeadElement):
+                index = element_below._orig_start_index
+                continue
+
             text_lines = text.splitlines()
             if len(text_lines) == 1:
                 result = result + text_lines[0]
