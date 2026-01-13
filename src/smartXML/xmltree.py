@@ -417,7 +417,7 @@ class SmartXML:
         def find_start_index_of_new_element(element: ElementBase) -> int:
             element_above = element._get_element_above()
             if element_above == element._parent:
-                # TODO - need to find index in parent
+                # TODO - need to find index in parent?
                 return element_above._index_of_newly_added_elements
 
             # TODO - what id element_above is also new?
@@ -440,18 +440,21 @@ class SmartXML:
 
         index = 0
         for element, start_index, end_index in modifications:
-            _, _, orig_indentation = original_content[0:start_index].rpartition("\n")
-
-            new_element = True if element._orig_start_index == element._orig_end_index else False
-
-            # if should_add_indentation(element):
-            #     text = element._to_string(count_parents(element), indentation)
-            # else:
-            text = element._to_string(0, indentation)
-            result = result + original_content[index:start_index]
-
             element_above = element._get_element_above()
             element_below = element._get_lower_sibling()
+
+            # TODO - move this below!
+            if element_above and element_above._orig_end_line_number == element._orig_start_line_number:
+                orig_indentation = ""
+            else:
+                _, _, orig_indentation = original_content[0:start_index].rpartition("\n")
+
+            new_element = False
+            if element._orig_start_index == element._orig_end_index and not isinstance(element, DeadElement):
+                new_element = True
+
+            text = element._to_string(0, indentation)
+            result = result + original_content[index:start_index]
 
             if new_element:
                 if element_above and element_below:
@@ -459,6 +462,7 @@ class SmartXML:
                         result = result + original_content[start_index : element_below._orig_start_index]
 
             if isinstance(element, DeadElement):
+                # result = result + original_content[element_above._orig_end_index + 1 : element._orig_start_index]
                 index = element_below._orig_start_index
                 continue
 
@@ -475,44 +479,9 @@ class SmartXML:
                 if element_above and element_below:
                     if element_above._orig_end_line_number != element_below._orig_start_line_number:
                         result = result + "\n"
-
-            # if element._orig_end_line_number != 0:
-            #     if element._orig_start_line_number == element._orig_end_line_number and len(element._sons) == 0:
-            #         if element_above and element_above._orig_end_line_number == element._orig_start_line_number:
-            #             if not element_below or element_below._orig_start_line_number == element._orig_end_line_number:
-            #                 text = element._to_string(0, indentation)
-            #                 result = result + original_content[index:start_index]
-            #                 result = result + text[:-1]
-            #                 index = end_index + 1
-            #                 continue
-            #
-            # text = element._to_string(count_parents(element), indentation)
-            #
-            # if isinstance(element, DeadElement) or (
-            #     element._orig_end_line_number != 0
-            #     and element_above
-            #     and element_above._orig_end_line_number == element._orig_start_line_number
-            #     and text.count("\n") <= 1
-            # ):
-            #     result = result + original_content[index:start_index]
-            # else:
-            #     result = result + original_content[index:start_index].rstrip() + "\n"
-            #
-            # add_new_line = True
-            # if element_below.parent == element.parent:
-            #     # brother:
-            #     if "\n" in original_content[end_index + 1 : element_below._orig_start_index]:
-            #         add_new_line = False
-            # else:
-            #     # parent
-            #     if "\n" in original_content[end_index + 1 : element_below._orig_end_index]:
-            #         add_new_line = False
-            # if add_new_line:
-            #     result = result + text
-            # else:
-            #     result = result + text[:-1]
-
-            index = end_index + 1
+                index = end_index  # TODO - check this
+            else:
+                index = end_index + 1
 
         result = result + original_content[index:]
         return result
