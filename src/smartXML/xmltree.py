@@ -37,9 +37,11 @@ class Token:
 def _divide_to_tokens(file_content):
     tokens = []
 
-    last_char = ""
-    last_index = 0
-    line_number = 1
+    last_char: str = ""
+    last_index: int = 0
+    line_number: int = 1
+    indentation: str = ""
+    collect_indentation: bool = True
 
     index = 0
     length = len(file_content)
@@ -80,6 +82,7 @@ def _divide_to_tokens(file_content):
             last_index = index
         elif char == "\n":
             line_number += 1
+            indentation = ""
         elif char == "!":
             if file_content[index + 1] == "-":
                 # !--
@@ -116,6 +119,8 @@ def _divide_to_tokens(file_content):
                 last_index = start + 1
                 index = start + 1
                 continue
+        elif collect_indentation:
+            indentation += char
 
         index += 1
 
@@ -443,41 +448,40 @@ class SmartXML:
             element_above = element._get_element_above()
             element_below = element._get_lower_sibling()
 
-            # TODO - move this below!
-            if element_above and element_above._orig_end_line_number == element._orig_start_line_number:
-                orig_indentation = ""
-            else:
-                _, _, orig_indentation = original_content[0:start_index].rpartition("\n")  # TODO - this is wrong!
-
-            new_element = False
-            if element._orig_start_index == element._orig_end_index and not isinstance(element, DeadElement):
-                new_element = True
+            new_element = True if element._orig_start_index == element._orig_end_index else False
 
             text = element._to_string(0, indentation)
             result = result + original_content[index:start_index]
+
+            if isinstance(element, DeadElement):
+                if new_element:
+                    index = element._orig_start_index
+                else:
+                    index = element_below._orig_start_index
+                continue
 
             if new_element:
                 if element_above and element_below:
                     if element_above._orig_end_index != element_below._orig_start_index:
                         result = result + original_content[start_index : element_below._orig_start_index]
 
-            if isinstance(element, DeadElement):
-                # result = result + original_content[element_above._orig_end_index + 1 : element._orig_start_index]
-                index = element_below._orig_start_index
-                continue
-
             text_lines = text.splitlines()
             if len(text_lines) == 1:
                 result = result + text_lines[0]
             else:
                 result = result + text_lines[0] + "\n"
+                if element_above and element_above._orig_end_line_number == element._orig_start_line_number:
+                    orig_indentation = ""
+                else:
+                    _, _, orig_indentation = original_content[0:start_index].rpartition("\n")  # TODO - this is wrong!
+
                 for line in text_lines[1:-1]:
                     result = result + orig_indentation + line + "\n"
                 result = result + orig_indentation + text_lines[-1]
 
             if new_element:
                 if element_above and element_below:
-                    pass
+                    pass  # TODO remove this if
                 #                    if element_above._orig_end_line_number != element_below._orig_start_line_number:
                 #                        result = result + "\n"
                 index = end_index  # TODO - check this

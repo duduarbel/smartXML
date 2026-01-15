@@ -129,10 +129,7 @@ class ElementBase:
             new_parent._is_empty = False
             new_parent._is_modified = True
 
-        if new_parent == old_parent:
-            old_parent._sons.pop(self)
-        else:
-            self._remove_from_parent()
+        self._remove_from_parent()
 
         self._parent = new_parent
         new_parent._sons.insert(index, self)

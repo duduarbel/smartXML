@@ -94,7 +94,6 @@ def test_preserve_formatting_2():
     assert result == dst
 
 
-@pytest.mark.one
 def test_preserve_formatting_3():
     src = textwrap.dedent(
         """\
@@ -604,15 +603,202 @@ def test_preserve_formatting_change_comment():
     assert result == dst2
 
 
+def test_preserve_formatting_add_and_delete():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <!-- first comment -->
+            <!--
+                <tag1>000</tag1>
+            -->
+            <tag2>000</tag2>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    # add new and delete it
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+    new_tag = Element("new_tag")
+    new_tag.add_after(tag1)
+    new_tag.remove()
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == src
+
+
+def test_formatting_add_as_last_son_of_complex_tag():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <tag1>000
+                  <tag2>000</tag2>  
+                  <tag3/>
+            </tag1>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root>
+            <tag1>000
+                  <tag3/>
+                  <tag2>000</tag2> 
+            </tag1>
+            <father>
+                <son1/> 
+                <son2></son2>
+            </father> 
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+    father = Element("father")
+    son1 = Element("son1")
+    son1._is_empty = True
+    son2 = Element("son2")
+    father.add_as_last_son_of(tag1)
+    son1.add_as_last_son_of(father)
+    son2.add_after(son1)
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst
+
+    # the complex and the simple below does not work. need to calc where to add them
+
+
+def test_formatting_add_as_last_son_of_1():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <tag1>000
+                  <tag2>000</tag2>  
+                  <tag3/>
+            </tag1>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root>
+            <tag1>000
+                  <tag3/>
+                  <tag2>000</tag2> 
+                  <nX5/> 
+            </tag1>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+    nX5 = Element("nX5")
+    nX5._is_empty = True
+    nX5.add_as_last_son_of(tag1)
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_formatting_move_element_to_same_parent():
+    src = textwrap.dedent(
+        """\
+        <root>
+            <tag1>000
+                  <tag2>000</tag2>  
+                  <tag3/>
+            </tag1>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root>
+            <tag1>000
+                  <tag3/>
+                  <tag2>000</tag2>  
+            </tag1>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc> 
+            </aaaaa>
+        </root>
+        """
+    )
+
+    # move element to the same parent!!!
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+    tag2 = xml.find("tag2")
+    tag2.add_as_last_son_of(tag1)
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst
+
+
+@pytest.mark.one
+def test_stam():
+    src = textwrap.dedent(
+        """\
+        <A>
+         <B>000
+          <C>000</C>   
+            </B>
+        </A>
+        """
+    )
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    xml.write(preserve_format=True)
+
+
 # TODO - add several new tags to unformatted file
 # TODO - reset _orig_start_index when element is moved
 # TODO - test format + special indentataion (3 spaces e.g.)
 # TODO - move an element to a new location (check old removed, new added in right place)
 # TODO - many changes/writes
-# TODO -move element to the same parent!!!
 # TODO - change a parent and its son
 # TODO - change a parent and add new son
 # TODO - add several new sons
 # TODO - add new to an empty parent
-# TODO - add new and delete it
 # TODO - move element (add_after) to SAME parent
+# TODO - _is_empty (and all the rest ) must be properties, as we need to know whether they were changed
