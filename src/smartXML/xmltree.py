@@ -23,15 +23,25 @@ class TokenType(Enum):
 
 
 class Token:
-    def __init__(self, token_type: TokenType, data: str, line_number: int, start_index: int, end_index: int):
+    def __init__(
+        self,
+        token_type: TokenType,
+        data: str,
+        line_number: int,
+        start_index: int,
+        end_index: int,
+        indentation: str = "",
+    ):
         self.token_type = token_type
         self.data = data
         self.line_number = line_number
         self.start_index = start_index
         self.end_index = end_index
+        self.indentation = indentation
 
     def __repr__(self):
-        return f"{self.token_type.name}: {self.data} indexes: {self.start_index}-{self.end_index}"
+        indentation = self.indentation.replace(" ", "-")
+        return f"{self.token_type.name}: {self.data} indexes: {self.start_index}-{self.end_index} indentation:'{indentation}'"
 
 
 def _divide_to_tokens(file_content):
@@ -41,7 +51,6 @@ def _divide_to_tokens(file_content):
     last_index: int = 0
     line_number: int = 1
     indentation: str = ""
-    collect_indentation: bool = True
 
     index = 0
     length = len(file_content)
@@ -57,6 +66,7 @@ def _divide_to_tokens(file_content):
                         line_number,
                         last_index,
                         index,
+                        indentation,
                     )
                 )
             else:
@@ -74,8 +84,11 @@ def _divide_to_tokens(file_content):
         elif char == "<":
             if last_char == "<":
                 raise BadXMLFormat(f"Malformed element in line {line_number}")
-            if last_char == ">":
-                text = file_content[last_index + 1 : index].strip()
+            elif last_char == ">":
+                text = file_content[last_index + 1 : index]
+                last_end_line_index = text.rfind("\n")
+                indentation = text[last_end_line_index + 1 :] if last_end_line_index != -1 else ""
+                text = text.strip()
                 if text:
                     tokens.append(Token(TokenType.content, text, line_number, last_index, index))
             last_char = char
@@ -119,8 +132,6 @@ def _divide_to_tokens(file_content):
                 last_index = start + 1
                 index = start + 1
                 continue
-        elif collect_indentation:
-            indentation += char
 
         index += 1
 

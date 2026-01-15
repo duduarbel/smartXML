@@ -780,15 +780,26 @@ def test_stam():
         """\
         <A>
          <B>000
-          <C>000</C>   
-            </B>
+         <C>000</C>   
+             <D>000</D>   
+           </B>
         </A>
         """
     )
+    src2 = textwrap.dedent(
+        """\
+        <A><B>000<C>000</C><D>000</D>   
+           </B>
+        </A>
+        """
+    )
+
     file_name = __create_file(src)
     xml = SmartXML(file_name)
 
-    xml.write(preserve_format=True)
+    xml.write()
+    result = file_name.read_text()
+    pass
 
 
 # TODO - add several new tags to unformatted file
