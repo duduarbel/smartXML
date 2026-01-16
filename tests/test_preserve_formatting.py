@@ -5,7 +5,7 @@ from smartXML.element import Element, TextOnlyComment
 
 import pytest
 
-from tests.test import __create_file
+from tests.test import __create_file, _test_tree_integrity
 
 
 def test_preserve_formatting_1():
@@ -653,13 +653,13 @@ def test_formatting_add_as_last_son_of_complex_tag():
         """\
         <root>
             <tag1>000
-                  <tag3/>
-                  <tag2>000</tag2> 
+                 <tag3/>
+                 <tag2>000</tag2> 
+                 <father>
+                 \t<son1/> 
+                 \t<son2></son2>
+                 </father> 
             </tag1>
-            <father>
-                <son1/> 
-                <son2></son2>
-            </father> 
             <aaaaa>
                 <bbbbb/>
                 <ccccc></ccccc> 
@@ -671,13 +671,15 @@ def test_formatting_add_as_last_son_of_complex_tag():
     file_name = __create_file(src)
     xml = SmartXML(file_name)
     tag1 = xml.find("tag1")
+
     father = Element("father")
     son1 = Element("son1")
     son1._is_empty = True
-    son2 = Element("son2")
-    father.add_as_last_son_of(tag1)
     son1.add_as_last_son_of(father)
+    son2 = Element("son2")
     son2.add_after(son1)
+
+    father.add_as_last_son_of(tag1)
 
     xml.write(preserve_format=True)
     result = file_name.read_text()
@@ -738,10 +740,6 @@ def test_formatting_move_element_to_same_parent():
                   <tag2>000</tag2>  
                   <tag3/>
             </tag1>
-            <aaaaa>
-                <bbbbb/>
-                <ccccc></ccccc> 
-            </aaaaa>
         </root>
         """
     )
@@ -753,10 +751,6 @@ def test_formatting_move_element_to_same_parent():
                   <tag3/>
                   <tag2>000</tag2>  
             </tag1>
-            <aaaaa>
-                <bbbbb/>
-                <ccccc></ccccc> 
-            </aaaaa>
         </root>
         """
     )
@@ -774,32 +768,97 @@ def test_formatting_move_element_to_same_parent():
     assert result == dst
 
 
-@pytest.mark.one
-def test_stam():
+def test_all_adds():
     src = textwrap.dedent(
         """\
-        <A>
-         <B>000
-         <C>000</C>   
-             <D>000</D>   
-           </B>
-        </A>
+        <root x="1">aa
+          <tag1>000
+            <first>000</first>  
+              <second/>
+            </tag1>
+        </root>
         """
     )
-    src2 = textwrap.dedent(
+
+    dst = textwrap.dedent(
         """\
-        <A><B>000<C>000</C><D>000</D>   
-           </B>
-        </A>
+        <root x="1">aa
+          <add_one></add_one>
+          <tag1>000
+            <first>000</first>  
+              <second/>
+              <add_two></add_two>
+            </tag1>
+            <add_three></add_three>
+        </root>
         """
     )
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
 
-    xml.write()
+    one = Element("add_one")
+    two = Element("add_two")
+    three = Element("add_three")
+
+    one.add_before(tag1)
+    two.add_as_last_son_of(tag1)
+    three.add_after(tag1)
+
+    _test_tree_integrity(xml)
+
+    xml.write(preserve_format=True)
     result = file_name.read_text()
-    pass
+    assert result == dst
+
+
+@pytest.mark.one
+def test_all_adds2():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <tag1>000
+            <first>000</first>  
+              <second/>
+            </tag1>
+         <tag2/>    
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <one></one>
+          <tag1>000
+            <first>000</first>  
+              <second/>
+              <two></two>
+            </tag1>
+            <three></three>
+         <tag2/>    
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+
+    one = Element("one")
+    two = Element("two")
+    three = Element("three")
+
+    one.add_before(tag1)
+    two.add_as_last_son_of(tag1)
+    three.add_after(tag1)
+
+    _test_tree_integrity(xml)
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst
 
 
 # TODO - add several new tags to unformatted file
@@ -813,3 +872,5 @@ def test_stam():
 # TODO - add new to an empty parent
 # TODO - move element (add_after) to SAME parent
 # TODO - _is_empty (and all the rest ) must be properties, as we need to know whether they were changed
+# TODO - add son to an emty element with content and attibutes
+# TODO - add to element with content that breaks lines

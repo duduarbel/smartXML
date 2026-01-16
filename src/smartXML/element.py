@@ -36,16 +36,24 @@ def _check_content_match(element: ElementBase, with_content: str, case_sensitive
     return False
 
 
+class Format:
+    def __init__(self):
+        self.start_index: int = 0
+        self.first_son_index: int = 0
+        self.end_index: int = 0
+        self.start_line_number: int = 0
+        self.end_line_number: int = 0
+        self.start_indentation: str = ""
+        self.end_indentation: str = ""
+
+
 class ElementBase:
     def __init__(self, name: str):
         self._name = name
         self._sons = []
         self._parent: "ElementBase|None" = None
         self._content = ""
-        self._orig_start_index: int = 0
-        self._orig_end_index: int = 0
-        self._orig_start_line_number: int = 0
-        self._orig_end_line_number: int = 0
+        self._format: Format = Format()
         self._is_modified: bool = False
 
     @property
@@ -100,7 +108,7 @@ class ElementBase:
     def _remove_from_parent(self):
         if self._parent is not None:
             index = self._parent._sons.index(self)
-            place_holder = DeadElement(self._parent)
+            place_holder = PlaceHolder(self._parent)
             place_holder._orig_start_index = self._orig_start_index
             place_holder._orig_end_index = self._orig_end_index
             self._parent._sons[index] = place_holder
@@ -168,7 +176,7 @@ class ElementBase:
 
     def remove(self):
         """Remove this element from its parent's sons."""
-        self.__class__ = DeadElement
+        self.__class__ = PlaceHolder
         self._is_modified = True
 
     def _get_index_in_parent(self):
@@ -268,7 +276,7 @@ class ElementBase:
         return results
 
 
-class DeadElement(ElementBase):
+class PlaceHolder(ElementBase):
     """An element that has been removed from the XML tree."""
 
     def __init__(self, parent: ElementBase):

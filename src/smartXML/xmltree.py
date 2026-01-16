@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from enum import Enum
 
-from .element import ElementBase, Element, CData, Doctype, TextOnlyComment, DeadElement
+from .element import ElementBase, Element, CData, Doctype, TextOnlyComment, PlaceHolder
 
 
 class BadXMLFormat(Exception):
@@ -145,19 +145,15 @@ def _add_ready_token(ready_nodes, element: ElementBase, depth: int, end_index: i
         ready_nodes[depth] = [element]
 
     if depth + 1 in ready_nodes:
-        element._index_of_newly_added_elements = ready_nodes[depth + 1][0]._orig_start_index
-
         element._sons = ready_nodes[depth + 1]
         del ready_nodes[depth + 1]
         for son in element._sons:
             son._parent = element
             element._is_modified = False
-    else:
-        element._index_of_newly_added_elements = element._orig_end_index
 
     element._is_modified = False
-    element._orig_end_index = end_index
-    element._orig_end_line_number = end_line_number
+    element._format.end_index = end_index
+    element._format.end_line_number = end_line_number
 
 
 def _parse_element(text: str, start_index: int, start_line_number: int) -> Element:
@@ -217,8 +213,8 @@ def _parse_element(text: str, start_index: int, start_line_number: int) -> Eleme
 
     element = Element(name)
     element.attributes = attributes
-    element._orig_start_index = start_index
-    element._orig_start_line_number = start_line_number
+    element._format.start_index = start_index
+    element._format.start_line_number = start_line_number
     return element
 
 
@@ -239,17 +235,23 @@ def _read_elements(text: str) -> list[Element]:
             if data.endswith("/"):
                 element = _parse_element(data[:-1], token.start_index, line_number)
                 element._is_empty = True
+                element._format.start_indentation = element._format.end_indentation = token.indentation
                 _add_ready_token(ready_nodes, element, depth + 1, token.end_index, line_number)
 
             elif data.startswith("/"):
                 data = data[1:].strip()
                 element = incomplete_nodes.pop()
+                element._format.end_indentation = token.indentation
 
                 if element.name != data:
                     raise BadXMLFormat(
                         f"Mismatched XML tags, opening: {element.name}, closing: {data}, in line {line_number}"
                     )
                 _add_ready_token(ready_nodes, element, depth, token.end_index, line_number)
+                if len(element._sons) > 0:
+                    element._format.first_son_index = element._sons[0]._format.start_index
+                # else:
+                #    element._format.first_son_index = element._format.end_index
                 depth -= 1
 
             else:
@@ -258,7 +260,8 @@ def _read_elements(text: str) -> list[Element]:
                     _add_ready_token(ready_nodes, element, depth + 1, token.end_index, line_number)
                 else:
                     element = _parse_element(data, token.start_index, line_number)
-                    element._orig_end_index = token.end_index
+                    element._format.end_index = token.end_index
+                    element._format.start_indentation = token.indentation
                     incomplete_nodes.append(element)
                     depth += 1
 
@@ -273,7 +276,7 @@ def _read_elements(text: str) -> list[Element]:
                 if len(elements_in_comment) == 1:
                     comment = elements_in_comment[0]
                     comment.comment_out()
-                    comment._orig_start_index = token.start_index
+                    comment._format.start_index = token.start_index
                     _add_ready_token(ready_nodes, comment, depth + 1, token.end_index, line_number)
                     continue
             except Exception:
@@ -281,10 +284,10 @@ def _read_elements(text: str) -> list[Element]:
                 pass
 
             element = TextOnlyComment(data)
-            element._orig_start_index = token.start_index
-            element._orig_start_line_number = line_number
+            element._format.start_index = token.start_index
+            element._format.start_line_number = line_number
 
-            _add_ready_token(ready_nodes, element, depth + 1, element._orig_start_index + len(data) + 6, line_number)
+            _add_ready_token(ready_nodes, element, depth + 1, element._format.start_index + len(data) + 6, line_number)
 
         elif token_type == TokenType.closing:
             element = incomplete_nodes.pop()
@@ -430,20 +433,19 @@ class SmartXML:
 
         modifications = []
 
-        def find_start_index_of_new_element(element: ElementBase) -> int:
-            element_above = element._get_element_above()
-            if element_above == element._parent:
-                # TODO - need to find index in parent?
-                return element_above._index_of_newly_added_elements
-
-            # TODO - what id element_above is also new?
-            return element_above._orig_end_index + 1
-
         def collect_modification(element: ElementBase):
             if element._is_modified:
-                if element._orig_start_index == 0:
-                    element._orig_start_index = element._orig_end_index = find_start_index_of_new_element(element)
-                modifications.append((element, element._orig_start_index, element._orig_end_index))
+                if element._format.start_index == 0:
+                    element_above = element._get_element_above()
+                    element_below = element._get_lower_sibling()
+                    if element_above == element._parent:
+                        element._format.start_index = element_above._format.first_son_index
+                    elif element_below:
+                        element._format.start_index = element_below._format.start_index
+                    else:
+                        element._format.start_index = element_above._format.end_index + 1
+                    element._format.end_index = element._format.start_index
+                modifications.append((element, element._format.start_index, element._format.end_index))
             else:
                 for son in element._sons:
                     collect_modification(son)
@@ -459,45 +461,73 @@ class SmartXML:
             element_above = element._get_element_above()
             element_below = element._get_lower_sibling()
 
-            new_element = True if element._orig_start_index == element._orig_end_index else False
+            is_new_element: bool = True if element._format.start_index == element._format.end_index else False
+            add_as_brother_to_above: bool = element_above != element._parent
 
-            text = element._to_string(0, indentation)
             result = result + original_content[index:start_index]
 
-            if isinstance(element, DeadElement):
-                if new_element:
-                    index = element._orig_start_index
+            if isinstance(element, PlaceHolder):
+                if is_new_element:
+                    index = element._format.start_index
                 else:
-                    index = element_below._orig_start_index
+                    index = element_below._format.start_index
                 continue
 
-            if new_element:
-                if element_above and element_below:
-                    if element_above._orig_end_index != element_below._orig_start_index:
-                        result = result + original_content[start_index : element_below._orig_start_index]
+            text = element._to_string(0, indentation)
 
-            text_lines = text.splitlines()
-            if len(text_lines) == 1:
-                result = result + text_lines[0]
-            else:
-                result = result + text_lines[0] + "\n"
-                if element_above and element_above._orig_end_line_number == element._orig_start_line_number:
-                    orig_indentation = ""
+            if is_new_element:
+                if add_as_brother_to_above:
+                    if element_above._format.start_line_number == element._format.end_line_number:
+                        new_indentation = element_above._format.start_indentation
+                    else:
+                        new_indentation = element_above._format.end_indentation
                 else:
-                    _, _, orig_indentation = original_content[0:start_index].rpartition("\n")  # TODO - this is wrong!
+                    new_indentation = element_above._format.start_indentation
+                    if element_below and element_below._parent == element._parent:
+                        new_indentation = new_indentation + element_below._format.start_indentation
+                    else:
+                        new_indentation = new_indentation + indentation
 
-                for line in text_lines[1:-1]:
-                    result = result + orig_indentation + line + "\n"
-                result = result + orig_indentation + text_lines[-1]
+                text_lines = text.splitlines()
+                for line in text_lines:
+                    if element_above._format.first_son_index != 0 and element_above == element._parent:
+                        result = result + line + "\n" + new_indentation
+                    else:
+                        result = result + "\n" + new_indentation + line
 
-            if new_element:
-                if element_above and element_below:
-                    pass  # TODO remove this if
-                #                    if element_above._orig_end_line_number != element_below._orig_start_line_number:
-                #                        result = result + "\n"
-                index = end_index  # TODO - check this
-            else:
-                index = end_index + 1
+                index = end_index
+            #
+            #
+            #
+            # # TODO:
+            # #  1. need to add indetation to elements from tokens
+            # #  2. add indentation to new elements (probably differently from modified ones)
+            # result = result + element_above._indentation
+            # if add_as_son_to_above:
+            #     result = result + indentation
+            #
+            # text_lines = text.splitlines()
+            # if len(text_lines) == 1:
+            #     result = result + text_lines[0]
+            # else:
+            #     result = result + text_lines[0] + "\n"
+            #     if element_above and element_above._format.end_line_number == element._format.start_line_number:
+            #         orig_indentation = ""
+            #     else:
+            #         _, _, orig_indentation = original_content[0:start_index].rpartition("\n")  # TODO - this is wrong!
+            #
+            #     for line in text_lines[1:-1]:
+            #         result = result + orig_indentation + line + "\n"
+            #     result = result + orig_indentation + text_lines[-1]
+            #
+            # if is_new_element:
+            #     if element_above and element_below:
+            #         pass  # TODO remove this if
+            #     #                    if element_above._format.end_line_number != element_below._format.start_line_number:
+            #     #                        result = result + "\n"
+            #     index = end_index  # TODO - check this
+            # else:
+            #     index = end_index + 1
 
         result = result + original_content[index:]
         return result
