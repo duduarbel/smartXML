@@ -90,7 +90,7 @@ def _divide_to_tokens(file_content):
                 indentation = text[last_end_line_index + 1 :] if last_end_line_index != -1 else ""
                 text = text.strip()
                 if text:
-                    tokens.append(Token(TokenType.content, text, line_number, last_index, index))
+                    tokens.append(Token(TokenType.content, text, line_number, last_index, last_index + 1 + len(text)))
             last_char = char
             last_index = index
         elif char == "\n":
@@ -237,6 +237,7 @@ def _read_elements(text: str) -> list[Element]:
                 element._is_empty = True
                 element._format.start_indentation = element._format.end_indentation = token.indentation
                 _add_ready_token(ready_nodes, element, depth + 1, token.end_index, line_number)
+                element._format.index_after_content = token.end_index
 
             elif data.startswith("/"):
                 data = data[1:].strip()
@@ -248,10 +249,6 @@ def _read_elements(text: str) -> list[Element]:
                         f"Mismatched XML tags, opening: {element.name}, closing: {data}, in line {line_number}"
                     )
                 _add_ready_token(ready_nodes, element, depth, token.end_index, line_number)
-                if len(element._sons) > 0:
-                    element._format.first_son_index = element._sons[0]._format.start_index
-                # else:
-                #    element._format.first_son_index = element._format.end_index
                 depth -= 1
 
             else:
@@ -262,6 +259,8 @@ def _read_elements(text: str) -> list[Element]:
                     element = _parse_element(data, token.start_index, line_number)
                     element._format.end_index = token.end_index
                     element._format.start_indentation = token.indentation
+                    element._format.index_after_content = token.end_index
+
                     incomplete_nodes.append(element)
                     depth += 1
 
@@ -305,6 +304,7 @@ def _read_elements(text: str) -> list[Element]:
             for d in data[1:]:
                 content += "\n" + d.strip()
             incomplete_nodes[-1].content = content
+            incomplete_nodes[-1]._format.index_after_content = token.end_index
 
         elif token_type == TokenType.doctype:
             element = Doctype(data)
@@ -434,18 +434,12 @@ class SmartXML:
         modifications = []
 
         def collect_modification(element: ElementBase):
+            add_new_line: bool = False
             if element._is_modified:
-                if element._format.start_index == 0:
-                    element_above = element._get_element_above()
-                    element_below = element._get_lower_sibling()
-                    if element_above == element._parent:
-                        element._format.start_index = element_above._format.first_son_index
-                    # elif element_below:
-                    #     element._format.start_index = element_below._format.start_index
-                    else:
-                        element._format.start_index = element_above._format.end_index + 1
+                if element._format.start_index == 0:  # new element
+                    element._format.start_index = element._parent._format.index_after_content
                     element._format.end_index = element._format.start_index
-                modifications.append((element, element._format.start_index, element._format.end_index))
+                modifications.append((element, element._format.start_index, element._format.end_index, add_new_line))
             else:
                 for son in element._sons:
                     collect_modification(son)
@@ -457,7 +451,7 @@ class SmartXML:
             return original_content
 
         index = 0
-        for element, start_index, end_index in modifications:
+        for element, start_index, end_index, add_new_line in modifications:
             element_above = element._get_element_above()
             element_below = element._get_lower_sibling()
 
@@ -483,17 +477,42 @@ class SmartXML:
                         new_indentation = element_above._format.end_indentation
                 else:
                     new_indentation = element_above._format.start_indentation
-                    if element_below and element_below._parent == element._parent:
+                    if (
+                        element_below
+                        and element_below._parent == element._parent
+                        and element_below._format.start_indentation != ""
+                    ):
                         new_indentation = new_indentation + element_below._format.start_indentation
                     else:
                         new_indentation = new_indentation + indentation
 
+                # if add_new_line:
+                #     result = result + "\n" + new_indentation
+                #
+                # text_lines = text.splitlines()
+                # for line in text_lines[:-1]:
+                #     result = result + line + "\n" + new_indentation
+                # if add_new_line:
+                #     result = result + text_lines[-1]
+                # else:
+                #     result = result + text_lines[-1] + "\n"
+
                 text_lines = text.splitlines()
-                for line in text_lines:
-                    if element_above._format.first_son_index != 0 and element_above == element._parent:
-                        result = result + line + "\n" + new_indentation
+
+                orig_is_in_one_line = element_above._format.start_line_number == element_below._format.start_line_number
+
+                if len(text_lines) == 1:
+                    if not orig_is_in_one_line:
+                        result = result + "\n" + new_indentation
+                    result = result + text_lines[0]
+                else:
+                    result = result + "\n"
+                    for line in text_lines:
+                        result = result + new_indentation + line + "\n"
+                    if not orig_is_in_one_line:
+                        result = result[:-1]  # r
                     else:
-                        result = result + "\n" + new_indentation + line
+                        result = result + new_indentation  # TODO - really?
 
                 index = end_index
             #

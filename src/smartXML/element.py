@@ -39,7 +39,7 @@ def _check_content_match(element: ElementBase, with_content: str, case_sensitive
 class Format:
     def __init__(self):
         self.start_index: int = 0
-        self.first_son_index: int = 0
+        self.index_after_content: int = 0
         self.end_index: int = 0
         self.start_line_number: int = 0
         self.end_line_number: int = 0
