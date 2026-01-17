@@ -440,8 +440,8 @@ class SmartXML:
                     element_below = element._get_lower_sibling()
                     if element_above == element._parent:
                         element._format.start_index = element_above._format.first_son_index
-                    elif element_below:
-                        element._format.start_index = element_below._format.start_index
+                    # elif element_below:
+                    #     element._format.start_index = element_below._format.start_index
                     else:
                         element._format.start_index = element_above._format.end_index + 1
                     element._format.end_index = element._format.start_index

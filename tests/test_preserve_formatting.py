@@ -768,6 +768,7 @@ def test_formatting_move_element_to_same_parent():
     assert result == dst
 
 
+@pytest.mark.one
 def test_all_adds():
     src = textwrap.dedent(
         """\
@@ -813,7 +814,6 @@ def test_all_adds():
     assert result == dst
 
 
-@pytest.mark.one
 def test_all_adds2():
     src = textwrap.dedent(
         """\
