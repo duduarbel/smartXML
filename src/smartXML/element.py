@@ -128,11 +128,7 @@ class ElementBase:
         return "|".join(reversed(elements))
 
     def _insert_into_parent_at_index(self, new_parent: Self, index: int):
-        old_parent = self._parent
-
         self._is_modified = True
-        # self._orig_start_index = 0
-        # self._orig_end_index = 0  # TODO - not sure
         if new_parent._is_empty:
             new_parent._is_empty = False
             new_parent._is_modified = True

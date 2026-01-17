@@ -768,7 +768,6 @@ def test_formatting_move_element_to_same_parent():
     assert result == dst
 
 
-@pytest.mark.one
 def test_all_adds():
     src = textwrap.dedent(
         """\
@@ -857,6 +856,139 @@ def test_all_adds2():
     _test_tree_integrity(xml)
 
     xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_all_adds_complex():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <tag1>000
+            <first>000</first>  
+              <second/>
+            </tag1>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <add_one attr="value">content
+            <one_son></one_son>
+          </add_one>
+          <tag1>000
+            <first>000</first>  
+              <second/>
+              <add_two attr="value">content
+                <two_son></two_son>
+              </add_two>
+            </tag1>
+            <add_three attr="value">content
+              <three_son></three_son>
+            </add_three>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+
+    one = Element("add_one")
+    one._content = "content"
+    one.attributes["attr"] = "value"
+    one1 = Element("one_son")
+    one1.add_as_last_son_of(one)
+
+    two = Element("add_two")
+    two._content = "content"
+    two.attributes["attr"] = "value"
+    two1 = Element("two_son")
+    two1.add_as_last_son_of(two)
+
+    three = Element("add_three")
+    three._content = "content"
+    three.attributes["attr"] = "value"
+    three1 = Element("three_son")
+    three1.add_as_last_son_of(three)
+
+    one.add_before(tag1)
+    two.add_as_last_son_of(tag1)
+    three.add_after(tag1)
+
+    _test_tree_integrity(xml)
+
+    xml.write(preserve_format=True, indentation="  ")
+    result = file_name.read_text()
+    assert result == dst
+
+
+@pytest.mark.one
+def test_all_adds2_complex():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <tag1>000
+            <first>000</first>  
+              <second/>
+            </tag1>
+         <tag2/>    
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <add_one attr="value">content
+            <one_son></one_son>
+          </add_one>
+          <tag1>000
+            <first>000</first>  
+              <second/>
+              <add_two attr="value">content
+                <two_son></two_son>
+              </add_two>
+            </tag1>
+            <add_three attr="value">content
+              <three_son></three_son>
+            </add_three>
+         <tag2/>    
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+
+    one = Element("add_one")
+    one._content = "content"
+    one.attributes["attr"] = "value"
+    one1 = Element("one_son")
+    one1.add_as_last_son_of(one)
+
+    two = Element("add_two")
+    two._content = "content"
+    two.attributes["attr"] = "value"
+    two1 = Element("two_son")
+    two1.add_as_last_son_of(two)
+
+    three = Element("add_three")
+    three._content = "content"
+    three.attributes["attr"] = "value"
+    three1 = Element("three_son")
+    three1.add_as_last_son_of(three)
+
+    one.add_before(tag1)
+    two.add_as_last_son_of(tag1)
+    three.add_after(tag1)
+
+    _test_tree_integrity(xml)
+
+    xml.write(preserve_format=True, indentation="  ")
     result = file_name.read_text()
     assert result == dst
 
