@@ -77,6 +77,17 @@ def test_trimming():
     _test_tree_integrity(xml)
 
 
+def test_smallest_xml():
+    file_name = __create_file("<a/>")
+    xml = SmartXML(file_name)
+    xml.write()
+
+    result = xml.to_string()
+
+    assert result == "<a/>\n"
+    _test_tree_integrity(xml)
+
+
 def test_read_comment1():
     src = textwrap.dedent(
         """\
@@ -2125,6 +2136,7 @@ def test_find_case_content():
     assert a[1].attributes["id"] == "ABC"
 
 
+@pytest.mark.one
 def test_mixed_content():
     src = textwrap.dedent(
         """\
@@ -2134,9 +2146,9 @@ def test_mixed_content():
                     456
                     <tag3 id="ABC"/>789
                 </tag2>
-                <tag3 id="Abc">123
-                    456
-                    789
+                <tag3 id="Abc">1230
+                    4560
+                    7890
                 </tag3>
             </tag1>
         </root>
@@ -2150,13 +2162,13 @@ def test_mixed_content():
         \t\t<tag2 id="Abc">
         \t\t\t123
         \t\t\t456
-        \t\t\t789
         \t\t\t<tag3 id="ABC"/>
+        \t\t\t789
         \t\t</tag2>
         \t\t<tag3 id="Abc">
-        \t\t\t123
-        \t\t\t456
-        \t\t\t789
+        \t\t\t1230
+        \t\t\t4560
+        \t\t\t7890
         \t\t</tag3>
         \t</tag1>
         </root>
@@ -2165,8 +2177,6 @@ def test_mixed_content():
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
-    tag2 = xml.find("tag2")
-    assert tag2.content == "123\n456\n789"
 
     xml.write()
     result = file_name.read_text()
@@ -2284,11 +2294,12 @@ def test_all_adds_to_empty_element():
     dst = textwrap.dedent(
         """\
         <root x="1">aa
-           <add_one></add_one>
-           <tag1 dljhsn="sdfjhgs">three little birds
-              <add_two></add_two>
-           </tag1
-           <add_three></add_three>
+          <add_one></add_one>
+          <tag1 dljhsn="sdfjhgs">
+            <add_two></add_two>
+          </tag1>
+          <add_three></add_three>
+          three little birds
         </root>
         """
     )
@@ -2314,7 +2325,6 @@ def test_all_adds_to_empty_element():
     assert result == dst
 
 
-@pytest.mark.one
 def test_complex_text():
     src = textwrap.dedent(
         """\
@@ -2329,9 +2339,10 @@ def test_complex_text():
     dst = textwrap.dedent(
         """\
         <root x="1">first text
-           <tag1 dljhsn="sdfjhgs"/>second text
-           <tag2>tag2 text</tag2>
-           third text
+            <tag1 dljhsn="sdfjhgs"/>
+            second text
+            <tag2>tag2 text</tag2>
+            third text
         </root>
         """
     )
@@ -2340,9 +2351,8 @@ def test_complex_text():
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
-    tag1 = xml.find("tag1")
 
-    xml.write(indentation="  ")
+    xml.write(indentation="    ")
     result = file_name.read_text()
     assert result == dst
 

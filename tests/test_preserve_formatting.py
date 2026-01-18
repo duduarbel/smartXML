@@ -34,6 +34,7 @@ def _test_add_after(src: str, dst: str, addition: ElementBase, indentation: str 
     assert result == dst
 
 
+@pytest.mark.one
 def test_stam():
     src = textwrap.dedent(
         """\
@@ -54,7 +55,7 @@ def test_stam():
     xml = SmartXML(file_name)
 
     c = xml.find("C")
-    #    c.name = "CC"
+    #    c.name = "CC"   # TODO add this
 
     tag4 = TextOnlyComment("X")
     tag4.add_before(c)
@@ -1434,7 +1435,6 @@ def test_all_adds2_complex():
     assert result == dst
 
 
-@pytest.mark.one
 def test_all_adds_to_empty_element_1():
     src = textwrap.dedent(
         """\
