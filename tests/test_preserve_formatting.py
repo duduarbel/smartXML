@@ -144,8 +144,8 @@ def test_add_before_3():
 
     dst = textwrap.dedent(
         """\
-        <root x="1">aa<add_one></add_one>
-                      <tag1>000</tag1>
+        <root x="1">aa
+                      <add_one></add_one><tag1>000</tag1>
         </root>
         """
     )
@@ -164,8 +164,8 @@ def test_add_before_4():
 
     dst = textwrap.dedent(
         """\
-        <root x="1">aa<add_one></add_one>
-                      <tag1>000</tag1>
+        <root x="1">aa
+                      <add_one></add_one><tag1>000</tag1>
             <tag2/>
         </root>
         """
@@ -185,10 +185,10 @@ def test_add_before_5():
 
     dst = textwrap.dedent(
         """\
-        <root x="1">aa<add_one attr="value">content
+        <root x="1">aa
+                      <add_one attr="value">content
                           <one_son></one_son>
-                      </add_one>
-                      <tag1>000</tag1>
+                      </add_one><tag1>000</tag1>
             <tag2/>
         </root>
         """
@@ -213,10 +213,10 @@ def test_add_before_5a():
 
     dst = textwrap.dedent(
         """\
-        <root x="1">aa<add_one attr="value">content
+        <root x="1">aa
+                      <add_one attr="value">content
                           <one_son></one_son>
-                      </add_one>
-                      <tag1>000</tag1><tag2/>
+                      </add_one><tag1>000</tag1><tag2/>
         </root>
         """
     )
@@ -261,6 +261,7 @@ def test_add_before_6():
     _test_add_before(src, dst, one)
 
 
+@pytest.mark.one
 def test_add_after_1():
     src = textwrap.dedent(
         """\
@@ -357,7 +358,6 @@ def test_add_after_4():
     _test_add_after(src, dst, Element("add_one"))
 
 
-@pytest.mark.one
 def test_add_after_5():
     src = textwrap.dedent(
         """\
