@@ -8,7 +8,7 @@ import pytest
 from tests.test import __create_file, _test_tree_integrity
 
 
-def _test_add_before(src: str, dst: str, addition: ElementBase):
+def _test_add_before(src: str, dst: str, addition: ElementBase, indentation: str = "    "):
     file_name = __create_file(src)
     xml = SmartXML(file_name)
     tag1 = xml.find("tag1")
@@ -16,9 +16,66 @@ def _test_add_before(src: str, dst: str, addition: ElementBase):
     addition.add_before(tag1)
     _test_tree_integrity(xml)
 
-    xml.write(preserve_format=True, indentation="    ")
+    xml.write(preserve_format=True, indentation=indentation)
     result = file_name.read_text()
     assert result == dst
+
+
+def _test_add_after(src: str, dst: str, addition: ElementBase, indentation: str = "    "):
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+
+    addition.add_after(tag1)
+    _test_tree_integrity(xml)
+
+    xml.write(preserve_format=True, indentation=indentation)
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_add_before_0():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <tag1></tag1>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <add_one></add_one>
+          <tag1></tag1>
+        </root>
+        """
+    )
+
+    _test_add_before(src, dst, Element("add_one"))
+
+
+def test_add_before_01():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <tag1></tag1>
+          <tag2></tag2>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <add_one></add_one>
+          <tag1></tag1>
+          <tag2></tag2>
+        </root>
+        """
+    )
+
+    _test_add_before(src, dst, Element("add_one"))
 
 
 def test_add_before_1():
@@ -87,7 +144,8 @@ def test_add_before_3():
 
     dst = textwrap.dedent(
         """\
-        <root x="1">aa<add_one></add_one><tag1>000</tag1>
+        <root x="1">aa<add_one></add_one>
+                      <tag1>000</tag1>
         </root>
         """
     )
@@ -106,7 +164,8 @@ def test_add_before_4():
 
     dst = textwrap.dedent(
         """\
-        <root x="1">aa<add_one></add_one><tag1>000</tag1>
+        <root x="1">aa<add_one></add_one>
+                      <tag1>000</tag1>
             <tag2/>
         </root>
         """
@@ -115,7 +174,6 @@ def test_add_before_4():
     _test_add_before(src, dst, Element("add_one"))
 
 
-@pytest.mark.one
 def test_add_before_5():
     src = textwrap.dedent(
         """\
@@ -127,11 +185,10 @@ def test_add_before_5():
 
     dst = textwrap.dedent(
         """\
-        <root x="1">aa
-            <add_one attr="value">content
-                <one_son></one_son>
-            </add_one>
-            <tag1>000</tag1>
+        <root x="1">aa<add_one attr="value">content
+                          <one_son></one_son>
+                      </add_one>
+                      <tag1>000</tag1>
             <tag2/>
         </root>
         """
@@ -146,7 +203,33 @@ def test_add_before_5():
     _test_add_before(src, dst, one)
 
 
-@pytest.mark.one
+def test_add_before_5a():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa<tag1>000</tag1><tag2/>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa<add_one attr="value">content
+                          <one_son></one_son>
+                      </add_one>
+                      <tag1>000</tag1><tag2/>
+        </root>
+        """
+    )
+
+    one = Element("add_one")
+    one._content = "content"
+    one.attributes["attr"] = "value"
+    one1 = Element("one_son")
+    one1.add_as_last_son_of(one)
+
+    _test_add_before(src, dst, one)
+
+
 def test_add_before_6():
     src = textwrap.dedent(
         """\
@@ -176,6 +259,163 @@ def test_add_before_6():
     one1.add_as_last_son_of(one)
 
     _test_add_before(src, dst, one)
+
+
+def test_add_after_1():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <tag1>content1
+            <first>000</first>  
+              <second/>
+            </tag1>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <tag1>content1
+            <first>000</first>  
+              <second/>
+            </tag1>
+          <add_one></add_one>
+        </root>
+        """
+    )
+
+    _test_add_after(src, dst, Element("add_one"))
+
+
+def test_add_after_2():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <tag1>000
+            <first>000</first>  
+              <second/>
+            </tag1>
+            <tag2/>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa
+          <tag1>000
+            <first>000</first>  
+              <second/>
+            </tag1>
+          <add_one></add_one>
+            <tag2/>
+        </root>
+        """
+    )
+
+    _test_add_after(src, dst, Element("add_one"))
+
+
+def test_add_after_3():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa<tag1>000</tag1>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa<tag1>000</tag1>
+                      <add_one></add_one>
+        </root>
+        """
+    )
+
+    _test_add_after(src, dst, Element("add_one"))
+
+
+def test_add_after_4():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa<tag1>000</tag1>
+            <tag2/>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa<tag1>000</tag1>
+                      <add_one></add_one>
+            <tag2/>
+        </root>
+        """
+    )
+
+    _test_add_after(src, dst, Element("add_one"))
+
+
+@pytest.mark.one
+def test_add_after_5():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa<tag1>000</tag1>
+            <tag2/>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa<tag1>000</tag1>
+                      <add_one attr="value">content
+                          <one_son></one_son>
+                      </add_one>
+            <tag2/>
+        </root>
+        """
+    )
+
+    one = Element("add_one")
+    one._content = "content"
+    one.attributes["attr"] = "value"
+    one1 = Element("one_son")
+    one1.add_as_last_son_of(one)
+
+    _test_add_after(src, dst, one)
+
+
+def test_add_after_6():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa
+            <tag1>000</tag1>
+            <tag2/>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa
+            <tag1>000</tag1>
+            <add_one attr="value">content
+                <one_son></one_son>
+            </add_one>
+            <tag2/>
+        </root>
+        """
+    )
+
+    one = Element("add_one")
+    one._content = "content"
+    one.attributes["attr"] = "value"
+    one1 = Element("one_son")
+    one1.add_as_last_son_of(one)
+
+    _test_add_after(src, dst, one)
 
 
 #

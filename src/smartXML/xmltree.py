@@ -437,8 +437,13 @@ class SmartXML:
             add_new_line: bool = False
             if element._is_modified:
                 if element._format.start_index == 0:  # new element
-                    element._format.start_index = element._parent._format.index_after_content
+                    element_above = element._get_element_above()
+                    if element_above == element._parent:
+                        element._format.start_index = element._parent._format.index_after_content
+                    else:
+                        element._format.start_index = element_above._format.end_index + 1
                     element._format.end_index = element._format.start_index
+
                 modifications.append((element, element._format.start_index, element._format.end_index, add_new_line))
             else:
                 for son in element._sons:
@@ -499,7 +504,13 @@ class SmartXML:
 
                 text_lines = text.splitlines()
 
-                orig_is_in_one_line = element_above._format.start_line_number == element_below._format.start_line_number
+                orig_is_in_one_line = False
+
+                if element_above._format.start_line_number == element_above._format.end_line_number:
+                    orig_is_in_one_line = True
+                elif element_below:
+                    if element_above._format.start_line_number == element_below._format.start_line_number:
+                        orig_is_in_one_line = True
 
                 if len(text_lines) == 1:
                     if not orig_is_in_one_line:
