@@ -626,7 +626,6 @@ def test_one_line_comment2():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.one
 def test_one_line_comment3():
     src = textwrap.dedent(
         """\
@@ -2269,6 +2268,81 @@ def test_add_tag_to_empty_tag():
     driver.add_as_last_son_of(email)
 
     xml.write()
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_all_adds_to_empty_element():
+    src = textwrap.dedent(
+        """\
+        <root x="1">aa
+           <tag1 dljhsn="sdfjhgs"/>three little birds
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">aa
+           <add_one></add_one>
+           <tag1 dljhsn="sdfjhgs">three little birds
+              <add_two></add_two>
+           </tag1
+           <add_three></add_three>
+        </root>
+        """
+    )
+
+    # Add son to an empty element with content and attributes
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+
+    one = Element("add_one")
+    two = Element("add_two")
+    three = Element("add_three")
+
+    one.add_before(tag1)
+    two.add_as_last_son_of(tag1)
+    three.add_after(tag1)
+
+    _test_tree_integrity(xml)
+
+    xml.write(indentation="  ")
+    result = file_name.read_text()
+    assert result == dst
+
+
+@pytest.mark.one
+def test_complex_text():
+    src = textwrap.dedent(
+        """\
+        <root x="1">first text
+           <tag1 dljhsn="sdfjhgs"/>second text
+           <tag2>tag2 text</tag2>
+           third text
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <root x="1">first text
+           <tag1 dljhsn="sdfjhgs"/>second text
+           <tag2>tag2 text</tag2>
+           third text
+        </root>
+        """
+    )
+
+    # Add son to an empty element with content and attributes
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+
+    xml.write(indentation="  ")
     result = file_name.read_text()
     assert result == dst
 

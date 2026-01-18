@@ -51,7 +51,7 @@ class ElementBase:
         self._name = name
         self._sons = []
         self._parent: "ElementBase|None" = None
-        self._content = ""
+        self._content = ""  # the first line of content, not including the content that is in sons
         self._format: Format = Format()
         self._is_modified: bool = False
 
@@ -108,11 +108,11 @@ class ElementBase:
         if self._parent is not None:
             index = self._parent._sons.index(self)
             place_holder = PlaceHolder(self._parent)
-            place_holder._orig_start_index = self._orig_start_index
-            place_holder._orig_end_index = self._orig_end_index
+            place_holder._format.start_index = self._format.start_index
+            place_holder._format.end_index = self._format.end_index
             self._parent._sons[index] = place_holder
-            self._orig_start_index = 0
-            self._orig_end_index = 0
+            self._format.start_index = 0
+            self._format.end_index = 0
             self._parent = None
 
     def get_path(self) -> str:
@@ -171,8 +171,9 @@ class ElementBase:
 
     def remove(self):
         """Remove this element from its parent's sons."""
-        self.__class__ = PlaceHolder
-        self._is_modified = True
+        # self.__class__ = PlaceHolder
+        # self._is_modified = True
+        self._remove_from_parent()
 
     def _get_index_in_parent(self):
         index = 0
@@ -281,6 +282,17 @@ class PlaceHolder(ElementBase):
 
     def _to_string(self, index: int, indentation: str) -> str:
         return ""
+
+
+class ContentOnly(ElementBase):
+    """An element that only contains text, not other elements."""
+
+    def __init__(self, text: str):
+        super().__init__("")
+        self._text = text
+
+    def _to_string(self, index: int, indentation: str) -> str:
+        return indentation + self._text + "\n"
 
 
 class TextOnlyComment(ElementBase):
