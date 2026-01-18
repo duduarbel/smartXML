@@ -448,22 +448,22 @@ class SmartXML:
         def collect_modification(element: ElementBase):
             if element._is_modified:
                 new_indentation = ""
-                new_index = 0
+                index_of_element = 0
                 if element._format.start_index == 0:  # new element
 
                     element_above = element._get_element_above()
                     if element_above != element._parent:
                         new_indentation = element_above._format.indentation
-                        new_index = element_above._format.end_index + 1
+                        index_of_element = element_above._format.end_index + 1
                     else:
-                        new_index = element._parent._format.index_after_content
+                        index_of_element = element._parent._format.index_after_content
                         brother_below = element._get_lower_sibling()
                         if brother_below:
                             new_indentation = brother_below._format.indentation
                         else:
                             new_indentation = element._parent._format.indentation + indentation
 
-                modifications.append((element, new_index, new_indentation))
+                modifications.append((element, index_of_element, new_indentation))
             else:
                 for son in element._sons:
                     collect_modification(son)
@@ -490,19 +490,17 @@ class SmartXML:
             return original_content
 
         index = 0
-        for element, new_index, new_indentation in modifications:
-            element_above = element._get_element_above()
-            brother_below = element._get_lower_sibling()
-
+        for element, index_of_element, new_indentation in modifications:
             is_new_element: bool = True if element._format.start_index == element._format.end_index else False
 
-            result = result + original_content[index:new_index]
+            result = result + original_content[index:index_of_element]
 
             if isinstance(element, PlaceHolder):
                 if is_new_element:
                     index = element._format.start_index
                 else:
-                    index = brother_below._format.start_index
+                    brother_below = element._get_lower_sibling()
+                    index = brother_below._format.start_index  # TODO - wrong. what is no brother below?
                 continue
 
             text = element._to_string(0, indentation)
@@ -513,7 +511,7 @@ class SmartXML:
                     line = add_clean_indentation(line, new_indentation)
                     result = result + "\n" + line
 
-                index = new_index
+                index = index_of_element
             #
             #
             #
