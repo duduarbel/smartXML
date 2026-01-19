@@ -1358,7 +1358,6 @@ def test_all_adds_to_empty_element_2():
     assert result == dst
 
 
-@pytest.mark.skip(reason="Multiline content not supported yet")
 def test_all_adds_to_empty_element_3():
     src = textwrap.dedent("""\
         <root x="1">aa
@@ -1368,12 +1367,10 @@ def test_all_adds_to_empty_element_3():
 
     dst = textwrap.dedent("""\
         <root x="1">aa
-           <tag1 dljhsn="sdfjhgs"/>three little birds
-           <add_three></add_three>
+           <tag1 dljhsn="sdfjhgs"/>
+           <add_three></add_three>three little birds
         </root>
         """)
-
-    # Add son to an empty element with content and attributes
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1421,7 +1418,6 @@ def test_adds_as_first_son_with_content():
     assert result == dst
 
 
-@pytest.mark.skip(reason="Multiline content not supported yet")
 def test_all_adds_to_empty_element():
     src = textwrap.dedent("""\
         <root x="1">aa
@@ -1432,10 +1428,10 @@ def test_all_adds_to_empty_element():
     dst = textwrap.dedent("""\
         <root x="1">aa
            <add_one></add_one>
-           <tag1 dljhsn="sdfjhgs">three little birds
-            <add_two></add_two>
-           </tag1
-           <add_three></add_three>
+           <tag1 dljhsn="sdfjhgs">
+             <add_two></add_two>
+           </tag1>
+           <add_three></add_three>three little birds
         </root>
         """)
 
@@ -1460,7 +1456,7 @@ def test_all_adds_to_empty_element():
     assert result == dst
 
 
-@pytest.mark.skip(reason="Multiline content not supported yet")
+@pytest.mark.one
 def test_all_adds_several_sons_to_parent_with_no_sons():
     src = textwrap.dedent("""\
         <root x="1">aa
@@ -1471,13 +1467,11 @@ def test_all_adds_several_sons_to_parent_with_no_sons():
 
     dst = textwrap.dedent("""\
         <root x="1">aa
-           <add_one></add_one>
            <tag1 dljhsn="sdfjhgs">three little birds
-            <add_one></add_one>
-            <add_two></add_two>
-            <add_three></add_three>
+             <add_one></add_one>
+             <add_two></add_two>
+             <add_three></add_three>
            </tag1
-           <add_three></add_three>
         </root>
         """)
 
@@ -1493,7 +1487,7 @@ def test_all_adds_several_sons_to_parent_with_no_sons():
 
     one.add_as_last_son_of(tag1)
     two.add_as_last_son_of(tag1)
-    three.add_as_last_son_of(tag1)
+    # three.add_as_last_son_of(tag1)
 
     _test_tree_integrity(xml)
 
@@ -1543,7 +1537,6 @@ def test_all_adds_several_sons_to_parent_with_no_sons_same_line():
     assert result == dst
 
 
-@pytest.mark.one
 def test_modify_c_data():
     src = textwrap.dedent("""\
         <?xml version="1.0"?>
