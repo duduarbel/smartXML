@@ -121,6 +121,7 @@ def test_read_comment2():
     _test_tree_integrity(xml)
 
 
+@pytest.mark.one
 def test_read_comment3():
     src = textwrap.dedent("""\
         <root>
@@ -1977,7 +1978,6 @@ def test_find_case_content():
     assert a[1].attributes["id"] == "ABC"
 
 
-@pytest.mark.one
 def test_mixed_content():
     src = textwrap.dedent("""\
         <root>
@@ -2197,3 +2197,4 @@ def test_complex_text():
 
 # TODO - how to find text comment????
 # TODO - doctype should be rewriten!!
+# TODO - cdata should store it's text in _text,  not name!

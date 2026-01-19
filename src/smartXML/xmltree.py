@@ -285,12 +285,13 @@ def _read_elements(text: str) -> list[Element]:
                     elements_in_comment = _read_elements("<" + data + ">")  # support the case of <!--TAG...-->
                 else:
                     elements_in_comment = _read_elements(data)
-                if len(elements_in_comment) == 1:
-                    comment = elements_in_comment[0]
+                # if len(elements_in_comment) == 1:
+                for comment in elements_in_comment:
+                    # comment = elements_in_comment[0]
                     comment.comment_out()
                     comment._format.start_index = token.start_index
                     _add_ready_token(incomplete_nodes, ready_nodes, comment, depth + 1, token.end_index, line_number)
-                    continue
+                continue
             except Exception:
                 # The content of the comment can not be parsed, so handle this as plain text
                 pass
@@ -317,10 +318,10 @@ def _read_elements(text: str) -> list[Element]:
             data = data.splitlines()
             for content in data:
                 contentOnly = ContentOnly(content.strip())
-                contentOnly._format.start_index = token.start_index
+                contentOnly._format.start_index = token.start_index + 1
                 contentOnly._format.start_line_number = line_number
-                contentOnly._parent = incomplete_nodes[-1]
-                incomplete_nodes[-1]._sons.append(contentOnly)
+                contentOnly._format.indentation = token.indentation
+                _add_ready_token(incomplete_nodes, ready_nodes, contentOnly, depth + 1, token.end_index, line_number)
 
         elif token_type == TokenType.doctype:
             element = Doctype(data)
@@ -455,7 +456,11 @@ class SmartXML:
                         new_indentation = element_above._format.indentation
                         index_of_element = element_above._format.end_index + 1
                     else:
-                        index_of_element = element._parent._format.index_after_content
+                        if len(element._parent._sons) > 0 and isinstance(element._parent._sons[0], ContentOnly):
+                            index_of_element = element._parent._sons[0]._format.end_index
+                        else:
+                            index_of_element = element._parent._format.index_after_content
+
                         brother_below = element._get_lower_sibling()
                         if brother_below:
                             new_indentation = brother_below._format.indentation
@@ -502,7 +507,7 @@ class SmartXML:
                     index = index_of_element
                 else:
                     brother_below = element._get_lower_sibling()
-                    index = brother_below._format.start_index  # TODO - wrong. what is no brother below?
+                    index = brother_below._format.start_index  # TODO - wrong. what if no brother below?
                 continue
 
             text = element._to_string(0, indentation)
@@ -522,9 +527,6 @@ class SmartXML:
                     for line in text_lines[1:-1]:
                         result = result + add_clean_indentation(line + "\n", new_indentation)
                     result = result + add_clean_indentation(text_lines[-1], new_indentation)
-
-                    # line_of_element_below = find_line_of_element_below(element) # TODO - remove find_line_of_element_below
-                    # last_new_line_is_redundant = element._format.end_line_number == line_of_element_below
 
                 index = element._format.end_index + 1
 

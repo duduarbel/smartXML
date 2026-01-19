@@ -174,7 +174,14 @@ class ElementBase:
         return -1
 
     def _get_element_above(self):
+        """
+        Get the element above this one in the XML tree.
+        NOTE: Ignoring a first child ContentOnly element.
+        :return:
+        """
         index = self._get_index_in_parent()
+        if index == 1 and isinstance(self._parent._sons[0], ContentOnly):
+            return self._parent
         if index > 0:
             return self._parent._sons[index - 1]
         else:
@@ -282,7 +289,41 @@ class ContentOnly(ElementBase):
 
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index
-        return f"{indent}{self._text}\n"
+        if self._get_index_in_parent() == 0:
+            return f"{indent}{self._text}"
+        else:
+            return f"{indent}{self._text}\n"
+
+    def add_before(self, sibling: "ElementBase"):
+        """Add this element before the given sibling element."""
+        super().add_before(sibling)
+        if self._get_index_in_parent() == 0:
+            self._parent._is_modified = True
+
+    def add_as_last_son_of(self, parent: "ElementBase"):
+        """Add this element as the last son of the given parent element."""
+        super().add_as_last_son_of(parent)
+        if self._get_index_in_parent() == 0:
+            self._parent._is_modified = True
+
+    def add_as_first_son_of(self, parent: "ElementBase"):
+        """Add this element as the first son of the given parent element."""
+        super().add_as_first_son_of(parent)
+        if self._get_index_in_parent() == 0:
+            self._parent._is_modified = True
+
+    @property
+    def text(self) -> str:
+        """Get the content of the element."""
+        return self._text
+
+    @text.setter
+    def text(self, text: str):
+        """Set the content of the element."""
+        self._text = text
+        self._is_modified = True
+        if self._get_index_in_parent() == 0:
+            self._parent._is_modified = True
 
     def __repr__(self):
         return f"{self._text}"
@@ -327,6 +368,18 @@ class CData(ElementBase):
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index
         return f"{indent}<![CDATA[{self._text}]]>\n"
+
+    @property
+    def text(self) -> str:
+        """Get the content of the element."""
+        return self._text
+
+    @text.setter
+    def text(self, text: str):
+        """Set the content of the element."""
+        self._text = text
+        self._is_modified = True
+        self._parent._is_modified = True
 
 
 class Doctype(ElementBase):

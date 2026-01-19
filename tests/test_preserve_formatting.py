@@ -60,7 +60,6 @@ def test_stam():
     assert result == dst
 
 
-@pytest.mark.one
 def test_add_before_0():
     src = textwrap.dedent("""\
         <root x="1">aa
@@ -194,7 +193,9 @@ def test_add_before_5():
         """)
 
     one = Element("add_one")
-    one._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(one)
+
     one.attributes["attr"] = "value"
     one1 = Element("one_son")
     one1.add_as_last_son_of(one)
@@ -217,7 +218,8 @@ def test_add_before_5a():
         """)
 
     one = Element("add_one")
-    one._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(one)
     one.attributes["attr"] = "value"
     one1 = Element("one_son")
     one1.add_as_last_son_of(one)
@@ -244,7 +246,8 @@ def test_add_before_6():
         """)
 
     one = Element("add_one")
-    one._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(one)
     one.attributes["attr"] = "value"
     one1 = Element("one_son")
     one1.add_as_last_son_of(one)
@@ -349,7 +352,8 @@ def test_add_after_5():
         """)
 
     one = Element("add_one")
-    one._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(one)
     one.attributes["attr"] = "value"
     one1 = Element("one_son")
     one1.add_as_last_son_of(one)
@@ -376,7 +380,8 @@ def test_add_after_6():
         """)
 
     one = Element("add_one")
-    one._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(one)
     one.attributes["attr"] = "value"
     one1 = Element("one_son")
     one1.add_as_last_son_of(one)
@@ -522,8 +527,7 @@ def test_preserve_formatting_4():
 
     age = xml.find("age")
     age.name = "new_age"
-    content = ContentOnly("45")
-    content.add_as_last_son_of(age)
+    age._sons[0].text = "45"
 
     xml.write(preserve_format=True)
     result = file_name.read_text()
@@ -641,14 +645,12 @@ def test_format_all_kinds_of_oneline_changes():
     file_name = __create_file("<root><tag1>000</tag1><tag2>000</tag2></root>")
     xml = SmartXML(file_name)
     tag1 = xml.find("tag1")
-    content = ContentOnly("the weals of the bus go round and round")
-    content.add_as_last_son_of(tag1)
+    tag1._sons[0].text = "the weals of the bus go round and round"
     assert (
         xml.to_string(preserve_format=True)
         == "<root><tag1>the weals of the bus go round and round</tag1><tag2>000</tag2></root>"
     )
-    content = ContentOnly("A")
-    content.add_as_last_son_of(tag1)
+    tag1._sons[0].text = "A"
     assert xml.to_string(preserve_format=True) == "<root><tag1>A</tag1><tag2>000</tag2></root>"
     tag1.comment_out()
     assert xml.to_string(preserve_format=True) == "<root><!-- <tag1>A</tag1> --><tag2>000</tag2></root>"
@@ -931,9 +933,7 @@ def test_preserve_formatting_add_and_delete():
     src = textwrap.dedent("""\
         <root>
             <!-- first comment -->
-            <!--
-                <tag1>000</tag1>
-            -->
+            <!-- <tag1>000</tag1> -->
             <tag2>000</tag2>
             <aaaaa>
                 <bbbbb/>
@@ -1195,19 +1195,22 @@ def test_all_adds_complex():
     tag1 = xml.find("tag1")
 
     one = Element("add_one")
-    one._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(one)
     one.attributes["attr"] = "value"
     one1 = Element("one_son")
     one1.add_as_last_son_of(one)
 
     two = Element("add_two")
-    two._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(two)
     two.attributes["attr"] = "value"
     two1 = Element("two_son")
     two1.add_as_last_son_of(two)
 
     three = Element("add_three")
-    three._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(three)
     three.attributes["attr"] = "value"
     three1 = Element("three_son")
     three1.add_as_last_son_of(three)
@@ -1258,19 +1261,22 @@ def test_all_adds2_complex():
     tag1 = xml.find("tag1")
 
     one = Element("add_one")
-    one._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(one)
     one.attributes["attr"] = "value"
     one1 = Element("one_son")
     one1.add_as_last_son_of(one)
 
     two = Element("add_two")
-    two._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(two)
     two.attributes["attr"] = "value"
     two1 = Element("two_son")
     two1.add_as_last_son_of(two)
 
     three = Element("add_three")
-    three._content = "content"
+    content = ContentOnly("content")
+    content.add_as_last_son_of(three)
     three.attributes["attr"] = "value"
     three1 = Element("three_son")
     three1.add_as_last_son_of(three)
@@ -1506,6 +1512,7 @@ def test_all_adds_several_sons_to_parent_with_no_sons_same_line():
     assert result == dst
 
 
+@pytest.mark.one
 def test_modify_c_data():
     src = textwrap.dedent("""\
         <?xml version="1.0"?>
@@ -1537,7 +1544,7 @@ def test_modify_c_data():
     xml = SmartXML(file_name)
 
     c_data = xml.tree._sons[0]
-    c_data._text = "<<<>>>"
+    c_data.text = "<<<>>>"
 
     xml.write()
     result = file_name.read_text()
@@ -1595,3 +1602,4 @@ def test_modify_doctype():
 # TODO - _is_empty (and all the rest ) must be properties, as we need to know whether they were changed
 # TODO - add to element with content that breaks lines
 # TODO - modify doctype and <?...>
+# TODO - modify all elements but root
