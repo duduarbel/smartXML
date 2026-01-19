@@ -404,7 +404,7 @@ class SmartXML:
         else:
             raise BadXMLFormat("xml contains more than one outer element")
 
-    def write(self, file_name: Path = None, indentation: str = "\t", preserve_format: bool = False) -> str | None:
+    def write(self, file_name: Path = None, indentation: str = "\t") -> str | None:
         """Write the XML tree back to the file.
         :param file_name: Path to the XML file, if None, overwrite the original file
         :param indentation: string used for indentation, default is tab character
@@ -415,7 +415,7 @@ class SmartXML:
             TypeError: if file_name is not a pathlib.Path object
             FileNotFoundError: if file_name does not exist
         """
-
+        preserve_format: bool = False
         if not file_name:
             file_name = self._file_name
         if not file_name:
@@ -423,17 +423,18 @@ class SmartXML:
 
         tmp_file = file_name.resolve().with_name(file_name.name + ".tmp")
 
-        result = self.to_string(indentation=indentation, preserve_format=preserve_format)
+        result = self.to_string(indentation=indentation)  # , preserve_format=preserve_format)
         with open(tmp_file, "w", encoding="utf-8") as file:
             file.write(result)
         os.replace(tmp_file, file_name)
 
-    def to_string(self, indentation: str = "\t", preserve_format: bool = False) -> str:
+    def to_string(self, indentation: str = "\t") -> str:
         """
         Convert the XML tree to a string.
         :param indentation: string used for indentation, default is tab character
         :return: XML string
         """
+        preserve_format: bool = False
         result = ""
         if self._declaration:
             result = f"<?xml {self._declaration}?>\n"
