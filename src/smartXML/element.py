@@ -147,6 +147,8 @@ class ElementBase:
 
     def add_as_first_son_of(self, parent: "ElementBase"):
         """Add this element as the first son of the given parent element."""
+        if len(parent._sons) > 0 and isinstance(parent._sons[0], ContentOnly):
+            parent._is_modified = True
         self._insert_into_parent_at_index(parent, 0)
 
     def set_as_parent_of(self, son: "ElementBase"):

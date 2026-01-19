@@ -1399,9 +1399,10 @@ def test_adds_as_first_son_with_content():
 
     dst = textwrap.dedent("""\
         <root x="1">aa
-           <tag1 dljhsn="sdfjhgs">three little birds
-            <add_two></add_two>
-           </tag1
+           <tag1 dljhsn="sdfjhgs">
+               <add_two></add_two>
+               three little birds
+           </tag1>
         </root>
         """)
 
@@ -1415,7 +1416,7 @@ def test_adds_as_first_son_with_content():
 
     _test_tree_integrity(xml)
 
-    xml.write(preserve_format=True, indentation="  ")
+    xml.write(preserve_format=True, indentation="    ")
     result = file_name.read_text()
     assert result == dst
 
