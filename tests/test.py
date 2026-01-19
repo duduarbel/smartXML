@@ -88,7 +88,6 @@ def test_smallest_xml():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.one
 def test_read_comment1():
     src = textwrap.dedent(
         """\
@@ -2139,7 +2138,7 @@ def test_find_case_content():
     assert a[1].attributes["id"] == "ABC"
 
 
-@pytest.mark.skip(reason="Multiline content not supported yet")
+@pytest.mark.one
 def test_mixed_content():
     src = textwrap.dedent(
         """\
@@ -2162,14 +2161,12 @@ def test_mixed_content():
         """\
         <root>
         \t<tag1 id="abc">abc
-        \t\t<tag2 id="Abc">
-        \t\t\t123
+        \t\t<tag2 id="Abc">123
         \t\t\t456
         \t\t\t<tag3 id="ABC"/>
         \t\t\t789
         \t\t</tag2>
-        \t\t<tag3 id="Abc">
-        \t\t\t1230
+        \t\t<tag3 id="Abc">1230
         \t\t\t4560
         \t\t\t7890
         \t\t</tag3>
@@ -2330,7 +2327,9 @@ def test_all_adds_to_empty_element():
     assert result == dst
 
 
-@pytest.mark.skip(reason="Multiline content not supported yet")
+# @pytest.mark.skip(reason="Multiline content not supported yet")
+
+
 def test_complex_text():
     src = textwrap.dedent(
         """\

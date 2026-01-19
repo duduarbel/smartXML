@@ -291,7 +291,8 @@ class ContentOnly(ElementBase):
         self._text = text
 
     def _to_string(self, index: int, indentation: str) -> str:
-        return indentation + self._text + "\n"
+        indent = indentation * index
+        return f"{indent}{self._text}\n"
 
     def __repr__(self):
         return f"{self._text}"

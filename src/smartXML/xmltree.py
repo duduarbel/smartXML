@@ -316,7 +316,7 @@ def _read_elements(text: str) -> list[Element]:
         elif token_type == TokenType.content:
             data = data.splitlines()
             for content in data:
-                contentOnly = ContentOnly(content)
+                contentOnly = ContentOnly(content.strip())
                 contentOnly._format.start_index = token.start_index
                 contentOnly._format.start_line_number = line_number
                 contentOnly._parent = incomplete_nodes[-1]
