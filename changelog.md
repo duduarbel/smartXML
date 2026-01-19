@@ -1,3 +1,7 @@
+## 1.1.1
+
+- add required `typing-extensions` to pipfile
+
 ## 1.1.0
 - Improve support for multiple lines content
   - **Breaking Change** User can not directly change content via `tag.contnt = "abc"`
