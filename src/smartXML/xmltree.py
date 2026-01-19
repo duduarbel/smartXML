@@ -497,7 +497,7 @@ class SmartXML:
 
             return ("\t" * num_tabs) + (" " * remainder_spaces) + stripped_l
 
-        def find_line_of_element_below(element: ElementBase) -> int:
+        def find_line_of_element_below(element: ElementBase) -> int:  #  TODO remove
             brother_below = element._get_lower_sibling()
             if brother_below:
                 return brother_below._format.start_line_number
