@@ -423,7 +423,7 @@ class Element(ElementBase):
         return result
 
     def find(
-        self, name: str = None, only_one: bool = True, with_content: str = None, case_sensitive: bool = True
+        self, name: str = "", only_one: bool = True, with_content: str = None, case_sensitive: bool = True
     ) -> Union[Self, list[Self], None]:
         """
         Find element(s) by name or content or both

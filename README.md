@@ -31,10 +31,10 @@ At its core, the package provides:
 - **`write(path)`**  
   Write the current XML tree to a file.
 
-- **`find(...)`**  
-  Search for elements by name and/or content.
+- **`find(name: str = "", only_one: bool = True, with_content: str = None, case_sensitive: bool = True)`**  
+  Search for descendant elements, by name and/or content. can return one or multiple results.
 
-- **`to_string()`**  
+- **`to_string(indentation: str = "\t")`**  
   Serialize the entire XML document to a string.
 
 ---
@@ -60,8 +60,8 @@ It provides common navigation, manipulation, and serialization functionality.
   (`None` if this is the root).
 
 #### Methods
-- **`find(...)`**  
-  Search for descendant elements.
+- **`find(name: str = "", only_one: bool = True, with_content: str = None, case_sensitive: bool = True)`**  
+  Search for descendant elements, by name and/or content. can return one or multiple results.
 
 - **`remove()`**  
   Remove the current element from its parent.
@@ -75,7 +75,7 @@ It provides common navigation, manipulation, and serialization functionality.
 - **`is_comment()`**  
   Return `True` if this element represents a comment.
 
-- **`to_string()`**  
+- **`to_string(indentation: str = "\t")`**  
   Serialize the element (and its children) to a string.
 
 - **`get_path()`**  
@@ -86,6 +86,9 @@ It provides common navigation, manipulation, and serialization functionality.
 
 - **`add_after(sibling)`**  
   Insert this element after the given sibling.
+
+- **`add_as_first_son_of(parent)`**  
+  Add this element as the first child of the given parent element.
 
 - **`add_as_last_son_of(parent)`**  
   Add this element as the last child of the given parent element.
@@ -119,12 +122,12 @@ xml.write()
 result (files/students.xml):
 ```xml
 <students>
-  <!-- Bob is out -->
-  <!--
-    <student id="S002">
-	  <firstName>Bob</firstName>
-	  <lastName>Levi</lastName>
-    </student>
-  -->
+    <!-- Bob is out -->
+    <!--
+        <student id="S002">
+            <firstName>Bob</firstName>
+            <lastName>Levi</lastName>
+        </student>
+    -->
 </students>
 ```
