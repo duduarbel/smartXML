@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Union
-from typing_extensions import Self
 
 import warnings
 import re
@@ -123,7 +122,7 @@ class ElementBase:
             current = current._parent
         return "|".join(reversed(elements))
 
-    def _insert_into_parent_at_index(self, new_parent: Self, index: int):
+    def _insert_into_parent_at_index(self, new_parent: "ElementBase", index: int):
         self._is_modified = True
         if new_parent._is_empty:
             new_parent._is_empty = False
@@ -134,23 +133,23 @@ class ElementBase:
         self._parent = new_parent
         new_parent._sons.insert(index, self)
 
-    def add_before(self, sibling: Self):
+    def add_before(self, sibling: "ElementBase"):
         """Add this element before the given sibling element."""
         self._insert_into_parent_at_index(sibling._parent, sibling._parent._sons.index(sibling))
 
-    def add_after(self, sibling: Self):
+    def add_after(self, sibling: "ElementBase"):
         """Add this element after the given sibling element."""
         self._insert_into_parent_at_index(sibling._parent, sibling._parent._sons.index(sibling) + 1)
 
-    def add_as_last_son_of(self, parent: Self):
+    def add_as_last_son_of(self, parent: "ElementBase"):
         """Add this element as the last son of the given parent element."""
         self._insert_into_parent_at_index(parent, len(parent._sons))
 
-    def add_as_first_son_of(self, parent: Self):
+    def add_as_first_son_of(self, parent: "ElementBase"):
         """Add this element as the first son of the given parent element."""
         self._insert_into_parent_at_index(parent, 0)
 
-    def set_as_parent_of(self, son: Self):
+    def set_as_parent_of(self, son: "ElementBase"):
         """Set this element as the parent of the given son element."""
         warnings.warn(
             "set_as_parent_of() is deprecated and will be removed in version 1.1.0 . add_before() or add_after() or add_as_last_son_of instead.",
@@ -369,7 +368,7 @@ class Element(ElementBase):
         raises IllegalOperation, if any parent or any descended is a comment
         """
 
-        def find_comment_son(element: Self) -> bool:
+        def find_comment_son(element: "ElementBase") -> bool:
             if element.is_comment():
                 return True
             for a_son in element._sons:
@@ -424,7 +423,7 @@ class Element(ElementBase):
 
     def find(
         self, name: str = "", only_one: bool = True, with_content: str = None, case_sensitive: bool = True
-    ) -> Union[Self, list[Self], None]:
+    ) -> Union["ElementBase", list["ElementBase"], None]:
         """
         Find element(s) by name or content or both
         :param name: name of the element to find, can be nested using |, e.g. "parent|child|subchild"

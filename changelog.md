@@ -1,5 +1,7 @@
-## 1.1.1
+## 1.1.2
+- remove `typing-extensions`
 
+## 1.1.1
 - add required `typing-extensions` to pipfile
 
 ## 1.1.0
