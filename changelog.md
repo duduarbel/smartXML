@@ -3,6 +3,7 @@
     - As content can be multiple lines, they are now a part of elements' sons  
 - add `add_as_first_son_of` to `ElementBase`
 - remove deprecated `add_as_son_of`
+  - Use `add_as_first_son_of` or `add_as_last_son_of` instead.
 
 ## 1.0.21
 - Safely write the file by writing to a temporary file first and then renaming it.
