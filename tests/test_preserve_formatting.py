@@ -34,7 +34,6 @@ def _test_add_after(src: str, dst: str, addition: ElementBase, indentation: str 
     assert result == dst
 
 
-@pytest.mark.one
 def test_stam():
     src = textwrap.dedent(
         """\
@@ -1677,6 +1676,93 @@ def test_all_adds_several_sons_to_parent_with_no_sons_same_line():
     _test_tree_integrity(xml)
 
     xml.write(preserve_format=True, indentation="  ")
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_modify_c_data():
+    src = textwrap.dedent(
+        """\
+        <?xml version="1.0"?>
+        <!DOCTYPE note [
+        \t<!ELEMENT note (to, from, body)>
+        \t<!ATTLIST to (#PCDATA)>
+        \t<!ENTITY from (#PCDATA)>
+        \t<!NOTATION body (#PCDATA)>
+        ]>
+        <root>
+        \t<![CDATA[A story about <coding> & "logic". The <tags> inside here are ignored by the parser.]]>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <?xml version="1.0"?>
+        <!DOCTYPE note [
+        \t<!ELEMENT note (to, from, body)>
+        \t<!ATTLIST to (#PCDATA)>
+        \t<!ENTITY from (#PCDATA)>
+        \t<!NOTATION body (#PCDATA)>
+        ]>
+        <root>
+        \t<![CDATA[<<<>>>]]>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    c_data = xml.tree._sons[0]
+    c_data._text = "<<<>>>"
+
+    xml.write()
+    result = file_name.read_text()
+    assert result == dst
+
+
+@pytest.mark.one
+@pytest.mark.skip(reason="c data is not well defined. this xml is not valid!!!")
+def test_modify_doctype():
+    src = textwrap.dedent(
+        """\
+        <?xml version="1.0"?>
+        <!DOCTYPE note [
+        \t<!ELEMENT note (to, from, body)>
+        \t<!ATTLIST to (#PCDATA)>
+        \t<!ENTITY from (#PCDATA)>
+        \t<!NOTATION body (#PCDATA)>
+        ]>
+        <root>
+        \t<![CDATA[A story about <coding> & "logic". The <tags> inside here are ignored by the parser.]]>
+        </root>
+        """
+    )
+
+    dst = textwrap.dedent(
+        """\
+        <?xml version="1.0"?>
+        <!DOCTYPE note [
+        \t<!ELEMENT note (to, from, body)>
+        \t<!not-this>
+        \t<!ENTITY from (#PCDATA)>
+        \t<!NOTATION body (#PCDATA)>
+        ]>
+        <root>
+        \t<![CDATA[<<<>>>]]>
+        </root>
+        """
+    )
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    doctype = xml._doctype
+    son1 = doctype._sons[1]
+    son1.name = "not-this"
+
+    xml.write()
     result = file_name.read_text()
     assert result == dst
 

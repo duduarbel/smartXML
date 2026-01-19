@@ -2360,3 +2360,4 @@ def test_complex_text():
 
 
 # TODO - how to find text comment????
+# TODO - doctype should be rewriten!!
