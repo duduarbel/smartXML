@@ -51,20 +51,17 @@ class ElementBase:
         self._name = name
         self._sons = []
         self._parent: "ElementBase|None" = None
-        self._content = ""  # the first line of content, not including the content that is in sons
         self._format: Format = Format()
         self._is_modified: bool = False
 
     @property
     def content(self) -> str:
         """Get the content of the element."""
-        return self._content
-
-    @content.setter
-    def content(self, new_content: str):
-        """Set the content of the element."""
-        self._content = str(new_content)
-        self._is_modified = True
+        the_content = ""
+        for son in self._sons:
+            if isinstance(son, ContentOnly):
+                the_content = the_content + son._text + "\n"
+        return the_content.rstrip("\n")
 
     @property
     def parent(self):
@@ -146,8 +143,12 @@ class ElementBase:
         self._insert_into_parent_at_index(sibling._parent, sibling._parent._sons.index(sibling) + 1)
 
     def add_as_last_son_of(self, parent: Self):
-        """Add this element as a son of the given parent element."""
+        """Add this element as the last son of the given parent element."""
         self._insert_into_parent_at_index(parent, len(parent._sons))
+
+    def add_as_first_son_of(self, parent: Self):
+        """Add this element as the first son of the given parent element."""
+        self._insert_into_parent_at_index(parent, 0)
 
     def add_as_son_of(self, parent: Self):
         """Add this element as a son of the given parent element."""
@@ -294,6 +295,9 @@ class ContentOnly(ElementBase):
     def _to_string(self, index: int, indentation: str) -> str:
         return indentation + self._text + "\n"
 
+    def __repr__(self):
+        return f"{self._text}"
+
 
 class TextOnlyComment(ElementBase):
     """A comment that only contains text, not other elements."""
@@ -366,11 +370,6 @@ class Element(ElementBase):
         self.attributes = {}
         self._is_empty = False  # whether the element is self-closing
 
-    @ElementBase.content.setter
-    def content(self, new_content: str):
-        self._is_empty = False
-        super(Element, type(self)).content.__set__(self, new_content)
-
     def uncomment(self):
         if self.parent.is_comment():
             raise IllegalOperation("Cannot comment out an element whose parent is a comment")
@@ -416,21 +415,19 @@ class Element(ElementBase):
             opening_tag = f"<{self.name}{attributes_part}>"
             closing_tag = f"</{self.name}>"
 
-            children_str = "".join(son._to_string(index + 1, indentation) for son in self._sons)
+            first_content = ""
+            children_str = ""
+            if len(self._sons) > 0:
+                if isinstance(self._sons[0], ContentOnly):
+                    first_content = self._sons[0]._text
+                    children_str = "".join(son._to_string(index + 1, indentation) for son in self._sons[1:])
+                else:
+                    children_str = "".join(son._to_string(index + 1, indentation) for son in self._sons)
 
-            if "\n" in self.content:
-                content = f"\n{indentation * (index + 1)}" + self.content.replace(
-                    "\n", f"\n{indentation * (index + 1)}"
-                )
-                if children_str:
-                    result = f"{indent}{opening_tag}{content}\n{children_str}{indent}{closing_tag}"
-                else:
-                    result = f"{indent}{opening_tag}{content}\n{indent}{closing_tag}"
+            if children_str:
+                result = f"{indent}{opening_tag}{first_content}\n{children_str}{indent}{closing_tag}"
             else:
-                if children_str:
-                    result = f"{indent}{opening_tag}{self.content}\n{children_str}{indent}{closing_tag}"
-                else:
-                    result = f"{indent}{opening_tag}{self.content}{closing_tag}"
+                result = f"{indent}{opening_tag}{first_content}{closing_tag}"
 
         result += "\n"
         return result
@@ -472,7 +469,7 @@ class Comment(Element):
 
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index
-        if len(self._sons) == 0:
+        if len(self._sons) == 0 or (len(self._sons) == 1 and isinstance(self._sons[0], ContentOnly)):
             return f"{indent}<!-- {super()._to_string(0, indentation)[0:-1]} -->\n"
         else:
             return f"{indent}<!--\n{super()._to_string(index + 1, indentation)}{indent}-->\n"

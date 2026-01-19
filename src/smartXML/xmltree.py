@@ -157,20 +157,27 @@ def _divide_to_tokens(file_content):
     return tokens
 
 
-def _add_ready_token(ready_nodes, element: ElementBase, depth: int, end_index: int, end_line_number: int):
-    if depth in ready_nodes:
-        ready_nodes[depth].append(element)
+def _add_ready_token(
+    incomplete_nodes, ready_nodes, element: ElementBase, depth: int, end_index: int, end_line_number: int
+):
+    if len(incomplete_nodes) == 0:
+        ready_nodes.setdefault(depth, []).append(element)
     else:
-        ready_nodes[depth] = [element]
+        incomplete_nodes[-1]._sons.append(element)
+        element._parent = incomplete_nodes[-1]
 
-    if depth + 1 in ready_nodes:
-        element._sons = ready_nodes[depth + 1]
-        del ready_nodes[depth + 1]
-        for son in element._sons:
-            son._parent = element
-            element._is_modified = False
+    # if depth in ready_nodes:
+    #     ready_nodes[depth].append(element)
+    # else:
+    #     ready_nodes[depth] = [element]
+    #
+    # if depth + 1 in ready_nodes:
+    #     element._sons.extend(ready_nodes[depth + 1])
+    #     del ready_nodes[depth + 1]
+    #     for son in element._sons:
+    #         son._parent = element
+    #         element._is_modified = False
 
-    element._is_modified = False
     element._format.end_index = end_index
     element._format.end_line_number = end_line_number
 
@@ -255,7 +262,7 @@ def _read_elements(text: str) -> list[Element]:
                 element: ElementBase = _parse_element(data[:-1], token.start_index, line_number)
                 element._is_empty = True
                 element._format.indentation = token.indentation
-                _add_ready_token(ready_nodes, element, depth + 1, token.end_index, line_number)
+                _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1, token.end_index, line_number)
                 element._format.index_after_content = token.end_index + 1
 
             elif data.startswith("/"):
@@ -266,13 +273,13 @@ def _read_elements(text: str) -> list[Element]:
                     raise BadXMLFormat(
                         f"Mismatched XML tags, opening: {element.name}, closing: {data}, in line {line_number}"
                     )
-                _add_ready_token(ready_nodes, element, depth, token.end_index, line_number)
+                _add_ready_token(incomplete_nodes, ready_nodes, element, depth, token.end_index, line_number)
                 depth -= 1
 
             else:
                 if incomplete_nodes and isinstance(incomplete_nodes[-1], Doctype):
                     element = Element(data)
-                    _add_ready_token(ready_nodes, element, depth + 1, token.end_index, line_number)
+                    _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1, token.end_index, line_number)
                 else:
                     element = _parse_element(data, token.start_index, line_number)
                     element._format.end_index = token.end_index
@@ -294,7 +301,7 @@ def _read_elements(text: str) -> list[Element]:
                     comment = elements_in_comment[0]
                     comment.comment_out()
                     comment._format.start_index = token.start_index
-                    _add_ready_token(ready_nodes, comment, depth + 1, token.end_index, line_number)
+                    _add_ready_token(incomplete_nodes, ready_nodes, comment, depth + 1, token.end_index, line_number)
                     continue
             except Exception:
                 # The content of the comment can not be parsed, so handle this as plain text
@@ -304,33 +311,46 @@ def _read_elements(text: str) -> list[Element]:
             element._format.start_index = token.start_index
             element._format.start_line_number = line_number
 
-            _add_ready_token(ready_nodes, element, depth + 1, element._format.start_index + len(data) + 6, line_number)
+            _add_ready_token(
+                incomplete_nodes,
+                ready_nodes,
+                element,
+                depth + 1,
+                element._format.start_index + len(data) + 6,
+                line_number,
+            )
 
         elif token_type == TokenType.closing:
             element = incomplete_nodes.pop()
             #            if isinstance(element, Doctype):
-            _add_ready_token(ready_nodes, element, depth, token.end_index, line_number)
+            _add_ready_token(incomplete_nodes, ready_nodes, element, depth, token.end_index, line_number)
             depth -= 1
 
         elif token_type == TokenType.content:
             data = data.splitlines()
-            if len(incomplete_nodes[-1]._sons) > 0:
-                # content should be added as a son
-                contentOnly = ContentOnly(data)
+            for content in data:
+                contentOnly = ContentOnly(content)
                 contentOnly._format.start_index = token.start_index
                 contentOnly._format.start_line_number = line_number
-
-                _add_ready_token(ready_nodes, contentOnly, depth + 1, token.end_index, line_number)
-                continue
-            content = incomplete_nodes[-1].content
-            if content:
-                content += "\n" + data[0]
-            else:
-                content += data[0]
-            for d in data[1:]:
-                content += "\n" + d.strip()
-            incomplete_nodes[-1].content = content
-            incomplete_nodes[-1]._format.index_after_content = token.end_index
+                contentOnly._parent = incomplete_nodes[-1]
+                incomplete_nodes[-1]._sons.append(contentOnly)
+            # if len(incomplete_nodes[-1]._sons) > 0:
+            #     # content should be added as a son
+            #     contentOnly = ContentOnly(data)
+            #     contentOnly._format.start_index = token.start_index
+            #     contentOnly._format.start_line_number = line_number
+            #
+            #     _add_ready_token(incomplete_nodes, ready_nodes, contentOnly, depth + 1, token.end_index, line_number)
+            #     continue
+            # content = incomplete_nodes[-1].content
+            # if content:
+            #     content += "\n" + data[0]
+            # else:
+            #     content += data[0]
+            # for d in data[1:]:
+            #     content += "\n" + d.strip()
+            # incomplete_nodes[-1].content = content
+            # incomplete_nodes[-1]._format.index_after_content = token.end_index
 
         elif token_type == TokenType.doctype:
             element = Doctype(data)
@@ -339,7 +359,7 @@ def _read_elements(text: str) -> list[Element]:
 
         elif token_type == TokenType.c_data:
             element = CData(data)
-            _add_ready_token(ready_nodes, element, depth + 1, token.end_index, line_number)
+            _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1, token.end_index, line_number)
 
     if incomplete_nodes:
         unclosed = incomplete_nodes[-1]

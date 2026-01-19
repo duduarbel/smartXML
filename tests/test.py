@@ -3,7 +3,7 @@ import textwrap
 from readme_example import test_readme_example
 
 from smartXML.xmltree import SmartXML, BadXMLFormat, _read_elements, _parse_element
-from smartXML.element import Element, TextOnlyComment, IllegalOperation
+from smartXML.element import Element, TextOnlyComment, ContentOnly, IllegalOperation
 from pathlib import Path
 import pytest
 import random
@@ -88,6 +88,7 @@ def test_smallest_xml():
     _test_tree_integrity(xml)
 
 
+@pytest.mark.one
 def test_read_comment1():
     src = textwrap.dedent(
         """\
@@ -1413,7 +1414,8 @@ def test_build_tree():
 
     xml = SmartXML()
     head = Element("head")
-    head.content = "This is the head"
+    content = ContentOnly("This is the head")
+    content.add_as_last_son_of(head)
     head.attributes["version"] = "1.0"
 
     xml._tree = head
@@ -1570,7 +1572,8 @@ def test_tag_manipulations():
     bbbb = xml.find("bbbbb")
     cccc = xml.find("ccccc")
     aaaa.name = "a"
-    aaaa.content = "content"
+    content = ContentOnly("content")
+    content.add_as_first_son_of(aaaa)
     aaaa.attributes["id1"] = "42"
     aaaa.attributes["id2"] = "aaa"
 
@@ -2249,7 +2252,8 @@ def test_change_content_of_empty_tag():
     file_name = __create_file(src)
     xml = SmartXML(file_name)
     email = xml.find("email")
-    email.content = "AAA@bbb.com"
+    content = ContentOnly("AAA@bbb.com")
+    content.add_as_last_son_of(email)
     xml.write()
     result = file_name.read_text()
     assert result == dst
@@ -2282,7 +2286,7 @@ def test_add_tag_to_empty_tag():
     assert result == dst
 
 
-@pytest.mark.skip(reason="Multiline content not supported yet")
+# @pytest.mark.skip(reason="Multiline content not supported yet")
 def test_all_adds_to_empty_element():
     src = textwrap.dedent(
         """\

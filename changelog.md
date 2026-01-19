@@ -1,3 +1,7 @@
+- **Breaking Change** User can not directly change content via `tag.contnt = "abc"`
+  - As content can be multiple lines, they are now a part of elements' tag  
+- add `add_as_first_son_of` to `ElementBase`
+
 ## 1.0.21
 - Safely write the file by writing to a temporary file first and then renaming it.
 
