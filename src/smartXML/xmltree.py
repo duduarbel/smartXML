@@ -166,18 +166,6 @@ def _add_ready_token(
         incomplete_nodes[-1]._sons.append(element)
         element._parent = incomplete_nodes[-1]
 
-    # if depth in ready_nodes:
-    #     ready_nodes[depth].append(element)
-    # else:
-    #     ready_nodes[depth] = [element]
-    #
-    # if depth + 1 in ready_nodes:
-    #     element._sons.extend(ready_nodes[depth + 1])
-    #     del ready_nodes[depth + 1]
-    #     for son in element._sons:
-    #         son._parent = element
-    #         element._is_modified = False
-
     element._format.end_index = end_index
     element._format.end_line_number = end_line_number
 
@@ -322,7 +310,6 @@ def _read_elements(text: str) -> list[Element]:
 
         elif token_type == TokenType.closing:
             element = incomplete_nodes.pop()
-            #            if isinstance(element, Doctype):
             _add_ready_token(incomplete_nodes, ready_nodes, element, depth, token.end_index, line_number)
             depth -= 1
 
@@ -334,23 +321,6 @@ def _read_elements(text: str) -> list[Element]:
                 contentOnly._format.start_line_number = line_number
                 contentOnly._parent = incomplete_nodes[-1]
                 incomplete_nodes[-1]._sons.append(contentOnly)
-            # if len(incomplete_nodes[-1]._sons) > 0:
-            #     # content should be added as a son
-            #     contentOnly = ContentOnly(data)
-            #     contentOnly._format.start_index = token.start_index
-            #     contentOnly._format.start_line_number = line_number
-            #
-            #     _add_ready_token(incomplete_nodes, ready_nodes, contentOnly, depth + 1, token.end_index, line_number)
-            #     continue
-            # content = incomplete_nodes[-1].content
-            # if content:
-            #     content += "\n" + data[0]
-            # else:
-            #     content += data[0]
-            # for d in data[1:]:
-            #     content += "\n" + d.strip()
-            # incomplete_nodes[-1].content = content
-            # incomplete_nodes[-1]._format.index_after_content = token.end_index
 
         elif token_type == TokenType.doctype:
             element = Doctype(data)
@@ -517,13 +487,6 @@ class SmartXML:
 
             return ("\t" * num_tabs) + (" " * remainder_spaces) + stripped_l
 
-        def find_line_of_element_below(element: ElementBase) -> int:  #  TODO remove
-            brother_below = element._get_lower_sibling()
-            if brother_below:
-                return brother_below._format.start_line_number
-            parent = element._parent
-            return parent._format.end_line_number
-
         original_content = self._file_name.read_text()
 
         collect_modification(self._tree)
@@ -566,39 +529,6 @@ class SmartXML:
                     # last_new_line_is_redundant = element._format.end_line_number == line_of_element_below
 
                 index = element._format.end_index + 1
-
-            #
-            #
-            #
-            # # TODO:
-            # #  1. need to add indetation to elements from tokens
-            # #  2. add indentation to new elements (probably differently from modified ones)
-            # result = result + element_above._indentation
-            # if add_as_son_to_above:
-            #     result = result + indentation
-            #
-            # text_lines = text.splitlines()
-            # if len(text_lines) == 1:
-            #     result = result + text_lines[0]
-            # else:
-            #     result = result + text_lines[0] + "\n"
-            #     if element_above and element_above._format.end_line_number == element._format.start_line_number:
-            #         orig_indentation = ""
-            #     else:
-            #         _, _, orig_indentation = original_content[0:start_index].rpartition("\n")  # TODO - this is wrong!
-            #
-            #     for line in text_lines[1:-1]:
-            #         result = result + orig_indentation + line + "\n"
-            #     result = result + orig_indentation + text_lines[-1]
-            #
-            # if is_new_element:
-            #     if element_above and element_below:
-            #         pass  # TODO remove this if
-            #     #                    if element_above._format.end_line_number != element_below._format.start_line_number:
-            #     #                        result = result + "\n"
-            #     index = end_index  # TODO - check this
-            # else:
-            #     index = end_index + 1
 
         result = result + original_content[index:]
         return result

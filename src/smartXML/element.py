@@ -172,8 +172,6 @@ class ElementBase:
 
     def remove(self):
         """Remove this element from its parent's sons."""
-        # self.__class__ = PlaceHolder
-        # self._is_modified = True
         self._remove_from_parent()
 
     def _get_index_in_parent(self):
