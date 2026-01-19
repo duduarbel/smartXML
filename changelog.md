@@ -1,5 +1,6 @@
-- **Breaking Change** User can not directly change content via `tag.contnt = "abc"`
-  - As content can be multiple lines, they are now a part of elements' tag  
+- Improve support for multiple lines content
+  - **Breaking Change** User can not directly change content via `tag.contnt = "abc"`
+    - As content can be multiple lines, they are now a part of elements' sons  
 - add `add_as_first_son_of` to `ElementBase`
 
 ## 1.0.21
