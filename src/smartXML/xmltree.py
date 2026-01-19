@@ -408,14 +408,12 @@ class SmartXML:
         """Write the XML tree back to the file.
         :param file_name: Path to the XML file, if None, overwrite the original file
         :param indentation: string used for indentation, default is tab character
-        :param preserve_format: whether to preserve the original formatting as much as possible, default is False
         :return: XML string if file_name is None, else None
         :raises:
             ValueError: if file name is not specified
             TypeError: if file_name is not a pathlib.Path object
             FileNotFoundError: if file_name does not exist
         """
-        preserve_format: bool = False
         if not file_name:
             file_name = self._file_name
         if not file_name:
