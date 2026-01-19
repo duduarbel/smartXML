@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 import random
 
-
 test_file_name = "./files/test.xml"
 
 
@@ -38,8 +37,7 @@ def __create_file(content: str) -> Path:
 
 
 def test_trimming():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
 
 
         <  root  >
@@ -54,18 +52,15 @@ def test_trimming():
                 /user>
         </ root >
 
-        """
-    )
-    dst = textwrap.dedent(
-        """\
+        """)
+    dst = textwrap.dedent("""\
         <root>
         \t<user id="42">
         \t\t<name>D u d u</name>
         \t\t<x>12</x>
         \t</user>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -89,15 +84,13 @@ def test_smallest_xml():
 
 
 def test_read_comment1():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<user>
         \t\t<!-- <name0>Dudu</name0> -->
         \t</user>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -110,15 +103,13 @@ def test_read_comment1():
 
 
 def test_read_comment2():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<user>
         \t\t<!-- <name0>Dudu</name0> -->
         \t</user>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -131,8 +122,7 @@ def test_read_comment2():
 
 
 def test_read_comment3():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<!-- This is a comment -->
         \t<user id="42"><xxx/><yyy></yyy>
@@ -146,11 +136,9 @@ def test_read_comment3():
         \t\t<name3>Dudu</name3>
         \t</user>
         </root>
-        """
-    )
+        """)
 
-    dst = textwrap.dedent(
-        """\
+    dst = textwrap.dedent("""\
         <root>
         \t<!-- This is a comment -->
         \t<user id="42">
@@ -166,8 +154,7 @@ def test_read_comment3():
         \t\t<name3>Dudu</name3>
         \t</user>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -180,22 +167,18 @@ def test_read_comment3():
 
 
 def test_read_comment4():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<!--TAG>xxx
         \t</TAG -->
         </root>
-        """
-    )
+        """)
 
-    dst = textwrap.dedent(
-        """\
+    dst = textwrap.dedent("""\
         <root>
         \t<!-- <TAG>xxx</TAG> -->
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -249,8 +232,7 @@ def test_simple_find_and_get_path():
 
 
 def test_complex_find_and_get_path():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <A id="1">
                 <B/>
@@ -283,8 +265,7 @@ def test_complex_find_and_get_path():
             </A>
         </root>
 
-        """
-    )
+        """)
     file_name = __create_file(src)
     xml = SmartXML(file_name)
 
@@ -324,8 +305,7 @@ def test_complex_find_and_get_path():
 
 
 def test_parent_son():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <A>
                 <B><C/></B>
@@ -335,8 +315,7 @@ def test_parent_son():
             </A>
         </root>
 
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -357,31 +336,25 @@ def test_parent_son():
 
 
 def test_one_line_comment():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<tag1>Dudu</tag1>
         \t<tag2>Dudu</tag2>
         </root>
-        """
-    )
-    dst1 = textwrap.dedent(
-        """\
+        """)
+    dst1 = textwrap.dedent("""\
         <root>
         \t<!-- <tag1>Dudu</tag1> -->
         \t<!-- <tag2>Dudu</tag2> -->
         </root>
-        """
-    )
+        """)
 
-    dst2 = textwrap.dedent(
-        """\
+    dst2 = textwrap.dedent("""\
         <root>
         \t<!-- <tag1>Dudu</tag1> -->
         \t<tag2>Dudu</tag2>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -424,8 +397,7 @@ def test_one_line_comment():
 
 
 def test_nested_comment_1():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         <!-- 
             <tag2>
@@ -433,8 +405,7 @@ def test_nested_comment_1():
             </tag2>
         -->
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -445,8 +416,7 @@ def test_nested_comment_1():
 
 
 def test_nested_comment_2():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         <!-- 
             <tag2>
@@ -454,8 +424,7 @@ def test_nested_comment_2():
             </tag2>
         -->
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -466,13 +435,11 @@ def test_nested_comment_2():
 
 
 def test_nested_comment_3():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         <!-- tag2><!-- <tag111><tag33/></tag111> --></tag2 -->
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -483,8 +450,7 @@ def test_nested_comment_3():
 
 
 def test_nested_comment_sons():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <tag1> 
                 <tag2>
@@ -498,8 +464,7 @@ def test_nested_comment_sons():
                 </tag2>
             </tag1>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -512,26 +477,22 @@ def test_nested_comment_sons():
 
 
 def test_comment_1():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<user>
         \t\t<tag1>Dudu</tag1>
         \t\t<tag2>Dudu</tag2>
         \t</user>
         </root>
-        """
-    )
-    dst = textwrap.dedent(
-        """\
+        """)
+    dst = textwrap.dedent("""\
         <root>
         \t<user>
         \t\t<!-- <tag1>Dudu</tag1> -->
         \t\t<!-- <tag2>Dudu</tag2> -->
         \t</user>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -560,8 +521,7 @@ def test_comment_1():
 
 
 def test_comment_2():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<!--
         \t\t<tag1>tt1</tag1>
@@ -569,8 +529,7 @@ def test_comment_2():
         \t\t<tag3>tt3</tag3>
         \t-->
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -592,34 +551,28 @@ def test_comment_2():
 
 
 def test_one_line_comment2():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<user>
         \t\t<!--<tag1>000</tag1>-->
         \t</user>
         </root>
-        """
-    )
-    dst1 = textwrap.dedent(
-        """\
+        """)
+    dst1 = textwrap.dedent("""\
         <root>
         \t<user>
         \t\t<!-- <tag1>000</tag1> -->
         \t</user>
         </root>
-        """
-    )
+        """)
 
-    dst2 = textwrap.dedent(
-        """\
+    dst2 = textwrap.dedent("""\
         <root>
         \t<user>
         \t\t<tag1>000</tag1>
         \t</user>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -638,14 +591,11 @@ def test_one_line_comment2():
 
 
 def test_one_line_comment3():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <user>        <!--<tag1>aaa<tag2>bbb<tag3>ccc</tag3></tag2></tag1>-->
             </user>
-        """
-    )
-    dst1 = textwrap.dedent(
-        """\
+        """)
+    dst1 = textwrap.dedent("""\
         <user>
         \t<!--
         \t\t<tag1>aaa
@@ -655,11 +605,9 @@ def test_one_line_comment3():
         \t\t</tag1>
         \t-->
         </user>
-        """
-    )
+        """)
 
-    dst2 = textwrap.dedent(
-        """\
+    dst2 = textwrap.dedent("""\
         <user>
         \t<tag1>aaa
         \t\t<tag2>bbb
@@ -667,8 +615,7 @@ def test_one_line_comment3():
         \t\t</tag2>
         \t</tag1>
         </user>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -699,17 +646,14 @@ def test_one_line_comment3():
 
 
 def test_comment6():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t\t\t<tag1 id="1">
         \t\t\t\t<tag2>bbb</tag2><tag3>ccc</tag3>
         \t\t\t<tag4/></tag1>
         </root>
-        """
-    )
-    dst1 = textwrap.dedent(
-        """\
+        """)
+    dst1 = textwrap.dedent("""\
         <root>
         \t<!--
         \t\t<tag1 id="1">
@@ -719,8 +663,7 @@ def test_comment6():
         \t\t</tag1>
         \t-->
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -735,8 +678,7 @@ def test_comment6():
 
 
 def test_comment_stress():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<!-- <tag0>zfgrhbsddrfb</tag0> -->
         \t<!-- <tag1></tag1> -->
@@ -744,10 +686,8 @@ def test_comment_stress():
         \t<!-- <tag3/> -->
         \t<!-- <tag4/> -->
         </root>
-        """
-    )
-    all_tags_are_commented = textwrap.dedent(
-        """\
+        """)
+    all_tags_are_commented = textwrap.dedent("""\
         <root>
         \t<!-- <tag0>zfgrhbsddrfb</tag0> -->
         \t<!-- <tag1></tag1> -->
@@ -755,10 +695,8 @@ def test_comment_stress():
         \t<!-- <tag3/> -->
         \t<!-- <tag4/> -->
         </root>
-        """
-    )
-    no_tags_is_commented = textwrap.dedent(
-        """\
+        """)
+    no_tags_is_commented = textwrap.dedent("""\
         <root>
         \t<tag0>zfgrhbsddrfb</tag0>
         \t<tag1></tag1>
@@ -766,8 +704,7 @@ def test_comment_stress():
         \t<tag3/>
         \t<tag4/>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -833,13 +770,11 @@ def test_find_duplication():
 
 
 def test_attributes():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <settings>
         <user id="42" role="admin" xxxxxxxxxxxxxxxxxxxxxxxxx="yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"/>
         </settings>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -851,8 +786,7 @@ def test_attributes():
 
 
 def test_find_name():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <start>
             <A id="1">
                 <A id="2">
@@ -867,8 +801,7 @@ def test_find_name():
                 </A>
             </A>
         </start>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -895,8 +828,7 @@ def test_find_name():
 
 
 def test_find_name_2():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <start>
             <A id="A1">
                 <B id="B1">
@@ -911,8 +843,7 @@ def test_find_name_2():
                 </B>
             </A>
         </start>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -938,8 +869,7 @@ def test_find_name_2():
 
 
 def test_find_1():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <start>
             <!DOCTYPE note [
@@ -962,8 +892,7 @@ def test_find_1():
                 </B>
             </A>
         </start>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -997,13 +926,11 @@ def test_find_1():
 
 
 def test_bad_find():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <head version="1.0">This is the head
         \t<tag1></tag1>
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1015,12 +942,10 @@ def test_bad_find():
 
 
 def test_bad_format_1():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <start><B>
         </start>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1031,12 +956,10 @@ def test_bad_format_1():
 
 
 def test_bad_format_2():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <start></start>
         <start></start>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1047,14 +970,12 @@ def test_bad_format_2():
 
 
 def test_bad_format_3():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <user>
             <name>Alex</name>
             <email>alex@example.com
         </user>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1065,11 +986,9 @@ def test_bad_format_3():
 
 
 def test_bad_format_4():
-    src = textwrap.dedent(
-        """
+    src = textwrap.dedent("""
         <b><i>This is bold and italic</b></i>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1080,11 +999,9 @@ def test_bad_format_4():
 
 
 def test_bad_format_5():
-    src = textwrap.dedent(
-        """
+    src = textwrap.dedent("""
         <1st_place>John</1st_place>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1096,16 +1013,14 @@ def test_bad_format_5():
 
 
 def test_bad_format_6():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
          <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <head version="1.0">This is the head
         \t<tag1></tag1>
         \t<!-- <tag2></tag2> -->
         \t<tag3/>
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1116,16 +1031,14 @@ def test_bad_format_6():
 
 
 def test_bad_format_7():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <?xml version="1.0" encoding="UTF-8" standalone="yes">
         <head version="1.0">This is the head
         \t<tag1></tag1>
         \t<!-- <tag2></tag2> -->
         \t<tag3/>
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1136,13 +1049,11 @@ def test_bad_format_7():
 
 
 def test_bad_format_8():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <head version="1.0">This is the head
         \t<tag1></tag2>
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1153,13 +1064,11 @@ def test_bad_format_8():
 
 
 def test_bad_format_9():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <head version="1.0">This is the head
         \t<!--tag1></tag1>
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1170,13 +1079,11 @@ def test_bad_format_9():
 
 
 def test_bad_format_10():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <head version="1.0">This is the head
         \t<!--<tag1></tag1>>
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1187,13 +1094,11 @@ def test_bad_format_10():
 
 
 def test_bad_format_11():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <head version="1.0">This is the head
         \t<!-- T!--AG /TAG -->
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1204,16 +1109,14 @@ def test_bad_format_11():
 
 
 def test_bad_format_12():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <head version="1.0">This is the head
         \t<tag1></tag1>
         \t<<tag2></tag2> -->
         \t<tag3/>
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
 
@@ -1243,8 +1146,7 @@ def test_read_me_example():
     xml.write(output_file)
     result = output_file.read_text()
 
-    dst = textwrap.dedent(
-        """\
+    dst = textwrap.dedent("""\
 <?xml version="1.0" encoding="UTF-8"?>
 <students>
 \t<student id="S001">
@@ -1272,15 +1174,13 @@ def test_read_me_example():
 \t\t<email>noa.shalev@example.com</email>
 \t</student>
 </students>
-"""
-    )
+""")
 
     assert result == dst
 
 
 def test_find_with_content():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <head version="1.0">This is the head
             <tag1></tag1>
             <!-- <tag2 id="1">content 1</tag2> -->
@@ -1291,8 +1191,7 @@ def test_find_with_content():
             </tag2>
             <tag3/>
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1314,8 +1213,7 @@ def test_find_with_content():
 
 
 def test_find_all_with_content():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <head version="1.0">This is the head
             <tag1></tag1>
             <!-- <tag2 id="1">content</tag2> -->
@@ -1327,8 +1225,7 @@ def test_find_all_with_content():
             <tag3/>
             <tag4>xxx</tag4>
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1363,8 +1260,7 @@ def test_read_me_example_ver1():
     xml.write(output_file)
     result = output_file.read_text()
 
-    dst = textwrap.dedent(
-        """\
+    dst = textwrap.dedent("""\
 <?xml version="1.0" encoding="UTF-8"?>
 <students>
 \t<student id="S001">
@@ -1392,15 +1288,13 @@ def test_read_me_example_ver1():
 \t\t<email>noa.shalev@example.com</email>
 \t</student>
 </students>
-"""
-    )
+""")
 
     assert result == dst
 
 
 def test_build_tree():
-    dst = textwrap.dedent(
-        """\
+    dst = textwrap.dedent("""\
         <head version="1.0">This is the head
         \t<tag1></tag1>
         \t<!-- tag4 comment -->
@@ -1408,8 +1302,7 @@ def test_build_tree():
         \t<tag5></tag5>
         \t<tag3/>
         </head>
-        """
-    )
+        """)
 
     xml = SmartXML()
     head = Element("head")
@@ -1441,16 +1334,14 @@ def test_build_tree():
 
 
 def test_declaration():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <head version="1.0">This is the head
         \t<tag1></tag1>
         \t<!-- <tag2></tag2> -->
         \t<tag3/>
         </head>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1462,8 +1353,7 @@ def test_declaration():
 
 
 def test_remove():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <!--
                 <tag1>000</tag1>
@@ -1473,23 +1363,18 @@ def test_remove():
                 <ccccc></ccccc> 
             </aaaaa>
         </root>
-        """
-    )
-    dst1 = textwrap.dedent(
-        """\
+        """)
+    dst1 = textwrap.dedent("""\
         <root>
         \t<!-- <tag1>000</tag1> -->
         \t<aaaaa></aaaaa>
         </root>
-        """
-    )
-    dst2 = textwrap.dedent(
-        """\
+        """)
+    dst2 = textwrap.dedent("""\
         <root>
         \t<aaaaa></aaaaa>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1515,21 +1400,17 @@ def test_remove():
 
 
 def test_remove2():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <aaaaa>
                 <bbbbb/>
                 <ccccc></ccccc> 
             </aaaaa>
         </root>
-        """
-    )
-    dst = textwrap.dedent(
-        """\
+        """)
+    dst = textwrap.dedent("""\
         <root></root>
-        """
-    )
+        """)
     file_name = __create_file(src)
     xml = SmartXML(file_name)
 
@@ -1544,26 +1425,22 @@ def test_remove2():
 
 
 def test_tag_manipulations():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <aaaaa>
                 <bbbbb/>
                 <ccccc></ccccc> 
             </aaaaa>
         </root>
-        """
-    )
-    dst = textwrap.dedent(
-        """\
+        """)
+    dst = textwrap.dedent("""\
         <root>
         \t<a id1="42" id2="aaa">content
         \t\t<!-- <bbbbb/> -->
         \t\t<ccccc/>
         \t</a>
         </root>
-        """
-    )
+        """)
     file_name = __create_file(src)
     xml = SmartXML(file_name)
 
@@ -1596,8 +1473,7 @@ def test_tag_manipulations():
 
 
 def test_indentation():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <A>
                 <B><C/></B>
@@ -1606,10 +1482,8 @@ def test_indentation():
                 </A>
             </A>
         </root>
-        """
-    )
-    dst1 = textwrap.dedent(
-        """\
+        """)
+    dst1 = textwrap.dedent("""\
         <root>
          <A>
           <B>
@@ -1622,10 +1496,8 @@ def test_indentation():
           </A>
          </A>
         </root>
-        """
-    )
-    dst2 = textwrap.dedent(
-        """\
+        """)
+    dst2 = textwrap.dedent("""\
         <root>
         -<A>
         --<B>
@@ -1638,10 +1510,8 @@ def test_indentation():
         --</A>
         -</A>
         </root>
-        """
-    )
-    dst3 = textwrap.dedent(
-        """\
+        """)
+    dst3 = textwrap.dedent("""\
         <root>
         <A>
         <B>
@@ -1654,10 +1524,8 @@ def test_indentation():
         </A>
         </A>
         </root>
-        """
-    )
-    dst4 = textwrap.dedent(
-        """\
+        """)
+    dst4 = textwrap.dedent("""\
         <root>
         #$<A>
         #$#$<B>
@@ -1670,8 +1538,7 @@ def test_indentation():
         #$#$</A>
         #$</A>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1693,15 +1560,13 @@ def test_indentation():
 
 
 def test_c_data():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<AAA/>
         \t<![CDATA[A story about <coding> & "logic". The <tags> inside here are ignored by the parser.]]>
         \t<AAA/>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1711,8 +1576,7 @@ def test_c_data():
 
 
 def test_c_data_2():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <?xml version="1.0"?>
         <!DOCTYPE note [
         \t<!ELEMENT note (to, from, body)>
@@ -1723,8 +1587,7 @@ def test_c_data_2():
         <root>
         \t<![CDATA[A story about <coding> & "logic". The <tags> inside here are ignored by the parser.]]>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1734,8 +1597,7 @@ def test_c_data_2():
 
 
 def test_c_data_3():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <!DOCTYPE note [
         \t<!-- Parameter entity (DTD-only macro) -->
         \t<!ENTITY % personContent "(name, email)">
@@ -1759,8 +1621,7 @@ def test_c_data_3():
         \t\ttype  NOTATION (jpeg) #REQUIRED>
         ]>
         <root></root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1770,25 +1631,21 @@ def test_c_data_3():
 
 
 def test_to_string():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <tag1>
                 <bbbbb/>
                 <ccccc></ccccc> 
             </tag1>
         </root>
-        """
-    )
+        """)
 
-    dst1 = textwrap.dedent(
-        """\
+    dst1 = textwrap.dedent("""\
         <tag1>
         \t<bbbbb/>
         \t<ccccc></ccccc>
         </tag1>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1818,15 +1675,13 @@ def test_read():
     assert str(error.value) == "File ssss does not exist"
     assert error.type is FileNotFoundError
 
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<AAA/>
         \t<![CDATA[A story about <coding> & "logic". The <tags> inside here are ignored by the parser.]]>
         \t<AAA/>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml.read(file_name)
@@ -1836,16 +1691,14 @@ def test_read():
 
 
 def test_test_comment_more_than_one_line():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<!--
         \tA story about coding logic.
         \tA story about coding logic.
         \t-->
         </root>
-        """
-    )
+        """)
     file_name = __create_file(src)
     xml = SmartXML(file_name)
 
@@ -1855,16 +1708,14 @@ def test_test_comment_more_than_one_line():
 
 
 def test_test_comment_with_small_sign():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<!--
         \tA story about <coding> & "logic".
         \tA story about <coding> & "logic".
         \t-->
         </root>
-        """
-    )
+        """)
     file_name = __create_file(src)
     xml = SmartXML(file_name)
 
@@ -1874,16 +1725,14 @@ def test_test_comment_with_small_sign():
 
 
 def test_test_comment_with_bad_elements():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
         \t<!--
         \t<tag1> A story about</tag1>
         \t<tag2> Node: tag2 is not closed!!!! </tag2
         \t-->
         </root>
-        """
-    )
+        """)
     file_name = __create_file(src)
     xml = SmartXML(file_name)
 
@@ -1964,8 +1813,7 @@ def test_parse_element():
 
 
 def test_find_2():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <start>
             <!DOCTYPE note [
@@ -1978,8 +1826,7 @@ def test_find_2():
             <!-- <A/ -->
             <!-- <B> -->
         </start>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -1992,8 +1839,7 @@ def test_find_2():
 
 
 def test_find_case():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <A>
                 <AA>
@@ -2006,8 +1852,7 @@ def test_find_case():
             </A>
         </root>
 
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -2050,13 +1895,11 @@ def test_find_case():
 
 
 def test_find_in_comment():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <!--aaa id="yes"></aaa-->
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -2065,8 +1908,7 @@ def test_find_in_comment():
 
 
 def test_find_case_2():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <abc id="abc">
                 <Abc id="Abc">
@@ -2077,8 +1919,7 @@ def test_find_case_2():
                 </Abc>
             </abc>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -2102,8 +1943,7 @@ def test_find_case_2():
 
 
 def test_find_case_content():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <abc id="abc">___abc___
                 <Abc id="Abc">___Abc___
@@ -2114,8 +1954,7 @@ def test_find_case_content():
                 </Abc>
             </abc>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -2140,8 +1979,7 @@ def test_find_case_content():
 
 @pytest.mark.one
 def test_mixed_content():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root>
             <tag1 id="abc">abc
                 <tag2 id="Abc">123
@@ -2154,11 +1992,9 @@ def test_mixed_content():
                 </tag3>
             </tag1>
         </root>
-        """
-    )
+        """)
 
-    dst = textwrap.dedent(
-        """\
+    dst = textwrap.dedent("""\
         <root>
         \t<tag1 id="abc">abc
         \t\t<tag2 id="Abc">123
@@ -2172,8 +2008,7 @@ def test_mixed_content():
         \t\t</tag3>
         \t</tag1>
         </root>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -2185,14 +2020,12 @@ def test_mixed_content():
 
 
 def test_bad_naming():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <students>
         <student><firstName>Alice</firstName><lastName>Cohen</lastName><age>20</age><grade>90</grade>
         \t\t\t\t\t<email>alice.cohen@example.com</email>
         \t\t\t\t\t\t</student></students>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -2212,15 +2045,13 @@ def test_one_line():
 
 
 def test_stam():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <A>
             <!--
                 <B/>
             -->
         </A>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -2233,18 +2064,14 @@ def test_stam():
 
 
 def test_change_content_of_empty_tag():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <user><email/></user>
-        """
-    )
-    dst = textwrap.dedent(
-        """\
+        """)
+    dst = textwrap.dedent("""\
         <user>
         \t<email>AAA@bbb.com</email>
         </user>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -2257,20 +2084,16 @@ def test_change_content_of_empty_tag():
 
 
 def test_add_tag_to_empty_tag():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <user><email/></user>
-        """
-    )
-    dst = textwrap.dedent(
-        """\
+        """)
+    dst = textwrap.dedent("""\
         <user>
         \t<email>
         \t\t<driver></driver>
         \t</email>
         </user>
-        """
-    )
+        """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
@@ -2285,16 +2108,13 @@ def test_add_tag_to_empty_tag():
 
 # @pytest.mark.skip(reason="Multiline content not supported yet")
 def test_all_adds_to_empty_element():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root x="1">aa
            <tag1 dljhsn="sdfjhgs"/>three little birds
         </root>
-        """
-    )
+        """)
 
-    dst = textwrap.dedent(
-        """\
+    dst = textwrap.dedent("""\
         <root x="1">aa
           <add_one></add_one>
           <tag1 dljhsn="sdfjhgs">
@@ -2303,8 +2123,7 @@ def test_all_adds_to_empty_element():
           <add_three></add_three>
           three little birds
         </root>
-        """
-    )
+        """)
 
     # Add son to an empty element with content and attributes
 
@@ -2331,31 +2150,45 @@ def test_all_adds_to_empty_element():
 
 
 def test_complex_text():
-    src = textwrap.dedent(
-        """\
+    src = textwrap.dedent("""\
         <root x="1">first text
            <tag1 dljhsn="sdfjhgs"/>second text
            <tag2>tag2 text</tag2>
            third text
         </root>
-        """
-    )
+        """)
 
-    dst = textwrap.dedent(
-        """\
+    dst = textwrap.dedent("""\
         <root x="1">first text
-            <tag1 dljhsn="sdfjhgs"/>
+            <tag1 dljhsn="sdfjhgs">
+                <add_one>the weals on the bus go round and round
+                    <add_two></add_two>
+                </add_one>
+            </tag1>
             second text
             <tag2>tag2 text</tag2>
             third text
         </root>
-        """
-    )
+        """)
 
     # Add son to an empty element with content and attributes
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
+
+    tag1 = xml.find("tag1")
+
+    one = Element("add_one")
+    two = Element("add_two")
+    content = ContentOnly("the weals on the bus go round and round")
+
+    one.add_as_last_son_of(tag1)
+    two.add_as_last_son_of(one)
+    content.add_as_first_son_of(one)
+
+    one.add_as_first_son_of(tag1)
+
+    _test_tree_integrity(xml)
 
     xml.write(indentation="    ")
     result = file_name.read_text()
