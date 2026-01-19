@@ -150,15 +150,6 @@ class ElementBase:
         """Add this element as the first son of the given parent element."""
         self._insert_into_parent_at_index(parent, 0)
 
-    def add_as_son_of(self, parent: Self):
-        """Add this element as a son of the given parent element."""
-        warnings.warn(
-            "add_as_son_of() is deprecated and will be removed in version 1.1.0 . add_as_last_son_of instead.",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        self.add_as_last_son_of(parent)
-
     def set_as_parent_of(self, son: Self):
         """Set this element as the parent of the given son element."""
         warnings.warn(
