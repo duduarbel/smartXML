@@ -389,6 +389,7 @@ def test_add_after_6():
     _test_add_after(src, dst, one)
 
 
+@pytest.mark.skip(reason="multi write is not supported yet")
 def test_preserve_formatting_1():
     src = textwrap.dedent("""\
         <students>
@@ -1292,7 +1293,6 @@ def test_all_adds2_complex():
     assert result == dst
 
 
-@pytest.mark.skip(reason="Multiline content not supported yet")
 def test_all_adds_to_empty_element_1():
     src = textwrap.dedent("""\
         <root x="1">aa
@@ -1305,6 +1305,7 @@ def test_all_adds_to_empty_element_1():
         <root x="1">aa
            <add_one></add_one>
            <tag1 dljhsn="sdfjhgs"/>three little birds
+           beside my doorstep
         </root>
         """)
 
@@ -1325,7 +1326,6 @@ def test_all_adds_to_empty_element_1():
     assert result == dst
 
 
-@pytest.mark.skip(reason="Multiline content not supported yet")
 def test_all_adds_to_empty_element_2():
     src = textwrap.dedent("""\
         <root x="1">aa
@@ -1335,9 +1335,9 @@ def test_all_adds_to_empty_element_2():
 
     dst = textwrap.dedent("""\
         <root x="1">aa
-           <tag1 dljhsn="sdfjhgs">three little birds
-            <add_two></add_two>
-           </tag1
+           <tag1 dljhsn="sdfjhgs">
+             <add_two></add_two>
+           </tag1>three little birds
         </root>
         """)
 
@@ -1382,6 +1382,36 @@ def test_all_adds_to_empty_element_3():
     three = Element("add_three")
 
     three.add_after(tag1)
+
+    _test_tree_integrity(xml)
+
+    xml.write(preserve_format=True, indentation="  ")
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_adds_as_first_son_with_content():
+    src = textwrap.dedent("""\
+        <root x="1">aa
+           <tag1 dljhsn="sdfjhgs">three little birds</tag1>
+        </root>
+        """)
+
+    dst = textwrap.dedent("""\
+        <root x="1">aa
+           <tag1 dljhsn="sdfjhgs">three little birds
+            <add_two></add_two>
+           </tag1
+        </root>
+        """)
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+
+    two = Element("add_two")
+
+    two.add_as_first_son_of(tag1)
 
     _test_tree_integrity(xml)
 

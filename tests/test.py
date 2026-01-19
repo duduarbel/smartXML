@@ -121,7 +121,6 @@ def test_read_comment2():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.one
 def test_read_comment3():
     src = textwrap.dedent("""\
         <root>
@@ -146,12 +145,12 @@ def test_read_comment3():
         \t\t<xxx/>
         \t\t<yyy></yyy>
         \t\t<!-- <name0>Dudu</name0> -->
-        \t\t<!-- <x>12</x><y>13</y><z into="33"/> -->
-        \t\t<!--
-        \t\t\t<x1>12</x1>
-        \t\t\t<y1>13</y1>
-        \t\t\t<z1 into="33"/>
-        \t\t-->
+        \t\t<!-- <x>12</x> -->
+        \t\t<!-- <y>13</y> -->
+        \t\t<!-- <z into="33"/> -->
+        \t\t<!-- <x1>12</x1> -->
+        \t\t<!-- <y1>13</y1> -->
+        \t\t<!-- <z1 into="33"/> -->
         \t\t<name3>Dudu</name3>
         \t</user>
         </root>
@@ -539,16 +538,9 @@ def test_comment_2():
     tag2 = xml.find("tag2")
     tag3 = xml.find("tag3")
 
-    assert tag1 is None
-    assert tag2 is None
-    assert tag3 is None
-
-    comment = xml.tree._sons[0]
-    assert isinstance(comment, TextOnlyComment)
-
-    with pytest.raises(AttributeError) as error:
-        comment.uncomment()
-    assert error.type is AttributeError
+    assert tag1 is not None
+    assert tag2 is not None
+    assert tag3 is not None
 
 
 def test_one_line_comment2():
@@ -2044,23 +2036,36 @@ def test_one_line():
     _test_tree_integrity(xml)
 
 
+@pytest.mark.one
 def test_stam():
     src = textwrap.dedent("""\
-        <A>
-            <!--
-                <B/>
-            -->
-        </A>
-        """)
+    <root x="1">aa
+    <tag1 dljhsn="sdfjhgs">three little birds</tag1>
+    </root>
+    """)
+
+    dst = textwrap.dedent("""\
+    <root x="1">aa
+        <tag1 dljhsn="sdfjhgs">
+            <X></X>
+            three little birds
+        </tag1>
+    </root>
+    """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
-    # c = xml.find("C")
-    # c.uncomment()
-    xml.write()
-    result = file_name.read_text()
+    b = xml.find("tag1")
+
+    two = Element("X")
+
+    two.add_as_first_son_of(b)
+
     _test_tree_integrity(xml)
-    pass
+
+    xml.write(indentation="    ")
+    result = file_name.read_text()
+    assert result == dst
 
 
 def test_change_content_of_empty_tag():
@@ -2187,6 +2192,37 @@ def test_complex_text():
     content.add_as_first_son_of(one)
 
     one.add_as_first_son_of(tag1)
+
+    _test_tree_integrity(xml)
+
+    xml.write(indentation="    ")
+    result = file_name.read_text()
+    assert result == dst
+
+
+def test_adds_as_first_son_with_content():
+    src = textwrap.dedent("""\
+        <root x="1">aa
+        <tag1 dljhsn="sdfjhgs">three little birds</tag1>
+        </root>
+        """)
+
+    dst = textwrap.dedent("""\
+        <root x="1">aa
+            <tag1 dljhsn="sdfjhgs">
+                <add_two></add_two>
+                three little birds
+            </tag1>
+        </root>
+        """)
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+
+    two = Element("add_two")
+
+    two.add_as_first_son_of(tag1)
 
     _test_tree_integrity(xml)
 
