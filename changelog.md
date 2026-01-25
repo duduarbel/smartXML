@@ -1,4 +1,6 @@
+## 1.1.3
 - add __str__ to elements
+- fix bugs
 
 ## 1.1.2
 - remove `typing-extensions`
