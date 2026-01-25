@@ -6,6 +6,8 @@ from enum import Enum
 
 from .element import ElementBase, Element, CData, Doctype, TextOnlyComment, ContentOnly
 
+# from tests.time_check import timeit
+
 
 class BadXMLFormat(Exception):
     def __init__(self, message: str):
@@ -23,25 +25,13 @@ class TokenType(Enum):
 
 
 class Token:
-    def __init__(
-        self,
-        token_type: TokenType,
-        data: str,
-        line_number: int,
-        start_index: int,
-        end_index: int,
-        indentation: str = "",
-    ):
+    def __init__(self, token_type: TokenType, data: str, line_number: int):
         self.token_type = token_type
         self.data = data
         self.line_number = line_number
-        self.start_index = start_index
-        self.end_index = end_index
-        self.indentation = indentation
 
     def __repr__(self):
-        indentation = self.indentation.replace(" ", "-")
-        return f"{self.token_type.name}: {self.data} indexes: {self.start_index}-{self.end_index} indentation:'{indentation}'"
+        return f"{self.token_type.name}: {self.data}"
 
 
 def _divide_to_tokens(file_content):
@@ -50,26 +40,6 @@ def _divide_to_tokens(file_content):
     last_char: str = ""
     last_index: int = 0
     line_number: int = 1
-    use_tabs_for_indentation: bool = False
-    index_of_start_line: int = 0
-
-    def create_indentation() -> str:
-        if not use_tabs_for_indentation:
-            return " " * (last_index - index_of_start_line)
-
-        tab_width = 4
-        total_width = 0
-        indent = file_content[index_of_start_line:last_index]
-        for ch in indent:
-            if ch == "\t":
-                total_width = total_width + tab_width
-            else:
-                total_width = total_width + 1
-
-        num_tabs = total_width // tab_width
-        num_spaces = total_width % tab_width
-
-        return ("\t" * num_tabs) + (" " * num_spaces)
 
     index = 0
     length = len(file_content)
@@ -78,26 +48,9 @@ def _divide_to_tokens(file_content):
 
         if char == ">":
             if last_char == "<":
-                tokens.append(
-                    Token(
-                        TokenType.full_tag_name,
-                        file_content[last_index + 1 : index].strip(),
-                        line_number,
-                        last_index,
-                        index,
-                        create_indentation(),
-                    )
-                )
+                tokens.append(Token(TokenType.full_tag_name, file_content[last_index + 1 : index].strip(), line_number))
             else:
-                tokens.append(
-                    Token(
-                        TokenType.closing,
-                        file_content[last_index + 1 : index].strip(),
-                        line_number,
-                        last_index,
-                        index,
-                    )
-                )
+                tokens.append(Token(TokenType.closing, file_content[last_index + 1 : index].strip(), line_number))
             last_char = char
             last_index = index
         elif char == "<":
@@ -107,13 +60,11 @@ def _divide_to_tokens(file_content):
                 text = file_content[last_index + 1 : index]
                 text = text.strip()
                 if text:
-                    tokens.append(Token(TokenType.content, text, line_number, last_index, last_index + 1 + len(text)))
+                    tokens.append(Token(TokenType.content, text, line_number))
             last_char = char
             last_index = index
         elif char == "\n":
             line_number += 1
-            use_tabs_for_indentation = False
-            index_of_start_line = index + 1
         elif char == "!":
             if file_content[index + 1] == "-":
                 # !--
@@ -122,7 +73,7 @@ def _divide_to_tokens(file_content):
                     raise BadXMLFormat(f"Malformed comment in line {line_number}")
 
                 comment = file_content[index + 3 : comment_end_index]
-                tokens.append(Token(TokenType.comment, comment, line_number, last_index, comment_end_index + 2))
+                tokens.append(Token(TokenType.comment, comment, line_number))
 
                 last_char = ""
                 last_index = comment_end_index + 3
@@ -133,7 +84,7 @@ def _divide_to_tokens(file_content):
                 if cdata_end == -1:
                     raise BadXMLFormat(f"Malformed CDATA section in line {line_number}")
                 cdata_content = file_content[index + 8 : cdata_end]
-                tokens.append(Token(TokenType.c_data, cdata_content, line_number, last_index, index))
+                tokens.append(Token(TokenType.c_data, cdata_content, line_number))
                 last_index = cdata_end + 2
                 last_char = ">"
                 index = last_index + 1
@@ -144,14 +95,13 @@ def _divide_to_tokens(file_content):
                 if start == -1:
                     raise BadXMLFormat(f"Malformed DOCTYPE declaration in line {line_number}")
                 doctype = file_content[index:start]
-                tokens.append(Token(TokenType.doctype, doctype, line_number, last_index, index))
+                tokens.append(Token(TokenType.doctype, doctype, line_number))
 
                 last_char = ""
                 last_index = start + 1
                 index = start + 1
                 continue
-        elif char == "\t":
-            use_tabs_for_indentation = True
+
         index += 1
 
     return tokens

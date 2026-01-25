@@ -1,3 +1,6 @@
+## 1.1.5
+- performance improvement
+
 ## 1.1.4
 - add support for searching a text only comment via `find()`
 
