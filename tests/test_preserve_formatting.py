@@ -34,30 +34,25 @@ def _test_add_after(src: str, dst: str, addition: ElementBase, indentation: str 
     assert result == dst
 
 
+@pytest.mark.one
 def test_stam():
     src = textwrap.dedent("""\
-        <A><B><C id="avd"></C><D>90</D>
-        </B></A>
+        <A><tag1>B</tag1>
+            <C></C>
+        </A>
         """)
 
-    dst = textwrap.dedent("""\
-        <A><B>
-              <!--X--><C id="avd"></C><D>90</D>
-        </B></A>
-        """)
-
+    # add new and delete it
     file_name = __create_file(src)
     xml = SmartXML(file_name)
-
-    c = xml.find("C")
-    #    c.name = "CC"   # TODO add this
-
-    tag4 = TextOnlyComment("X")
-    tag4.add_before(c)
+    tag1 = xml.find("tag1")
+    new_tag = Element("new_tag")
+    new_tag.add_after(tag1)
+    new_tag.remove()
 
     xml.write(preserve_format=True)
     result = file_name.read_text()
-    assert result == dst
+    assert result == src
 
 
 def test_add_before_0():
@@ -733,7 +728,7 @@ def test_format_move_element():
         """)
     dst = textwrap.dedent("""\
         <students><tag1>
-                <A ></A>
+                <A></A>
                 <C/   >
                 <D/    >
         </tag1><tag2>
@@ -759,15 +754,15 @@ def test_format_move_element_add_after():
                 <B/  >
                 <C/   >
                 <D/    >
-        </tag1><tag2/></students>
+        </tag1> <tag2/></students>
         """)
     dst = textwrap.dedent("""\
         <students><tag1>
-                <A ></A>
+                <A></A>
                 <C/   >
                 <D/    >
-        </tag1><tag2/>
-               <B/></students>
+        </tag1> <tag2/>
+                <B/></students>
         """)
 
     file_name = __create_file(src)
@@ -792,7 +787,7 @@ def test_format_move_element_add_before():
         """)
     dst = textwrap.dedent("""\
         <students><tag1>
-                <A ></A>
+                <A></A>
                 <C/   >
                 <D/    >
         </tag1>
@@ -935,6 +930,32 @@ def test_preserve_formatting_add_and_delete():
         <root>
             <!-- first comment -->
             <!-- <tag1>000</tag1> -->
+            <tag2>000</tag2>
+            <aaaaa>
+                <bbbbb/>
+                <ccccc></ccccc>
+            </aaaaa>
+        </root>
+        """)
+
+    # add new and delete it
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    tag1 = xml.find("tag1")
+    new_tag = Element("new_tag")
+    new_tag.add_after(tag1)
+    new_tag.remove()
+
+    xml.write(preserve_format=True)
+    result = file_name.read_text()
+    assert result == src
+
+
+def test_preserve_formatting_add_and_delete_2():
+    src = textwrap.dedent("""\
+        <root>
+            <!-- first comment -->
+            <tag1>000</tag1>
             <tag2>000</tag2>
             <aaaaa>
                 <bbbbb/>
@@ -1456,7 +1477,6 @@ def test_all_adds_to_empty_element():
     assert result == dst
 
 
-@pytest.mark.one
 def test_all_adds_several_sons_to_parent_with_no_sons():
     src = textwrap.dedent("""\
         <root x="1">aa
@@ -1471,8 +1491,8 @@ def test_all_adds_several_sons_to_parent_with_no_sons():
              <add_one></add_one>
              <add_two></add_two>
              <add_three></add_three>
-           </tag1
-        </root>
+           </tag1>
+                </root>
         """)
 
     # Add several new sons
@@ -1487,7 +1507,7 @@ def test_all_adds_several_sons_to_parent_with_no_sons():
 
     one.add_as_last_son_of(tag1)
     two.add_as_last_son_of(tag1)
-    # three.add_as_last_son_of(tag1)
+    three.add_as_last_son_of(tag1)
 
     _test_tree_integrity(xml)
 
@@ -1511,7 +1531,7 @@ def test_all_adds_several_sons_to_parent_with_no_sons_same_line():
             <add_one></add_one>
             <add_two></add_two>
             <add_three></add_three>
-           </tag1
+           </tag1>
            <add_three></add_three>
         </root>
         """)
@@ -1612,6 +1632,94 @@ def test_modify_doctype():
 
     xml.write()
     result = file_name.read_text()
+    assert result == dst
+
+
+def test_remove_first_after_content():
+    src = textwrap.dedent("""\
+        <root x="1">aa
+         <tag1 dljhsn="sdfjhgs">three little birds
+            <add_one></add_one>
+            <add_two></add_two>
+            <add_three></add_three>
+           </tag1>
+           <add_three></add_three>
+        </root>
+        """)
+    dst = textwrap.dedent("""\
+        <root x="1">aa
+         <tag1 dljhsn="sdfjhgs">three little birds
+            <add_two></add_two>
+            <add_three></add_three>
+           </tag1>
+           <add_three></add_three>
+        </root>
+    """)
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    add_one = xml.find("add_one")
+    add_one.remove()
+    _test_tree_integrity(xml)
+
+    result = xml.to_string(preserve_format=True, indentation=" ")
+    assert result == dst
+
+
+def test_simple_remove():
+    src = textwrap.dedent("""\
+        <root x="1">aa
+         <tag1 dljhsn="sdfjhgs">
+            <add_one></add_one>
+            <add_two></add_two>
+            <add_three></add_three>
+           </tag1>
+           <add_three></add_three>
+        </root>
+        """)
+    dst = textwrap.dedent("""\
+        <root x="1">aa
+         <tag1 dljhsn="sdfjhgs">
+            <add_two></add_two>
+            <add_three></add_three>
+           </tag1>
+           <add_three></add_three>
+        </root>
+    """)
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    add_one = xml.find("add_one")
+    add_one.remove()
+    _test_tree_integrity(xml)
+
+    result = xml.to_string(preserve_format=True, indentation=" ")
+    assert result == dst
+
+
+def test_last_remove():
+    src = textwrap.dedent("""\
+        <root x="1">aa
+         <tag1    dljhsn="sdfjhgs">
+            <add_one></add_one>
+           </tag1>
+           <add_three></add_three>
+        </root>
+        """)
+    dst = textwrap.dedent("""\
+        <root x="1">aa
+         <tag1 dljhsn="sdfjhgs"></tag1>
+           <add_three></add_three>
+        </root>
+    """)
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    add_one = xml.find("add_one")
+    add_one.remove()
+    _test_tree_integrity(xml)
+
+    result = xml.to_string(preserve_format=True, indentation=" ")
     assert result == dst
 
 

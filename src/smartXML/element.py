@@ -101,15 +101,20 @@ class ElementBase:
         pass
 
     def _remove_from_parent(self):
-        if self._parent is not None:
+        parent = self._parent
+        if parent is not None:
+            brother_above = self._get_higher_sibling()
+            brother_below = self._get_lower_sibling()
+            if brother_above:
+                brother_above._format.end_index = self._format.end_index
+                brother_above._is_modified = True  # needs to be rewritten to actual remove the element
+            elif brother_below:
+                brother_below._format.start_index = self._format.start_index
+                brother_below._is_modified = True  # needs to be rewritten to actual remove the element
+            else:
+                parent._is_modified = True
             index = self._parent._sons.index(self)
-            place_holder = PlaceHolder(self._parent)
-            place_holder._format.start_index = self._format.start_index
-            place_holder._format.end_index = self._format.end_index
-            self._parent._sons[index] = place_holder
-            self._format.start_index = 0
-            self._format.end_index = 0
-            self._parent = None
+            del self._parent._sons[index]
 
     def get_path(self) -> str:
         """Get the full path of the element
@@ -128,7 +133,26 @@ class ElementBase:
             new_parent._is_empty = False
             new_parent._is_modified = True
 
+        brother_above = new_parent._sons[index - 1] if index > 0 else None
+        brother_above_is_content_only = isinstance(brother_above, ContentOnly)
+
         self._remove_from_parent()
+
+        if brother_above and not brother_above_is_content_only:
+            self._format.start_index = self._format.end_index = brother_above._format.end_index + 1
+            self._format.indentation = brother_above._format.indentation
+        elif index < len(new_parent._sons):
+            brother_below = new_parent._sons[index]
+            if brother_above:
+                self._format.start_index = self._format.end_index = brother_above._format.end_index
+                if not brother_above_is_content_only:
+                    self._format.start_index += 1
+                    self._format.end_index += 1
+            else:
+                self._format.start_index = self._format.end_index = brother_below._format.start_index
+            self._format.indentation = brother_below._format.indentation
+        else:
+            new_parent._is_modified = True
 
         self._parent = new_parent
         new_parent._sons.insert(index, self)
@@ -166,7 +190,7 @@ class ElementBase:
         """Remove this element from its parent's sons."""
         self._remove_from_parent()
 
-    def _get_index_in_parent(self):
+    def _get_index_in_parent(self) -> "ElementBase":
         index = 0
         for son in self._parent._sons:
             if son == self:
@@ -175,7 +199,14 @@ class ElementBase:
 
         return -1
 
-    def _get_element_above(self):
+    def _get_higher_sibling(self) -> "ElementBase":
+        index = self._get_index_in_parent()
+        if index > 0:
+            return self._parent._sons[index - 1]
+        else:
+            return None
+
+    def _get_element_above(self) -> "ElementBase":
         """
         Get the element above this one in the XML tree.
         NOTE: Ignoring a first child ContentOnly element.
@@ -189,14 +220,14 @@ class ElementBase:
         else:
             return self.parent
 
-    def _get_lower_sibling(self):
+    def _get_lower_sibling(self) -> "ElementBase":
         index = self._get_index_in_parent()
         if index < len(self._parent._sons) - 1:
             return self._parent._sons[index + 1]
         else:
             return None
 
-    def _get_element_below(self):
+    def _get_element_below(self) -> "ElementBase":
         index = self._get_index_in_parent()
         if index < len(self._parent._sons) - 1:
             return self._parent._sons[index + 1]

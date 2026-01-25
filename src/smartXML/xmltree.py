@@ -502,7 +502,7 @@ class SmartXML:
 
             result = result + original_content[index:index_of_element]
 
-            if isinstance(element, PlaceHolder):
+            if isinstance(element, PlaceHolder):  # TODO - should be removed
                 if is_new_element:
                     index = index_of_element
                 else:
