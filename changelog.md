@@ -1,3 +1,6 @@
+## 1.1.4
+- add support for searching a text only comment via `find()`
+
 ## 1.1.3
 - add __str__ to elements
 - fix bugs

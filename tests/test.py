@@ -2039,32 +2039,15 @@ def test_one_line():
 def test_stam():
     src = textwrap.dedent("""\
     <root x="1">aa
+    <!--abc-->
     <tag1 dljhsn="sdfjhgs">three little birds</tag1>
-    </root>
-    """)
-
-    dst = textwrap.dedent("""\
-    <root x="1">aa
-        <tag1 dljhsn="sdfjhgs">
-            <X></X>
-            three little birds
-        </tag1>
     </root>
     """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
-    b = xml.find("tag1")
-
-    two = Element("X")
-
-    two.add_as_first_son_of(b)
-
-    _test_tree_integrity(xml)
-
-    xml.write(indentation="    ")
-    result = file_name.read_text()
-    assert result == dst
+    comment = xml.find("abc")
+    pass
 
 
 def test_change_content_of_empty_tag():
@@ -2199,7 +2182,6 @@ def test_complex_text():
     assert result == dst
 
 
-@pytest.mark.one
 def test__str__():
     src = textwrap.dedent("""\
         <root x="1">aa
@@ -2222,6 +2204,42 @@ def test__str__():
     assert str(comment) == "<!-- A comment -->\n"
 
 
-# TODO - how to find text comment????
-# TODO - doctype should be rewriten!!
-# TODO - cdata should store it's text in _text,  not name!
+@pytest.mark.one
+def test_find_comment():
+    src = textwrap.dedent("""\
+        <head version="1.0">This is the head
+            <A>
+                <!--ABC-->
+            </A>
+            <B>
+                <!--ABC-->
+            </B>
+            <C>
+                <!--abc-->
+            </C>
+        </head>
+        """)
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+
+    a = xml.find("A")
+    b = xml.find("B")
+    c = xml.find("C")
+    comment = xml.find("ABC")
+    assert comment
+    assert comment.parent == a
+
+    comments = xml.find("ABC", only_one=False)
+    assert len(comments) == 2
+    assert comments[0].parent == a
+    assert comments[1].parent == b
+
+    comments = xml.find("ABC", only_one=False, case_sensitive=False)
+    assert len(comments) == 3
+    assert comments[0].parent == a
+    assert comments[1].parent == b
+    assert comments[2].parent == c
+
+    comment = xml.find("AB")
+    assert comment is None

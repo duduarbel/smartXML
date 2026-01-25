@@ -12,29 +12,6 @@ class IllegalOperation(Exception):
         super().__init__(self.message)
 
 
-def _check_name_match(element: ElementBase, names: str, case_sensitive: bool) -> bool:
-    if names:
-        if case_sensitive:
-            if element.name != names:
-                return False
-        else:
-            if element.name.casefold() != names.casefold():
-                return False
-    return True
-
-
-def _check_content_match(element: ElementBase, with_content: str, case_sensitive: bool) -> bool:
-    if with_content is None:
-        return True
-    if case_sensitive:
-        if element.content == with_content:
-            return True
-    elif element.content.casefold() == with_content.casefold():
-        return True
-
-    return False
-
-
 class ElementBase:
     def __init__(self, name: str):
         self._name = name
@@ -197,6 +174,27 @@ class ElementBase:
         else:
             return self._parent
 
+    def _check_name_match(self, names: str, case_sensitive: bool) -> bool:
+        if names:
+            if case_sensitive:
+                if self.name != names:
+                    return False
+            else:
+                if self.name.casefold() != names.casefold():
+                    return False
+        return True
+
+    def _check_content_match(self, with_content: str, case_sensitive: bool) -> bool:
+        if with_content is None:
+            return True
+        if case_sensitive:
+            if self.content == with_content:
+                return True
+        elif self.content.casefold() == with_content.casefold():
+            return True
+
+        return False
+
     def _find_one_in_sons(
         self, names_list: list[str], with_content: str = None, case_sensitive: bool = True
     ) -> ElementBase | None:
@@ -204,23 +202,23 @@ class ElementBase:
             return self
         for name in names_list:
             for son in self._sons:
-                if _check_name_match(son, name, case_sensitive):
+                if son._check_name_match(name, case_sensitive):
                     found = son._find_one_in_sons(names_list[1:], with_content, case_sensitive)
                     if found:
-                        if _check_content_match(found, with_content, case_sensitive):
+                        if found._check_content_match(with_content, case_sensitive):
                             return found
         return None
 
     def _find_one(self, names: str, with_content: str, case_sensitive: bool) -> ElementBase | None:
 
-        if _check_name_match(self, names, case_sensitive):
-            if _check_content_match(self, with_content, case_sensitive):
+        if self._check_name_match(names, case_sensitive):
+            if self._check_content_match(with_content, case_sensitive):
                 return self
 
         names_list = names.split("|")
 
         if len(names_list) > 1:
-            if _check_name_match(self, names_list[0], case_sensitive):
+            if self._check_name_match(names_list[0], case_sensitive):
                 found = self._find_one_in_sons(names_list[1:], with_content, case_sensitive)
                 if found:
                     return found
@@ -233,8 +231,8 @@ class ElementBase:
 
     def _find_all(self, names: str, with_content: str, case_sensitive: bool) -> list[Element]:
         results = []
-        if _check_name_match(self, names=names, case_sensitive=case_sensitive):
-            if _check_content_match(self, with_content, case_sensitive):
+        if self._check_name_match(names=names, case_sensitive=case_sensitive):
+            if self._check_content_match(with_content, case_sensitive):
                 results.extend([self])
                 for son in self._sons:
                     results.extend(son._find_all(names, with_content, case_sensitive))
@@ -242,14 +240,14 @@ class ElementBase:
 
         names_list = names.split("|")
 
-        if _check_name_match(self, names_list[0], case_sensitive):
-            if _check_content_match(self, with_content, case_sensitive):
+        if self._check_name_match(names_list[0], case_sensitive):
+            if self._check_content_match(with_content, case_sensitive):
                 sons = []
                 sons.extend(self._sons)
                 match = []
                 for index, name in enumerate(names_list[1:]):
                     for son in sons:
-                        if _check_name_match(son, name, case_sensitive):
+                        if son._check_name_match(name, case_sensitive):
                             if index == len(names_list) - 2:
                                 results.append(son)
                             else:
@@ -336,6 +334,16 @@ class TextOnlyComment(ElementBase):
     def text(self) -> str:
         """Get the content of the element."""
         return self._text
+
+    def _check_name_match(self, names: str, case_sensitive: bool) -> bool:
+        if names:
+            if case_sensitive:
+                if self.text != names:
+                    return False
+            else:
+                if self.text.casefold() != names.casefold():
+                    return False
+        return True
 
     @text.setter
     def text(self, text: str):
