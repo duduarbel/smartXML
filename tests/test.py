@@ -1,3 +1,4 @@
+import argparse
 import shutil
 import textwrap
 from readme_example import test_readme_example
@@ -2204,7 +2205,6 @@ def test__str__():
     assert str(comment) == "<!-- A comment -->\n"
 
 
-@pytest.mark.one
 def test_find_comment():
     src = textwrap.dedent("""\
         <head version="1.0">This is the head
@@ -2273,3 +2273,44 @@ def test_find_content():
     assert a.content == "New\nNew Content"
     a.content = "ABC"
     assert a.content == "ABC\nNew Content"
+
+
+def print_green(message: str) -> None:
+    print(f"\033[32m{message}\033[0m")
+
+
+def print_red(message: str) -> None:
+    print(f"\033[31m{message}\033[0m")
+
+
+def skip(name2=None, skip=None) -> None:
+    xml = SmartXML(Path("./files/Settings.xml"))
+
+    protocols = xml.find("settings|Executions|Protocol", only_one=False, case_sensitive=False)
+    for protocol in protocols:
+        protocol_name = protocol.find("Name", case_sensitive=False)
+        if protocol_name:
+            if name2:
+                if protocol_name.content == name2:
+                    skipConnection = protocol.find("SkipConnection", case_sensitive=False)
+                    skipConnection.content = skip
+                    print(f"Set SkipConnection={skip} for protocol {protocol_name.content}")
+                    xml.write()
+
+    for protocol in protocols:
+        if not protocol.is_comment():
+            name = protocol.find("Name", case_sensitive=False)
+            skipConnection = protocol.find("SkipConnection", case_sensitive=False)
+            if skipConnection and skipConnection.content.lower() == "yes":
+                print_red(name.content)
+            else:
+                print_green(name.content)
+
+
+@pytest.mark.one
+def test_skip():
+    skip("BarCap")
+    skip("BarCap", "no")
+    skip("BarCap", "no")
+    skip("BarCap", "yes")
+    skip("BarCap", "yes")

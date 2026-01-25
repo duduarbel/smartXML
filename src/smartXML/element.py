@@ -24,7 +24,7 @@ class ElementBase:
         the_content = ""
         for son in self._sons:
             if isinstance(son, ContentOnly):
-                the_content = the_content + son._text + "\n"
+                the_content += son._text + "\n"
         return the_content.rstrip("\n")
 
     @content.setter
@@ -283,7 +283,7 @@ class ContentOnly(ElementBase):
 
     def __init__(self, text: str):
         super().__init__("")
-        self._text = text
+        self._text = str(text)
 
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index
@@ -312,7 +312,7 @@ class ContentOnly(ElementBase):
     @text.setter
     def text(self, text: str):
         """Set the content of the element."""
-        self._text = text
+        self._text = str(text)
 
     def __repr__(self):
         return f"{self._text}"
@@ -323,7 +323,7 @@ class TextOnlyComment(ElementBase):
 
     def __init__(self, text: str):
         super().__init__("")
-        self._text = text
+        self._text = str(text)
 
     @property
     def text(self) -> str:
