@@ -8,7 +8,9 @@ WORKDIR /app
 
 COPY ./test.py /app
 COPY ./readme_example.py /app
-COPY ./files/* /app/files/
+COPY ./files/students.xml /app/files/
+COPY ./files/test_1.xml /app/files/
+COPY ./files/test_2.xml /app/files/
 
 RUN pip install --upgrade smartXML
 RUN pip install --upgrade smartXML
