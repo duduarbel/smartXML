@@ -115,7 +115,6 @@ class ElementBase:
             new_parent._is_empty = False
             new_parent._is_modified = True
 
-        brother_above = new_parent._sons[index - 1] if index > 0 else None
         self._remove_from_parent()
 
         self._parent = new_parent
@@ -154,7 +153,7 @@ class ElementBase:
         """Remove this element from its parent's sons."""
         self._remove_from_parent()
 
-    def _get_index_in_parent(self) -> "ElementBase":
+    def _get_index_in_parent(self) -> int:
         index = 0
         for son in self._parent._sons:
             if son == self:
@@ -163,14 +162,14 @@ class ElementBase:
 
         return -1
 
-    def _get_higher_sibling(self) -> "ElementBase":
+    def _get_higher_sibling(self) -> ElementBase | None:
         index = self._get_index_in_parent()
         if index > 0:
             return self._parent._sons[index - 1]
         else:
             return None
 
-    def _get_element_above(self) -> "ElementBase":
+    def _get_element_above(self) -> ElementBase:
         """
         Get the element above this one in the XML tree.
         NOTE: Ignoring a first child ContentOnly element.
@@ -184,14 +183,14 @@ class ElementBase:
         else:
             return self.parent
 
-    def _get_lower_sibling(self) -> "ElementBase":
+    def _get_lower_sibling(self) -> ElementBase | None:
         index = self._get_index_in_parent()
         if index < len(self._parent._sons) - 1:
             return self._parent._sons[index + 1]
         else:
             return None
 
-    def _get_element_below(self) -> "ElementBase":
+    def _get_element_below(self) -> ElementBase:
         index = self._get_index_in_parent()
         if index < len(self._parent._sons) - 1:
             return self._parent._sons[index + 1]

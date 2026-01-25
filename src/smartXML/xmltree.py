@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from enum import Enum
 
-from .element import ElementBase, Element, CData, Doctype, TextOnlyComment, PlaceHolder, ContentOnly
+from .element import ElementBase, Element, CData, Doctype, TextOnlyComment, ContentOnly
 
 
 class BadXMLFormat(Exception):
@@ -60,8 +60,8 @@ def _divide_to_tokens(file_content):
         tab_width = 4
         total_width = 0
         indent = file_content[index_of_start_line:last_index]
-        for char in indent:
-            if char == "\t":
+        for ch in indent:
+            if ch == "\t":
                 total_width = total_width + tab_width
             else:
                 total_width = total_width + 1
@@ -165,7 +165,7 @@ def _add_ready_token(incomplete_nodes, ready_nodes, element: ElementBase, depth:
         element._parent = incomplete_nodes[-1]
 
 
-def _parse_element(text: str, start_index: int, start_line_number: int) -> Element:
+def _parse_element(text: str) -> Element:
     index = 0
     text = text.strip()
     length = len(text)
@@ -240,7 +240,7 @@ def _read_elements(text: str) -> list[Element]:
         if token_type == TokenType.full_tag_name:
             # this token is anything that is between < and >
             if data.endswith("/"):
-                element: ElementBase = _parse_element(data[:-1], token.start_index, line_number)
+                element: ElementBase = _parse_element(data[:-1])
                 element._is_empty = True
                 _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1)
 
@@ -260,7 +260,7 @@ def _read_elements(text: str) -> list[Element]:
                     element = Element(data)
                     _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1)
                 else:
-                    element = _parse_element(data, token.start_index, line_number)
+                    element = _parse_element(data)
 
                     incomplete_nodes.append(element)
                     depth += 1
@@ -277,7 +277,7 @@ def _read_elements(text: str) -> list[Element]:
                     comment.comment_out()
                     _add_ready_token(incomplete_nodes, ready_nodes, comment, depth + 1)
                 continue
-            except Exception:
+            except Exception as e:
                 # The content of the comment can not be parsed, so handle this as plain text
                 pass
 
@@ -293,8 +293,8 @@ def _read_elements(text: str) -> list[Element]:
         elif token_type == TokenType.content:
             data = data.splitlines()
             for content in data:
-                contentOnly = ContentOnly(content.strip())
-                _add_ready_token(incomplete_nodes, ready_nodes, contentOnly, depth + 1)
+                content_only = ContentOnly(content.strip())
+                _add_ready_token(incomplete_nodes, ready_nodes, content_only, depth + 1)
 
         elif token_type == TokenType.doctype:
             element = Doctype(data)
@@ -412,99 +412,7 @@ class SmartXML:
         if self._doctype:
             result = result + self._doctype.to_string(indentation)
 
-        preserve_format: bool = False
-        if not preserve_format:
-            result = result + self._tree.to_string(indentation)
-            return result
-
-        if self.tree._is_modified:
-            return self._tree.to_string(0, indentation)
-
-        modifications = []
-
-        def collect_modification(element: ElementBase):
-            if element._is_modified:
-                if element._format.start_index == 0:  # new element
-                    element_above = element._get_element_above()
-                    if element_above != element._parent:
-                        new_indentation = element_above._format.indentation
-                        index_of_element = element_above._format.end_index + 1
-                    else:
-                        if len(element._parent._sons) > 0 and isinstance(element._parent._sons[0], ContentOnly):
-                            index_of_element = element._parent._sons[0]._format.end_index
-                        else:
-                            index_of_element = element._parent._format.index_after_content
-
-                        brother_below = element._get_lower_sibling()
-                        if brother_below:
-                            new_indentation = brother_below._format.indentation
-                        else:
-                            new_indentation = element._parent._format.indentation + indentation
-                else:
-                    new_indentation = element._format.indentation
-                    index_of_element = element._format.start_index
-
-                modifications.append((element, index_of_element, new_indentation))
-            else:
-                for son in element._sons:
-                    collect_modification(son)
-
-        def add_clean_indentation(input_string: str, _indentation: str):
-            if "\t" not in _indentation and "\t" not in input_string:
-                return _indentation + input_string
-            input_string = _indentation + input_string
-            stripped_l = input_string.lstrip()
-            indent_part = input_string[: len(input_string) - len(stripped_l)]
-            tab_width = 4
-
-            visual_width = len(indent_part.expandtabs(tab_width))
-
-            num_tabs = visual_width // tab_width
-            remainder_spaces = visual_width % tab_width
-
-            return ("\t" * num_tabs) + (" " * remainder_spaces) + stripped_l
-
-        original_content = self._file_name.read_text()
-
-        collect_modification(self._tree)
-        if not modifications:
-            return original_content
-
-        index = 0
-        for element, index_of_element, new_indentation in modifications:
-            is_new_element: bool = True if element._format.start_index == element._format.end_index else False
-
-            result = result + original_content[index:index_of_element]
-
-            if isinstance(element, PlaceHolder):  # TODO - should be removed
-                if is_new_element:
-                    index = index_of_element
-                else:
-                    brother_below = element._get_lower_sibling()
-                    index = brother_below._format.start_index  # TODO - wrong. what if no brother below?
-                continue
-
-            text = element._to_string(0, indentation)
-            text_lines = text.splitlines()
-
-            if is_new_element:
-                for line in text_lines:
-                    line = add_clean_indentation(line, new_indentation)
-                    result = result + "\n" + line
-
-                index = index_of_element
-            else:
-                if len(text_lines) == 1:
-                    result = result + text_lines[0]
-                else:
-                    result = result + text_lines[0] + "\n"
-                    for line in text_lines[1:-1]:
-                        result = result + add_clean_indentation(line + "\n", new_indentation)
-                    result = result + add_clean_indentation(text_lines[-1], new_indentation)
-
-                index = element._format.end_index + 1
-
-        result = result + original_content[index:]
+        result = result + self._tree.to_string(indentation)
         return result
 
     def find(

@@ -1768,41 +1768,41 @@ def test_read_elements_minimum_comment():
 
 
 def test_parse_element():
-    element = _parse_element('name id="43" role="admin"', 0, 0)
+    element = _parse_element('name id="43" role="admin"')
     assert element.name == "name"
     assert element.attributes["id"] == "43"
     assert element.attributes["role"] == "admin"
 
-    element = _parse_element('   name   id   =   " 4 3 "    role = " admin" ', 0, 0)
+    element = _parse_element('   name   id   =   " 4 3 "    role = " admin" ')
     assert element.name == "name"
     assert element.attributes["id"] == " 4 3 "
     assert element.attributes["role"] == " admin"
 
-    element = _parse_element(" name ", 0, 0)
+    element = _parse_element(" name ")
     assert element.name == "name"
     assert element.attributes == {}
 
-    element = _parse_element('abc id=""', 0, 0)
+    element = _parse_element('abc id=""')
     assert element.name == "abc"
     assert element.attributes["id"] == ""
 
     with pytest.raises(Exception):
-        _parse_element('name  id="43" role="admin', 0, 0)
+        _parse_element('name  id="43" role="admin')
 
     with pytest.raises(Exception):
-        _parse_element('  id="43" role="admin"', 0, 0)
+        _parse_element('  id="43" role="admin"')
 
     with pytest.raises(Exception):
-        _parse_element('aaa  id="43" 12role="admin"', 0, 0)
+        _parse_element('aaa  id="43" 12role="admin"')
 
     with pytest.raises(Exception):
-        _parse_element('1aaa  id="43" role="admin"', 0, 0)
+        _parse_element('1aaa  id="43" role="admin"')
 
     with pytest.raises(Exception):
-        _parse_element("1aaa  id", 0, 0)
+        _parse_element("1aaa  id")
 
     with pytest.raises(Exception):
-        _parse_element("1aaa  id kjjkj =", 0, 0)
+        _parse_element("1aaa  id kjjkj =")
 
 
 def test_find_2():

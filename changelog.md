@@ -1,3 +1,5 @@
+- add __str__ to elements
+
 ## 1.1.2
 - remove `typing-extensions`
 
