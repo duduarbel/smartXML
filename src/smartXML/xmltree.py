@@ -87,8 +87,7 @@ def _divide_to_tokens(file_content):
                 tokens.append(Token(TokenType.c_data, cdata_content, line_number))
                 last_index = cdata_end + 2
                 last_char = ">"
-                index = last_index + 1
-                continue
+                index = last_index
             elif file_content[index + 1] == "D":
                 # !DOCTYPE
                 start = file_content.find("[", index)
@@ -99,8 +98,7 @@ def _divide_to_tokens(file_content):
 
                 last_char = ""
                 last_index = start + 1
-                index = start + 1
-                continue
+                index = start
 
         index += 1
 
