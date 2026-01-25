@@ -2283,34 +2283,43 @@ def print_red(message: str) -> None:
     print(f"\033[31m{message}\033[0m")
 
 
-def skip(name2=None, skip=None) -> None:
-    xml = SmartXML(Path("./files/Settings.xml"))
+def skip(file_name, name=None, skip_cmd=None):
+    xml = SmartXML(Path(file_name))
 
     protocols = xml.find("settings|Executions|Protocol", only_one=False, case_sensitive=False)
     for protocol in protocols:
         protocol_name = protocol.find("Name", case_sensitive=False)
         if protocol_name:
-            if name2:
-                if protocol_name.content == name2:
-                    skipConnection = protocol.find("SkipConnection", case_sensitive=False)
-                    skipConnection.content = skip
-                    print(f"Set SkipConnection={skip} for protocol {protocol_name.content}")
-                    xml.write()
+            if protocol_name.content == name:
+                skipConnection = protocol.find("SkipConnection", case_sensitive=False)
+                if not skipConnection:
+                    skipConnection = Element("SkipConnection")
+                    skipConnection.add_as_last_son_of(protocol)
+                skipConnection.content = skip_cmd
+                xml.write()
 
     for protocol in protocols:
         if not protocol.is_comment():
-            name = protocol.find("Name", case_sensitive=False)
+            protocol_name = protocol.find("Name", case_sensitive=False)
             skipConnection = protocol.find("SkipConnection", case_sensitive=False)
             if skipConnection and skipConnection.content.lower() == "yes":
-                print_red(name.content)
+                print_red(protocol_name.content)
             else:
-                print_green(name.content)
+                print_green(protocol_name.content)
+
+
+def _skip(name=None, skip2=None):
+    source_file = TEST_FOLDER / Path("files/Settings.xml")
+    input_file = TEST_FOLDER / Path("files/Settings.xml.copy")
+    shutil.copyfile(source_file, input_file)
+    skip("files/Settings.xml.copy", name, skip2)
 
 
 @pytest.mark.one
 def test_skip():
-    skip("BarCap")
-    skip("BarCap", "no")
-    skip("BarCap", "no")
-    skip("BarCap", "yes")
-    skip("BarCap", "yes")
+    _skip("BarCap")
+    _skip("BarCap", "no")
+    _skip("BarCap", "no")
+    _skip("BarCap", "yes")
+    _skip("BarCap", "yes")
+    _skip()
