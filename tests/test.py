@@ -2243,3 +2243,33 @@ def test_find_comment():
 
     comment = xml.find("AB")
     assert comment is None
+
+
+@pytest.mark.one
+def test_find_content():
+    src = textwrap.dedent("""\
+        <head version="1.0">This is the head
+            <A>
+                <!--ABC-->
+            </A>
+            <B>
+                <!--ABC-->
+            </B>
+            <C>
+                <!--abc-->
+            </C>
+        </head>
+        """)
+
+    file_name = __create_file(src)
+    xml = SmartXML(file_name)
+    a = xml.find("A")
+    a.content = "ABC"
+    assert a.content == "ABC"
+    a.content = "New Content"
+    assert a.content == "New Content"
+    content = ContentOnly("New")
+    content.add_as_first_son_of(a)
+    assert a.content == "New\nNew Content"
+    a.content = "ABC"
+    assert a.content == "ABC\nNew Content"

@@ -17,7 +17,6 @@ class ElementBase:
         self._name = name
         self._sons = []
         self._parent: "ElementBase|None" = None
-        self._is_modified: bool = False
 
     @property
     def content(self) -> str:
@@ -27,6 +26,18 @@ class ElementBase:
             if isinstance(son, ContentOnly):
                 the_content = the_content + son._text + "\n"
         return the_content.rstrip("\n")
+
+    @content.setter
+    def content(self, new_content: str):
+        """Set the content of the element."""
+        if len(self._sons) == 0:
+            self._sons.append(ContentOnly(new_content))
+        else:
+            first_son = self._sons[0]
+            if isinstance(first_son, ContentOnly):
+                first_son.text = new_content
+            else:
+                self._sons.insert(0, ContentOnly(new_content))
 
     @property
     def parent(self):
@@ -46,7 +57,6 @@ class ElementBase:
             raise ValueError(f"Invalid tag name '{new_name}'")
 
         self._name = new_name
-        self._is_modified = True
 
     def __repr__(self):
         return f"{self.name}"
@@ -87,10 +97,8 @@ class ElementBase:
         return "|".join(reversed(elements))
 
     def _insert_into_parent_at_index(self, new_parent: "ElementBase", index: int):
-        self._is_modified = True
         if new_parent._is_empty:
             new_parent._is_empty = False
-            new_parent._is_modified = True
 
         self._remove_from_parent()
 
@@ -111,8 +119,6 @@ class ElementBase:
 
     def add_as_first_son_of(self, parent: "ElementBase"):
         """Add this element as the first son of the given parent element."""
-        if len(parent._sons) > 0 and isinstance(parent._sons[0], ContentOnly):
-            parent._is_modified = True
         self._insert_into_parent_at_index(parent, 0)
 
     def set_as_parent_of(self, son: "ElementBase"):
@@ -124,7 +130,6 @@ class ElementBase:
         )
         self._sons.append(son)
         son._parent = self
-        self._is_modified = True
 
     def remove(self):
         """Remove this element from its parent's sons."""
@@ -267,7 +272,6 @@ class PlaceHolder(ElementBase):
 
     def __init__(self, parent: ElementBase):
         super().__init__("")
-        self._is_modified = True
         self._parent = parent
 
     def _to_string(self, index: int, indentation: str) -> str:
@@ -291,20 +295,14 @@ class ContentOnly(ElementBase):
     def add_before(self, sibling: "ElementBase"):
         """Add this element before the given sibling element."""
         super().add_before(sibling)
-        if self._get_index_in_parent() == 0:
-            self._parent._is_modified = True
 
     def add_as_last_son_of(self, parent: "ElementBase"):
         """Add this element as the last son of the given parent element."""
         super().add_as_last_son_of(parent)
-        if self._get_index_in_parent() == 0:
-            self._parent._is_modified = True
 
     def add_as_first_son_of(self, parent: "ElementBase"):
         """Add this element as the first son of the given parent element."""
         super().add_as_first_son_of(parent)
-        if self._get_index_in_parent() == 0:
-            self._parent._is_modified = True
 
     @property
     def text(self) -> str:
@@ -315,9 +313,6 @@ class ContentOnly(ElementBase):
     def text(self, text: str):
         """Set the content of the element."""
         self._text = text
-        self._is_modified = True
-        if self._get_index_in_parent() == 0:
-            self._parent._is_modified = True
 
     def __repr__(self):
         return f"{self._text}"
@@ -349,7 +344,6 @@ class TextOnlyComment(ElementBase):
     def text(self, text: str):
         """Set the content of the element."""
         self._text = text
-        self._is_modified = True
 
     def is_comment(self) -> bool:
         return True
@@ -382,8 +376,6 @@ class CData(ElementBase):
     def text(self, text: str):
         """Set the content of the element."""
         self._text = text
-        self._is_modified = True
-        self._parent._is_modified = True
 
 
 class Doctype(ElementBase):
@@ -444,7 +436,6 @@ class Element(ElementBase):
                 raise IllegalOperation("Cannot comment out an element whose descended is a comment")
 
         self.__class__ = Comment
-        self._is_modified = True
 
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index
@@ -511,7 +502,6 @@ class Comment(Element):
         if self.parent.is_comment():
             raise IllegalOperation("Cannot uncomment an element whose parent is a comment")
         self.__class__ = Element
-        self._is_modified = True
 
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index

@@ -1,3 +1,6 @@
+## 1.1.6
+- fix a bug in content setter
+
 ## 1.1.5
 - performance improvement
 
