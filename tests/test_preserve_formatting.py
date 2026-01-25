@@ -34,7 +34,6 @@ def _test_add_after(src: str, dst: str, addition: ElementBase, indentation: str 
     assert result == dst
 
 
-@pytest.mark.one
 def test_stam():
     src = textwrap.dedent("""\
         <A><tag1>B</tag1>

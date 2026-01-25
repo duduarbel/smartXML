@@ -157,17 +157,12 @@ def _divide_to_tokens(file_content):
     return tokens
 
 
-def _add_ready_token(
-    incomplete_nodes, ready_nodes, element: ElementBase, depth: int, end_index: int, end_line_number: int
-):
+def _add_ready_token(incomplete_nodes, ready_nodes, element: ElementBase, depth: int):
     if len(incomplete_nodes) == 0:
         ready_nodes.setdefault(depth, []).append(element)
     else:
         incomplete_nodes[-1]._sons.append(element)
         element._parent = incomplete_nodes[-1]
-
-    element._format.end_index = end_index
-    element._format.end_line_number = end_line_number
 
 
 def _parse_element(text: str, start_index: int, start_line_number: int) -> Element:
@@ -227,8 +222,6 @@ def _parse_element(text: str, start_index: int, start_line_number: int) -> Eleme
 
     element = Element(name)
     element.attributes = attributes
-    element._format.start_index = start_index
-    element._format.start_line_number = start_line_number
     return element
 
 
@@ -249,9 +242,7 @@ def _read_elements(text: str) -> list[Element]:
             if data.endswith("/"):
                 element: ElementBase = _parse_element(data[:-1], token.start_index, line_number)
                 element._is_empty = True
-                element._format.indentation = token.indentation
-                _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1, token.end_index, line_number)
-                element._format.index_after_content = token.end_index + 1
+                _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1)
 
             elif data.startswith("/"):
                 data = data[1:].strip()
@@ -261,18 +252,15 @@ def _read_elements(text: str) -> list[Element]:
                     raise BadXMLFormat(
                         f"Mismatched XML tags, opening: {element.name}, closing: {data}, in line {line_number}"
                     )
-                _add_ready_token(incomplete_nodes, ready_nodes, element, depth, token.end_index, line_number)
+                _add_ready_token(incomplete_nodes, ready_nodes, element, depth)
                 depth -= 1
 
             else:
                 if incomplete_nodes and isinstance(incomplete_nodes[-1], Doctype):
                     element = Element(data)
-                    _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1, token.end_index, line_number)
+                    _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1)
                 else:
                     element = _parse_element(data, token.start_index, line_number)
-                    element._format.end_index = token.end_index
-                    element._format.indentation = token.indentation
-                    element._format.index_after_content = token.end_index + 1
 
                     incomplete_nodes.append(element)
                     depth += 1
@@ -285,43 +273,28 @@ def _read_elements(text: str) -> list[Element]:
                     elements_in_comment = _read_elements("<" + data + ">")  # support the case of <!--TAG...-->
                 else:
                     elements_in_comment = _read_elements(data)
-                # if len(elements_in_comment) == 1:
                 for comment in elements_in_comment:
-                    # comment = elements_in_comment[0]
                     comment.comment_out()
-                    comment._format.start_index = token.start_index
-                    _add_ready_token(incomplete_nodes, ready_nodes, comment, depth + 1, token.end_index, line_number)
+                    _add_ready_token(incomplete_nodes, ready_nodes, comment, depth + 1)
                 continue
             except Exception:
                 # The content of the comment can not be parsed, so handle this as plain text
                 pass
 
             element = TextOnlyComment(data)
-            element._format.start_index = token.start_index
-            element._format.start_line_number = line_number
 
-            _add_ready_token(
-                incomplete_nodes,
-                ready_nodes,
-                element,
-                depth + 1,
-                element._format.start_index + len(data) + 6,
-                line_number,
-            )
+            _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1)
 
         elif token_type == TokenType.closing:
             element = incomplete_nodes.pop()
-            _add_ready_token(incomplete_nodes, ready_nodes, element, depth, token.end_index, line_number)
+            _add_ready_token(incomplete_nodes, ready_nodes, element, depth)
             depth -= 1
 
         elif token_type == TokenType.content:
             data = data.splitlines()
             for content in data:
                 contentOnly = ContentOnly(content.strip())
-                contentOnly._format.start_index = token.start_index + 1
-                contentOnly._format.start_line_number = line_number
-                contentOnly._format.indentation = token.indentation
-                _add_ready_token(incomplete_nodes, ready_nodes, contentOnly, depth + 1, token.end_index, line_number)
+                _add_ready_token(incomplete_nodes, ready_nodes, contentOnly, depth + 1)
 
         elif token_type == TokenType.doctype:
             element = Doctype(data)
@@ -330,7 +303,7 @@ def _read_elements(text: str) -> list[Element]:
 
         elif token_type == TokenType.c_data:
             element = CData(data)
-            _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1, token.end_index, line_number)
+            _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1)
 
     if incomplete_nodes:
         unclosed = incomplete_nodes[-1]
@@ -405,7 +378,7 @@ class SmartXML:
         else:
             raise BadXMLFormat("xml contains more than one outer element")
 
-    def write(self, file_name: Path = None, indentation: str = "\t", preserve_format: bool = False) -> str | None:
+    def write(self, file_name: Path = None, indentation: str = "\t") -> str | None:
         """Write the XML tree back to the file.
         :param file_name: Path to the XML file, if None, overwrite the original file
         :param indentation: string used for indentation, default is tab character
@@ -422,12 +395,12 @@ class SmartXML:
 
         tmp_file = file_name.resolve().with_name(file_name.name + ".tmp")
 
-        result = self.to_string(indentation=indentation, preserve_format=preserve_format)
+        result = self.to_string(indentation=indentation)  # , preserve_format=preserve_format)
         with open(tmp_file, "w", encoding="utf-8") as file:
             file.write(result)
         os.replace(tmp_file, file_name)
 
-    def to_string(self, indentation: str = "\t", preserve_format: bool = False) -> str:
+    def to_string(self, indentation: str = "\t") -> str:
         """
         Convert the XML tree to a string.
         :param indentation: string used for indentation, default is tab character
@@ -439,6 +412,7 @@ class SmartXML:
         if self._doctype:
             result = result + self._doctype.to_string(indentation)
 
+        preserve_format: bool = False
         if not preserve_format:
             result = result + self._tree.to_string(indentation)
             return result

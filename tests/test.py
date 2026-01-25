@@ -2036,7 +2036,6 @@ def test_one_line():
     _test_tree_integrity(xml)
 
 
-@pytest.mark.one
 def test_stam():
     src = textwrap.dedent("""\
     <root x="1">aa
@@ -2200,35 +2199,27 @@ def test_complex_text():
     assert result == dst
 
 
-def test_adds_as_first_son_with_content():
+@pytest.mark.one
+def test__str__():
     src = textwrap.dedent("""\
-        <root x="1">aa
-        <tag1 dljhsn="sdfjhgs">three little birds</tag1>
-        </root>
-        """)
-
-    dst = textwrap.dedent("""\
         <root x="1">aa
             <tag1 dljhsn="sdfjhgs">
                 <add_two></add_two>
                 three little birds
             </tag1>
+            <!-- A comment -->
         </root>
         """)
 
     file_name = __create_file(src)
     xml = SmartXML(file_name)
     tag1 = xml.find("tag1")
+    comment = xml.tree._sons[2]
+    print(tag1)
+    print(comment)
 
-    two = Element("add_two")
-
-    two.add_as_first_son_of(tag1)
-
-    _test_tree_integrity(xml)
-
-    xml.write(indentation="    ")
-    result = file_name.read_text()
-    assert result == dst
+    assert str(tag1) == '<tag1 dljhsn="sdfjhgs">\n\t<add_two></add_two>\n\tthree little birds\n</tag1>\n'
+    assert str(comment) == "<!-- A comment -->\n"
 
 
 # TODO - how to find text comment????

@@ -35,22 +35,11 @@ def _check_content_match(element: ElementBase, with_content: str, case_sensitive
     return False
 
 
-class Format:
-    def __init__(self):
-        self.start_index: int = 0
-        self.end_index: int = 0
-        self.start_line_number: int = 0
-        self.end_line_number: int = 0
-        self.indentation: str = ""
-        self.index_after_content: int = 0
-
-
 class ElementBase:
     def __init__(self, name: str):
         self._name = name
         self._sons = []
         self._parent: "ElementBase|None" = None
-        self._format: Format = Format()
         self._is_modified: bool = False
 
     @property
@@ -85,6 +74,9 @@ class ElementBase:
     def __repr__(self):
         return f"{self.name}"
 
+    def __str__(self):
+        return self.to_string()
+
     def is_comment(self) -> bool:
         """Check if the element is a comment."""
         return False
@@ -103,16 +95,6 @@ class ElementBase:
     def _remove_from_parent(self):
         parent = self._parent
         if parent is not None:
-            brother_above = self._get_higher_sibling()
-            brother_below = self._get_lower_sibling()
-            if brother_above:
-                brother_above._format.end_index = self._format.end_index
-                brother_above._is_modified = True  # needs to be rewritten to actual remove the element
-            elif brother_below:
-                brother_below._format.start_index = self._format.start_index
-                brother_below._is_modified = True  # needs to be rewritten to actual remove the element
-            else:
-                parent._is_modified = True
             index = self._parent._sons.index(self)
             del self._parent._sons[index]
 
@@ -134,25 +116,7 @@ class ElementBase:
             new_parent._is_modified = True
 
         brother_above = new_parent._sons[index - 1] if index > 0 else None
-        brother_above_is_content_only = isinstance(brother_above, ContentOnly)
-
         self._remove_from_parent()
-
-        if brother_above and not brother_above_is_content_only:
-            self._format.start_index = self._format.end_index = brother_above._format.end_index + 1
-            self._format.indentation = brother_above._format.indentation
-        elif index < len(new_parent._sons):
-            brother_below = new_parent._sons[index]
-            if brother_above:
-                self._format.start_index = self._format.end_index = brother_above._format.end_index
-                if not brother_above_is_content_only:
-                    self._format.start_index += 1
-                    self._format.end_index += 1
-            else:
-                self._format.start_index = self._format.end_index = brother_below._format.start_index
-            self._format.indentation = brother_below._format.indentation
-        else:
-            new_parent._is_modified = True
 
         self._parent = new_parent
         new_parent._sons.insert(index, self)
