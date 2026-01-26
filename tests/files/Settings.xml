@@ -3,8 +3,8 @@
 	<ConfigurationSystem>
 		<Infra>
 			<RepositoryUrl>gitlab.com/qspark/direct/qsdirect</RepositoryUrl>
-			<!-- <Commit>DIR-1756-Curvature-Set-OnBehalfOfCompID-InstinetCore</Commit> -->
-			<Commit>DIR-1584-support-citi-one</Commit>
+			<!-- <Commit>master</Commit> -->
+			<Commit>DIR-1874-purestream-update</Commit>
 		</Infra>
 		<Principle>
 			<Name>HAPIPrinciple</Name>
@@ -40,7 +40,7 @@
 		<ResponseUrl>tcp://10.131.36.5:8010</ResponseUrl>
 		<PublishUrl>tcp://10.131.36.5:8011</PublishUrl>
 		<!-- <ResponseUrl>tcp://127.0.0.1:8010</ResponseUrl> -->
-		<PublishUrl>tcp://127.0.0.1:8011</PublishUrl>
+		<!-- <PublishUrl>tcp://127.0.0.1:8011</PublishUrl> -->
 	</HAPI>
 	<DataService>
 		<base_url>https://dataservice.qspark.trade</base_url>
@@ -58,28 +58,29 @@
 		</Simulation>
 	</Servers>
 	<AllowSkippingNyseXML>Yes</AllowSkippingNyseXML>
-	<Vantage>
-		<Simulation>
-			<Enabled>Yes</Enabled>
-			<Paths>
-				<Symbols>./IO/testStocks.json</Symbols>
-			</Paths>
-		</Simulation>
-		<Enabled>Yes</Enabled>
-		<FQDN>localhost</FQDN>
-		<OperationalMode>Simulation</OperationalMode>
-		<Port>50053</Port>
-	</Vantage>
-	<Startup>
-		<Command>sys-independent-tests-mode</Command>
-	</Startup>
 	<!--
-		<Vantage>
-			<Enabled>Yes</Enabled>
-			<FQDN>vntapp-uat-nv02.qspark.prod</FQDN>
-			<Port>50052</Port>
-		</Vantage>
-	-->
+        <Vantage>
+            <Simulation>
+                <Enabled>Yes</Enabled>
+                <Paths>
+                    <Symbols>./IO/testStocks.json</Symbols>
+                </Paths>
+            </Simulation>
+            <Enabled>Yes</Enabled>
+            <FQDN>localhost</FQDN>
+            <OperationalMode>Simulation</OperationalMode>
+            <Port>50053</Port>
+        </Vantage>
+    -->
+	<Startup>
+		<!-- <Command>sys-independent-tests-mode</Command> -->
+	</Startup>
+	<Vantage>
+		<Enabled>Yes</Enabled>
+		<!--FQDN>vntapp-uat-nv02.qspark.prod</FQDN-->
+		<FQDN>gateway.uat.qspark.trade</FQDN>
+		<Port>50052</Port>
+	</Vantage>
 	<Executions>
 		<Protocol>
 			<Type>Simulation</Type>
@@ -93,262 +94,231 @@
 			<SkipConnection>No</SkipConnection>
 		</Protocol>
 		<!--
-			<Protocol>
-				<Name>CitiOneNxtd</Name>
-				<Type>UAT</Type>
-				<Vlan>2233</Vlan>
-				<SkipConnection>no</SkipConnection>
-			</Protocol>
-		-->
+            <Protocol>
+                <Name>PureStreamNxtd</Name>
+                <Type>UAT</Type>
+                <Vlan>2233</Vlan>
+                <SkipConnection>no</SkipConnection>
+                <SenderCompID>INCA03</SenderCompID>
+                <TargetCompID>STRM</TargetCompID>
+                <IP>170.16.225.199</IP>
+                <Port>22349</Port>
+                <OnBehalfOfCompID>INCXSA</OnBehalfOfCompID>
+                <MPID>ETBE</MPID>
+            </Protocol>
+        -->
+		<!--
+            <Protocol>
+                <Name>PureStreamNxtd</Name>
+                <Type>UAT</Type>
+                <Vlan>2233</Vlan>
+                <SkipConnection>no</SkipConnection>
+            </Protocol>
+        -->
 		<Protocol>
 			<Type>Simulation</Type>
 			<BindToIP>127.0.0.1</BindToIP>
-			<Name>CitiOneNxtd</Name>
+			<Name>PureStreamNxtd</Name>
 			<IP>127.0.0.1</IP>
 			<Port>55112</Port>
 			<TargetCompID>SERVER</TargetCompID>
-			<SenderCompID>CitiOneNxtd</SenderCompID>
+			<SenderCompID>PureStreamNxtd</SenderCompID>
 			<MPID>ETBE</MPID>
 			<SkipConnection>No</SkipConnection>
 			<TargetCompID>ONEC</TargetCompID>
 			<onBehalfOfCompID>1234</onBehalfOfCompID>
 		</Protocol>
-		<!-- <Note>Using local test fix server</Note> -->
 		<!--
-			<Protocol>
-				<Name>BarCap</Name>
-				<Type>UAT</Type>
-				<Vlan>2233</Vlan>
-				<SkipConnection>yes</SkipConnection>
-			</Protocol>
-		-->
-		<Protocol>
-			<Name>NysePillarFix</Name>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-			<SkipConnection>kkk</SkipConnection>
-		</Protocol>
-		<Protocol>
-			<Name>BarCap</Name>
-			<SkipConnection>yes</SkipConnection>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-		</Protocol>
-		<Protocol>
-			<Name>GoldmanSachsSigmaX2</Name>
-			<SkipConnection>Yes</SkipConnection>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-		</Protocol>
-		<Protocol>
-			<Name>InstinetCore</Name>
-			<SkipConnection>Yes</SkipConnection>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-		</Protocol>
-		<Protocol>
-			<Name>InstinetNXTG</Name>
-			<SkipConnection>Yes</SkipConnection>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-		</Protocol>
-		<Protocol>
-			<Name>IEX</Name>
-			<SkipConnection>Yes</SkipConnection>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-		</Protocol>
-		<Protocol>
-			<Name>LeveLATS</Name>
-			<SkipConnection>Yes</SkipConnection>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-		</Protocol>
-		<Protocol>
-			<Name>Pillar</Name>
-			<SkipConnection>Yes</SkipConnection>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-		</Protocol>
-		<Protocol>
-			<Name>Memx</Name>
-			<SkipConnection>Yes</SkipConnection>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-		</Protocol>
-		<Protocol>
-			<Name>Boe2</Name>
-			<SkipConnection>Yes</SkipConnection>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-		</Protocol>
-		<Protocol>
-			<Name>NasdaqOuchFour</Name>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-			<SkipConnection>Yes</SkipConnection>
-		</Protocol>
-		<Protocol>
-			<Name>DirectEdgeABOE2</Name>
-			<Type>UAT</Type>
-			<Vlan>2233</Vlan>
-			<SkipConnection>Yes</SkipConnection>
-		</Protocol>
+            <Protocol>
+                <Name>NasdaqOuchFive</Name>
+                <Type>UAT</Type>
+                <Vlan>2233</Vlan>
+                <SkipConnection>Yes</SkipConnection>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Type>Simulation</Type>
-				<BindToIP>127.0.0.1</BindToIP>
-				<Name>FoxRiver</Name>
-				<IP>127.0.0.1</IP>
-				<Port>55112</Port>
-				<TargetCompID>SERVER</TargetCompID>
-				<SenderCompID>FoxRiver</SenderCompID>
-				<MPID>ETBE</MPID>
-				<SkipConnection>Yes</SkipConnection>
-				<SenderSubID>SenderSubID</SenderSubID>
-				<CompanyGroupId>CompanyGroupId</CompanyGroupId>
-				<OnBehalfOfCompID>ABC</OnBehalfOfCompID>
-			</Protocol>
-		-->
+            <Protocol>
+                <Name>NysePillar</Name>
+                <Type>UAT</Type>
+                <Vlan>2233</Vlan>
+                <SkipConnection>Yes</SkipConnection>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Type>Simulation</Type>
-				<BindToIP>127.0.0.1</BindToIP>
-				<Name>PolarisFix</Name>
-				<IP>127.0.0.1</IP>
-				<Port>55112</Port>
-				<TargetCompID>SERVER</TargetCompID>
-				<SenderCompID>PolarisFix</SenderCompID>
-				<MPID>ETBE</MPID>
-				<SkipConnection>No</SkipConnection>
-				<TargetSubID>TargetSubID</TargetSubID>
-				<OnBehalfOfCompID>OnBehalfOfCompID</OnBehalfOfCompID>
-				<OnBehalfOfSubID>OnBehalfOfSubID</OnBehalfOfSubID>
-				<DeliverToCompID>DeliverToCompID</DeliverToCompID>
-				<companyGroupId>companyGroupId</companyGroupId>
-			</Protocol>
-		-->
+            <Protocol>
+                <Name>NasdaqOuchFour</Name>
+                <Type>UAT</Type>
+                <Vlan>2233</Vlan>
+                <SkipConnection>Yes</SkipConnection>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Name>PolarisFix</Name>
-				<Type>UAT</Type>
-				<Vlan>2233</Vlan>
-				<SkipConnection>No</SkipConnection>
-			</Protocol>
-		-->
+            <Protocol>
+                <Name>DirectEdgeABOE2</Name>
+                <Type>UAT</Type>
+                <Vlan>2233</Vlan>
+                <SkipConnection>Yes</SkipConnection>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Type>Simulation</Type>
-				<BindToIP>127.0.0.1</BindToIP>
-				<Name>IEX</Name>
-				<IP>127.0.0.1</IP>
-				<Port>55112</Port>
-				<TargetCompID>SERVER</TargetCompID>
-				<SenderCompID>IEX</SenderCompID>
-				<MPID>ETBE</MPID>
-				<SkipConnection>No</SkipConnection>
-			</Protocol>
-		-->
-		<Protocol>
-			<Type>Simulation</Type>
-			<BindToIP>127.0.0.1</BindToIP>
-			<Name>InstinetCore</Name>
-			<IP>127.0.0.1</IP>
-			<Port>55112</Port>
-			<TargetCompID>SERVER</TargetCompID>
-			<SenderCompID>InstinetCore</SenderCompID>
-			<MPID>ETBE</MPID>
-			<SkipConnection>No</SkipConnection>
-		</Protocol>
+            <Protocol>
+                <Type>Simulation</Type>
+                <BindToIP>127.0.0.1</BindToIP>
+                <Name>FoxRiver</Name>
+                <IP>127.0.0.1</IP>
+                <Port>55112</Port>
+                <TargetCompID>SERVER</TargetCompID>
+                <SenderCompID>FoxRiver</SenderCompID>
+                <MPID>ETBE</MPID>
+                <SkipConnection>Yes</SkipConnection>
+                <SenderSubID>SenderSubID</SenderSubID>
+                <CompanyGroupId>CompanyGroupId</CompanyGroupId>
+                <OnBehalfOfCompID>ABC</OnBehalfOfCompID>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Name>JPMXNxtd</Name>
-				<Type>UAT</Type>
-				<Vlan>2233</Vlan>
-				<SkipConnection>No</SkipConnection>
-			</Protocol>
-		-->
+            <Protocol>
+                <Type>Simulation</Type>
+                <BindToIP>127.0.0.1</BindToIP>
+                <Name>PolarisFix</Name>
+                <IP>127.0.0.1</IP>
+                <Port>55112</Port>
+                <TargetCompID>SERVER</TargetCompID>
+                <SenderCompID>PolarisFix</SenderCompID>
+                <MPID>ETBE</MPID>
+                <SkipConnection>No</SkipConnection>
+                <TargetSubID>TargetSubID</TargetSubID>
+                <OnBehalfOfCompID>OnBehalfOfCompID</OnBehalfOfCompID>
+                <OnBehalfOfSubID>OnBehalfOfSubID</OnBehalfOfSubID>
+                <DeliverToCompID>DeliverToCompID</DeliverToCompID>
+                <companyGroupId>companyGroupId</companyGroupId>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Type>Simulation</Type>
-				<BindToIP>127.0.0.1</BindToIP>
-				<Name>InstinetNXTG</Name>
-				<IP>127.0.0.1</IP>
-				<Port>55112</Port>
-				<TargetCompID>SERVER</TargetCompID>
-				<SenderCompID>InstinetNXTG</SenderCompID>
-				<MPID>ETBE</MPID>
-				<SkipConnection>Yes</SkipConnection>
-			</Protocol>
-		-->
-		<!--  -->
+            <Protocol>
+                <Name>PolarisFix</Name>
+                <Type>UAT</Type>
+                <Vlan>2233</Vlan>
+                <SkipConnection>No</SkipConnection>
+            </Protocol>
+        -->
+		<!--Protocol>
+           <Type>Simulation</Type>
+            <BindToIP>127.0.0.1</BindToIP>
+        <Name>IEX</Name>
+            <IP>127.0.0.1</IP>
+            <Port>55112</Port>
+            <TargetCompID>SERVER</TargetCompID>
+            <SenderCompID>IEX</SenderCompID>
+            <MPID>ETBE</MPID>
+            <SkipConnection>No</SkipConnection>
+        </Protocol>
+    <Protocol>
+        <Type>Simulation</Type>
+        <BindToIP>127.0.0.1</BindToIP>
+        <Name>InstinetCore</Name>
+        <IP>127.0.0.1</IP>
+        <Port>55112</Port>
+        <TargetCompID>SERVER</TargetCompID>
+        <SenderCompID>InstinetCore</SenderCompID>
+        <MPID>ETBE</MPID/>
+        <SkipConnection>No</SkipConnection>
+    </Protocol-->
 		<!--
-			<Protocol>
-				<Type>UAT</Type>
-				<OnBehalfOfCompID>QSPK</OnBehalfOfCompID>
-				<MPID>ETBE</MPID>
-				<Vlan>1573</Vlan>
-			</Protocol>
-		-->
+            <Protocol>
+                <Name>JPMXNxtd</Name>
+                <Type>UAT</Type>
+                <Vlan>2233</Vlan>
+                <SkipConnection>No</SkipConnection>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Type>Simulation</Type>
-				<Name>BatsBYX2Simulation</Name>
-				<IP>127.0.0.1</IP>
-				<Port>41293</Port>
-				<BindToIP>127.0.0.1</BindToIP>
-				<UserName>S1000</UserName>
-				<MPID>TST</MPID>
-				<SkipConnection>Yes</SkipConnection>
-			</Protocol>
-		-->
+            <Protocol>
+                <Type>Simulation</Type>
+                <BindToIP>127.0.0.1</BindToIP>
+                <Name>InstinetNXTG</Name>
+                <IP>127.0.0.1</IP>
+                <Port>55112</Port>
+                <TargetCompID>SERVER</TargetCompID>
+                <SenderCompID>InstinetNXTG</SenderCompID>
+                <MPID>ETBE</MPID>
+                <SkipConnection>Yes</SkipConnection>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Name>NysePillar</Name>
-				<Type>UAT</Type>
-				<IP>162.68.6.5</IP>
-				<Port>40075</Port>
-				<Username>NYQSPKBN01</Username>
-				<Password>pillargw</Password>
-				<VLAN>1573</VLAN>
-				<MPID>ETBE</MPID>
-				<SkipConnection>Yes</SkipConnection>
-			</Protocol>
-		-->
+            <Protocol>
+                <Name>BarCap</Name>
+                <SkipConnection>No</SkipConnection>
+                <Type>UAT</Type>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Type>UAT</Type>
-				<Name>BatsBZX2</Name>
-				<BindToIP>10.8.96.7</BindToIP>
-				<SkipConnection>No</SkipConnection>
-			</Protocol>
-		-->
+            <Protocol>
+                <Type>UAT</Type>
+                <OnBehalfOfCompID>QSPK</OnBehalfOfCompID>
+                <MPID>ETBE</MPID>
+                <Vlan>1573</Vlan>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Type>UAT</Type>
-				<Name>BatsBYX2</Name>
-				<BindToIP>10.8.96.7</BindToIP>
-			</Protocol>
-		-->
+            <Protocol>
+                <Type>Simulation</Type>
+                <Name>BatsBYX2Simulation</Name>
+                <IP>127.0.0.1</IP>
+                <Port>41293</Port>
+                <BindToIP>127.0.0.1</BindToIP>
+                <UserName>S1000</UserName>
+                <MPID>TST</MPID>
+                <SkipConnection>Yes</SkipConnection>
+            </Protocol>
+        -->
 		<!--
-			<Protocol>
-				<Type>UAT</Type>
-				<Name>InstinetCore</Name>
-				<IP>198.178.38.56</IP>
-				<Port>32411</Port>
-				<VLAN>1573</VLAN>
-				<TargetCompID>INCAUAT</TargetCompID>
-				<SenderCompID>ETC_UAT</SenderCompID>
-				<MPID>ETBE</MPID>
-				<SkipConnection>No</SkipConnection>
-			</Protocol>
-		-->
+            <Protocol>
+                <Name>NysePillar</Name>
+                <Type>UAT</Type>
+                <IP>162.68.6.5</IP>
+                <Port>40075</Port>
+                <Username>NYQSPKBN01</Username>
+                <Password>pillargw</Password>
+                <VLAN>1573</VLAN>
+                <MPID>ETBE</MPID>
+                <SkipConnection>Yes</SkipConnection>
+            </Protocol>
+        -->
+		<!--
+            <Protocol>
+                <Type>UAT</Type>
+                <Name>BatsBZX2</Name>
+                <BindToIP>10.8.96.7</BindToIP>
+                <SkipConnection>No</SkipConnection>
+            </Protocol>
+        -->
+		<!--
+            <Protocol>
+                <Type>UAT</Type>
+                <Name>BatsBYX2</Name>
+                <BindToIP>10.8.96.7</BindToIP>
+            </Protocol>
+        -->
+		<!--
+            <Protocol>
+                <Type>UAT</Type>
+                <Name>InstinetCore</Name>
+                <IP>198.178.38.56</IP>
+                <Port>32411</Port>
+                <VLAN>1573</VLAN>
+                <TargetCompID>INCAUAT</TargetCompID>
+                <SenderCompID>ETC_UAT</SenderCompID>
+                <MPID>ETBE</MPID>
+                <SkipConnection>No</SkipConnection>
+            </Protocol>
+        -->
 	</Executions>
 	<!--
-		<OrderManager>
-			<CancellationPolicy>NONE</CancellationPolicy>
-		</OrderManager>
-	-->
+        <OrderManager>
+            <CancellationPolicy>NONE</CancellationPolicy>
+        </OrderManager>
+    -->
 	<HaltConnectionOnGaps>
 		<Enabled>Yes</Enabled>
 	</HaltConnectionOnGaps>
@@ -364,64 +334,64 @@
 		<ReportToElastic>No</ReportToElastic>
 		<CollectLatencyStatistics>Yes</CollectLatencyStatistics>
 	</ResourceManager>
-	<!-- OMS Mockup !!!!! -->
+	<!-- OMS Mockup !!!!!-->
 	<!--
-		<OrderMarkings>
-			<IsServer>No</IsServer>
-			<ServerIP>127.0.0.1</ServerIP>
-			<ServerTcpPort>23232</ServerTcpPort>
-			<ClientBindTo>127.0.0.1</ClientBindTo>
-			<MulticastIP>225.255.36.22</MulticastIP>
-			<MulticastSourceIP>127.0.0.1</MulticastSourceIP>
-			<MulticastPort>23239</MulticastPort>
-			<MulticastBindTo>127.0.0.1</MulticastBindTo>
-			<HeartbeatIntervalInMillis>8000</HeartbeatIntervalInMillis>
-			<HeartbeatCheckIntervalInMillis>4000</HeartbeatCheckIntervalInMillis>
-			<OvernightFileMaxReadTime>0:00:00</OvernightFileMaxReadTime>
-			<WriteOvernightFileAndExitTime>23:58:00</WriteOvernightFileAndExitTime>
-			<positionTransferSupported>No</positionTransferSupported>
-		</OrderMarkings>
-	-->
+        <OrderMarkings>
+            <IsServer>No</IsServer>
+            <ServerIP>127.0.0.1</ServerIP>
+            <ServerTcpPort>23232</ServerTcpPort>
+            <ClientBindTo>127.0.0.1</ClientBindTo>
+            <MulticastIP>225.255.36.22</MulticastIP>
+            <MulticastSourceIP>127.0.0.1</MulticastSourceIP>
+            <MulticastPort>23239</MulticastPort>
+            <MulticastBindTo>127.0.0.1</MulticastBindTo>
+            <HeartbeatIntervalInMillis>8000</HeartbeatIntervalInMillis>
+            <HeartbeatCheckIntervalInMillis>4000</HeartbeatCheckIntervalInMillis>
+            <OvernightFileMaxReadTime>0:00:00</OvernightFileMaxReadTime>
+            <WriteOvernightFileAndExitTime>23:58:00</WriteOvernightFileAndExitTime>
+            <positionTransferSupported>No</positionTransferSupported>
+        </OrderMarkings>
+    -->
 	<OrderMarkings>
 		<Mockup>Yes</Mockup>
 		<SkipOrderMarkings>No</SkipOrderMarkings>
 		<IsServer>No</IsServer>
 	</OrderMarkings>
 	<!--
-		<OrderMarkings>
-			<IsServer>No</IsServer>
-			<ServerIP>10.131.36.162</ServerIP>
-			<ServerTcpPort>23330</ServerTcpPort>
-			<ClientBindTo>10.131.36.6</ClientBindTo>
-			<MulticastIP>239.30.76.220</MulticastIP>
-			<MulticastSourceIP>10.131.36.162</MulticastSourceIP>
-			<MulticastPort>23340</MulticastPort>
-			<MulticastBindTo>10.131.36.6</MulticastBindTo>
-			<HeartbeatIntervalInMillis>8000</HeartbeatIntervalInMillis>
-			<HeartbeatCheckIntervalInMillis>4000</HeartbeatCheckIntervalInMillis>
-			<OvernightFileMaxReadTime>6:59:59</OvernightFileMaxReadTime>
-			<OvernightFileWriteTime>08:00:00</OvernightFileWriteTime>
-			<zeroCopy>No</zeroCopy>
-		</OrderMarkings>
-	-->
-	<!-- OMS to dir002 !!!!! -->
+        <OrderMarkings>
+            <IsServer>No</IsServer>
+            <ServerIP>10.131.36.162</ServerIP>
+            <ServerTcpPort>23330</ServerTcpPort>
+            <ClientBindTo>10.131.36.6</ClientBindTo>
+            <MulticastIP>239.30.76.220</MulticastIP>
+            <MulticastSourceIP>10.131.36.162</MulticastSourceIP>
+            <MulticastPort>23340</MulticastPort>
+            <MulticastBindTo>10.131.36.6</MulticastBindTo>
+            <HeartbeatIntervalInMillis>8000</HeartbeatIntervalInMillis>
+            <HeartbeatCheckIntervalInMillis>4000</HeartbeatCheckIntervalInMillis>
+            <OvernightFileMaxReadTime>6:59:59</OvernightFileMaxReadTime>
+            <OvernightFileWriteTime>08:00:00</OvernightFileWriteTime>
+            <zeroCopy>No</zeroCopy>
+        </OrderMarkings>
+    -->
+	<!-- OMS to dir002 !!!!!-->
 	<!--
-		<OrderMarkings>
-			<IsServer>No</IsServer>
-			<ServerIP>10.131.36.6</ServerIP>
-			<ServerTcpPort>23330</ServerTcpPort>
-			<ClientBindTo>10.131.36.6</ClientBindTo>
-			<MulticastIP>239.30.76.223</MulticastIP>
-			<MulticastSourceIP>10.131.36.6</MulticastSourceIP>
-			<MulticastPort>23340</MulticastPort>
-			<MulticastBindTo>10.131.36.6</MulticastBindTo>
-			<HeartbeatIntervalInMillis>8000</HeartbeatIntervalInMillis>
-			<HeartbeatCheckIntervalInMillis>4000</HeartbeatCheckIntervalInMillis>
-			<OvernightFileMaxReadTime>6:59:59</OvernightFileMaxReadTime>
-			<WriteOvernightFileAndExitTime>23:58:00</WriteOvernightFileAndExitTime>
-			<positionTransferSupported>No</positionTransferSupported>
-		</OrderMarkings>
-	-->
+        <OrderMarkings>
+            <IsServer>No</IsServer>
+            <ServerIP>10.131.36.6</ServerIP>
+            <ServerTcpPort>23330</ServerTcpPort>
+            <ClientBindTo>10.131.36.6</ClientBindTo>
+            <MulticastIP>239.30.76.223</MulticastIP>
+            <MulticastSourceIP>10.131.36.6</MulticastSourceIP>
+            <MulticastPort>23340</MulticastPort>
+            <MulticastBindTo>10.131.36.6</MulticastBindTo>
+            <HeartbeatIntervalInMillis>8000</HeartbeatIntervalInMillis>
+            <HeartbeatCheckIntervalInMillis>4000</HeartbeatCheckIntervalInMillis>
+            <OvernightFileMaxReadTime>6:59:59</OvernightFileMaxReadTime>
+            <WriteOvernightFileAndExitTime>23:58:00</WriteOvernightFileAndExitTime>
+            <positionTransferSupported>No</positionTransferSupported>
+        </OrderMarkings>
+    -->
 	<CommandLineServer>
 		<Port>45195</Port>
 		<Password>yayyy</Password>
@@ -434,15 +404,15 @@
 		<secondsAfterRequestedLiquidationMode>30</secondsAfterRequestedLiquidationMode>
 	</cancellationWaitTimes>
 	<!--
-		<SimulationServer>
-			<IsServer>Yes</IsServer>
-			<Name>SimulationServer</Name>
-			<IP>127.0.0.1</IP>
-			<Port>44093</Port>
-			<BindToIP>127.0.0.1</BindToIP>
-			<VerbosePlayback>Yes</VerbosePlayback>
-		</SimulationServer>
-	-->
+        <SimulationServer>
+            <IsServer>Yes</IsServer>
+            <Name>SimulationServer</Name>
+            <IP>127.0.0.1</IP>
+            <Port>44093</Port>
+            <BindToIP>127.0.0.1</BindToIP>
+            <VerbosePlayback>Yes</VerbosePlayback>
+        </SimulationServer>
+    -->
 	<OrderTrail>
 		<Active>Yes</Active>
 		<LocalMode>Yes</LocalMode>
@@ -503,93 +473,93 @@
 			</Protocol>
 		</ProtocolGroup>
 		<!--
-			<ProtocolGroup>
-				<GroupName>QSTradesFeedGroup</GroupName>
-				<GroupType>Epoll</GroupType>
-				<Protocol>
-					<Name>QSTradesFeed</Name>
-					<VLAN>2333</VLAN>
-					<MulticastGroup>239.30.76.202</MulticastGroup>
-					<Port>5009</Port>
-					<Type>Production</Type>
-					<SkipConnection>No</SkipConnection>
-				</Protocol>
-				<Protocol>
-					<Name>QSTradesFeed</Name>
-					<VLAN>2333</VLAN>
-					<MulticastGroup>239.30.75.142</MulticastGroup>
-					<Port>6009</Port>
-					<Type>Production</Type>
-					<SkipConnection>No</SkipConnection>
-				</Protocol>
-				<Protocol>
-					<Name>QSTradesFeed</Name>
-					<VLAN>2333</VLAN>
-					<MulticastGroup>239.30.76.102</MulticastGroup>
-					<Port>7009</Port>
-					<Type>Production</Type>
-					<SkipConnection>No</SkipConnection>
-				</Protocol>
-			</ProtocolGroup>
-		-->
+            <ProtocolGroup>
+                <GroupName>QSTradesFeedGroup</GroupName>
+                <GroupType>Epoll</GroupType>
+                <Protocol>
+                    <Name>QSTradesFeed</Name>
+                    <VLAN>2333</VLAN>
+                    <MulticastGroup>239.30.76.202</MulticastGroup>
+                    <Port>5009</Port>
+                    <Type>Production</Type>
+                    <SkipConnection>No</SkipConnection>
+                </Protocol>
+                <Protocol>
+                    <Name>QSTradesFeed</Name>
+                    <VLAN>2333</VLAN>
+                    <MulticastGroup>239.30.75.142</MulticastGroup>
+                    <Port>6009</Port>
+                    <Type>Production</Type>
+                    <SkipConnection>No</SkipConnection>
+                </Protocol>
+                <Protocol>
+                    <Name>QSTradesFeed</Name>
+                    <VLAN>2333</VLAN>
+                    <MulticastGroup>239.30.76.102</MulticastGroup>
+                    <Port>7009</Port>
+                    <Type>Production</Type>
+                    <SkipConnection>No</SkipConnection>
+                </Protocol>
+            </ProtocolGroup>
+        -->
 		<!--
-			<ProtocolGroup>
-				<GroupName>QSTradesFeedGroup</GroupName>
-				<GroupType>Historical</GroupType>
-				<Protocol>
-					<Name>PcapQSTradesFeed</Name>
-					<Port>5009</Port>
-					<Type>Production</Type>
-					<Delay>100</Delay>
-				</Protocol>
-				<Protocol>
-					<Name>PcapQSTradesFeed</Name>
-					<VLAN>1073</VLAN>
-					<MulticastGroup>239.255.38.142</MulticastGroup>
-					<Port>6009</Port>
-					<Type>Production</Type>
-					<Delay>100</Delay>
-				</Protocol>
-				<Protocol>
-					<Name>PcapQSTradesFeed</Name>
-					<VLAN>1073</VLAN>
-					<MulticastGroup>239.255.36.152</MulticastGroup>
-					<Port>7009</Port>
-					<Type>Production</Type>
-					<Delay>100</Delay>
-				</Protocol>
-			</ProtocolGroup>
-		-->
+            <ProtocolGroup>
+                <GroupName>QSTradesFeedGroup</GroupName>
+                <GroupType>Historical</GroupType>
+                <Protocol>
+                    <Name>PcapQSTradesFeed</Name>
+                    <Port>5009</Port>
+                    <Type>Production</Type>
+                    <Delay>100</Delay>
+                </Protocol>
+                <Protocol>
+                    <Name>PcapQSTradesFeed</Name>
+                    <VLAN>1073</VLAN>
+                    <MulticastGroup>239.255.38.142</MulticastGroup>
+                    <Port>6009</Port>
+                    <Type>Production</Type>
+                    <Delay>100</Delay>
+                </Protocol>
+                <Protocol>
+                    <Name>PcapQSTradesFeed</Name>
+                    <VLAN>1073</VLAN>
+                    <MulticastGroup>239.255.36.152</MulticastGroup>
+                    <Port>7009</Port>
+                    <Type>Production</Type>
+                    <Delay>100</Delay>
+                </Protocol>
+            </ProtocolGroup>
+        -->
 		<!--
-			<ProtocolGroup>
-				<GroupName>QSTradesFeedGroup</GroupName>
-				<GroupType>Epoll</GroupType>
-				<Protocol>
-					<Name>QSTradesFeed</Name>
-					<VLAN>2333</VLAN>
-					<MulticastGroup>239.30.76.202</MulticastGroup>
-					<Port>5009</Port>
-					<Type>Simulation</Type>
-					<SkipConnection>No</SkipConnection>
-				</Protocol>
-				<Protocol>
-					<Name>QSTradesFeed</Name>
-					<VLAN>2333</VLAN>
-					<MulticastGroup>239.30.75.142</MulticastGroup>
-					<Port>6009</Port>
-					<Type>Simulation</Type>
-					<SkipConnection>No</SkipConnection>
-				</Protocol>
-				<Protocol>
-					<Name>QSTradesFeed</Name>
-					<VLAN>2333</VLAN>
-					<MulticastGroup>239.30.76.102</MulticastGroup>
-					<Port>7009</Port>
-					<Type>Simulation</Type>
-					<SkipConnection>No</SkipConnection>
-				</Protocol>
-			</ProtocolGroup>
-		-->
+            <ProtocolGroup>
+                <GroupName>QSTradesFeedGroup</GroupName>
+                <GroupType>Epoll</GroupType>
+                <Protocol>
+                    <Name>QSTradesFeed</Name>
+                    <VLAN>2333</VLAN>
+                    <MulticastGroup>239.30.76.202</MulticastGroup>
+                    <Port>5009</Port>
+                    <Type>Simulation</Type>
+                    <SkipConnection>No</SkipConnection>
+                </Protocol>
+                <Protocol>
+                    <Name>QSTradesFeed</Name>
+                    <VLAN>2333</VLAN>
+                    <MulticastGroup>239.30.75.142</MulticastGroup>
+                    <Port>6009</Port>
+                    <Type>Simulation</Type>
+                    <SkipConnection>No</SkipConnection>
+                </Protocol>
+                <Protocol>
+                    <Name>QSTradesFeed</Name>
+                    <VLAN>2333</VLAN>
+                    <MulticastGroup>239.30.76.102</MulticastGroup>
+                    <Port>7009</Port>
+                    <Type>Simulation</Type>
+                    <SkipConnection>No</SkipConnection>
+                </Protocol>
+            </ProtocolGroup>
+        -->
 	</DataFeeds>
 	<HistoricalPcapData>
 		<LogType>Info</LogType>

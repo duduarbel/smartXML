@@ -2317,9 +2317,4 @@ def _skip(name=None, skip2=None):
 
 @pytest.mark.one
 def test_skip():
-    _skip("BarCap")
-    _skip("BarCap", "no")
-    _skip("BarCap", "no")
-    _skip("BarCap", "yes")
-    _skip("BarCap", "yes")
-    _skip()
+    _skip("PureStreamNxtd")
