@@ -2286,18 +2286,17 @@ def print_red(message: str) -> None:
 def skip(file_name, name=None, skip_cmd=None):
     xml = SmartXML(Path(file_name))
 
-    protocols = xml.find("settings|Executions|Protocol", only_one=False, case_sensitive=False)
+    protocols = xml.find("Name", with_content=name, only_one=False, case_sensitive=False)
     for protocol in protocols:
-        protocol_name = protocol.find("Name", case_sensitive=False)
-        if protocol_name:
-            if protocol_name.content == name:
-                skipConnection = protocol.find("SkipConnection", case_sensitive=False)
-                if not skipConnection:
-                    skipConnection = Element("SkipConnection")
-                    skipConnection.add_as_last_son_of(protocol)
-                skipConnection.content = skip_cmd
-                xml.write()
+        if not protocol.is_comment():
+            skipConnection = protocol.find("SkipConnection", case_sensitive=False)
+            if not skipConnection:
+                skipConnection = Element("SkipConnection")
+                skipConnection.add_as_last_son_of(protocol)
+            skipConnection.content = skip_cmd
+            xml.write()
 
+    protocols = xml.find("settings|Executions|Protocol", only_one=False, case_sensitive=False)
     for protocol in protocols:
         if not protocol.is_comment():
             protocol_name = protocol.find("Name", case_sensitive=False)
@@ -2313,8 +2312,17 @@ def _skip(name=None, skip2=None):
     input_file = TEST_FOLDER / Path("files/Settings.xml.copy")
     shutil.copyfile(source_file, input_file)
     skip("files/Settings.xml.copy", name, skip2)
+    xml = SmartXML(input_file)
+
+    if skip2:
+        protocol = xml.find("Name", with_content=name, case_sensitive=False).parent
+        skip_connection = protocol.find("SkipConnection", case_sensitive=False)
+        assert skip_connection.content == skip2
 
 
 @pytest.mark.one
 def test_skip():
     _skip("PureStreamNxtd")
+    _skip("PureStreamNxtd", "yes")
+    _skip("PureStreamNxtd", "no")
+    _skip("PureStreamNxtd", "yes")
