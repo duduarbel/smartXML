@@ -109,8 +109,9 @@ def _add_ready_token(incomplete_nodes, ready_nodes, element: ElementBase, depth:
     if len(incomplete_nodes) == 0:
         ready_nodes.setdefault(depth, []).append(element)
     else:
-        incomplete_nodes[-1]._sons.append(element)
-        element._parent = incomplete_nodes[-1]
+        element.add_as_last_son_of(incomplete_nodes[-1])
+        # incomplete_nodes[-1]._sons.append(element)
+        # element._parent = incomplete_nodes[-1]
 
 
 def _parse_element(text: str) -> Element:
@@ -224,14 +225,9 @@ def _read_elements(text: str) -> list[Element]:
                 for comment in elements_in_comment:
                     comment.comment_out()
                     _add_ready_token(incomplete_nodes, ready_nodes, comment, depth + 1)
-                continue
-            except Exception as e:
+            except Exception:
                 # The content of the comment can not be parsed, so handle this as plain text
-                pass
-
-            element = TextOnlyComment(data)
-
-            _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1)
+                _add_ready_token(incomplete_nodes, ready_nodes, TextOnlyComment(data), depth + 1)
 
         elif token_type == TokenType.closing:
             element = incomplete_nodes.pop()

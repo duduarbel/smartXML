@@ -17,6 +17,7 @@ class ElementBase:
         self._name = name
         self._sons = []
         self._parent: "ElementBase|None" = None
+        self._is_empty = False  # whether the element is self-closing
 
     @property
     def content(self) -> str:
@@ -24,7 +25,7 @@ class ElementBase:
         the_content = ""
         for son in self._sons:
             if isinstance(son, ContentOnly):
-                the_content += son._text + "\n"
+                the_content += son.text + "\n"
         return the_content.rstrip("\n")
 
     @content.setter
@@ -283,14 +284,14 @@ class ContentOnly(ElementBase):
 
     def __init__(self, text: str):
         super().__init__("")
-        self._text = str(text)
+        self.text = str(text)
 
     def _to_string(self, index: int, indentation: str) -> str:
         indent = indentation * index
         if self._get_index_in_parent() == 0:
-            return f"{indent}{self._text}"
+            return f"{indent}{self.text}"
         else:
-            return f"{indent}{self._text}\n"
+            return f"{indent}{self.text}\n"
 
     def add_before(self, sibling: "ElementBase"):
         """Add this element before the given sibling element."""
@@ -406,7 +407,6 @@ class Element(ElementBase):
     def __init__(self, name: str):
         super().__init__(name)
         self.attributes = {}
-        self._is_empty = False  # whether the element is self-closing
 
     def uncomment(self):
         if self.parent.is_comment():

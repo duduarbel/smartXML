@@ -863,6 +863,7 @@ def test_find_name_2():
     assert len(abcdb) == 0
 
 
+@pytest.mark.one
 def test_find_1():
     src = textwrap.dedent("""\
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -2322,7 +2323,6 @@ def _skip(source_file, input_file, name=None, skip2=None):
     _test_tree_integrity(xml)
 
 
-@pytest.mark.one
 def test_skip():
     source_file = TEST_FOLDER / Path("files/Settings.xml")
     input_file = TEST_FOLDER / Path("files/Settings.xml.copy")
