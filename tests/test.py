@@ -2,6 +2,7 @@ import argparse
 import shutil
 import textwrap
 from readme_example import test_readme_example
+from difflib import ndiff
 
 from smartXML.xmltree import SmartXML, BadXMLFormat, _read_elements, _parse_element
 from smartXML.element import Element, TextOnlyComment, ContentOnly, IllegalOperation
@@ -2245,7 +2246,6 @@ def test_find_comment():
     assert comment is None
 
 
-@pytest.mark.one
 def test_find_content():
     src = textwrap.dedent("""\
         <head version="1.0">This is the head
@@ -2285,18 +2285,20 @@ def print_red(message: str) -> None:
 
 def skip(file_name, name=None, skip_cmd=None):
     xml = SmartXML(Path(file_name))
-
-    protocols = xml.find("Name", with_content=name, only_one=False, case_sensitive=False)
-    for protocol in protocols:
-        if not protocol.is_comment():
-            skipConnection = protocol.find("SkipConnection", case_sensitive=False)
-            if not skipConnection:
-                skipConnection = Element("SkipConnection")
-                skipConnection.add_as_last_son_of(protocol)
-            skipConnection.content = skip_cmd
-            xml.write()
+    xml.write()
 
     protocols = xml.find("settings|Executions|Protocol", only_one=False, case_sensitive=False)
+    for protocol in protocols:
+        protocol_name = protocol.find("Name", case_sensitive=False)
+        if protocol_name:
+            if protocol_name.content == name:
+                skipConnection = protocol.find("SkipConnection", case_sensitive=False)
+                if not skipConnection:
+                    skipConnection = Element("SkipConnection")
+                    skipConnection.add_as_last_son_of(protocol)
+                skipConnection.content = skip_cmd
+                xml.write()
+
     for protocol in protocols:
         if not protocol.is_comment():
             protocol_name = protocol.find("Name", case_sensitive=False)
@@ -2307,9 +2309,7 @@ def skip(file_name, name=None, skip_cmd=None):
                 print_green(protocol_name.content)
 
 
-def _skip(name=None, skip2=None):
-    source_file = TEST_FOLDER / Path("files/Settings.xml")
-    input_file = TEST_FOLDER / Path("files/Settings.xml.copy")
+def _skip(source_file, input_file, name=None, skip2=None):
     shutil.copyfile(source_file, input_file)
     skip("files/Settings.xml.copy", name, skip2)
     xml = SmartXML(input_file)
@@ -2322,7 +2322,26 @@ def _skip(name=None, skip2=None):
 
 @pytest.mark.one
 def test_skip():
-    _skip("PureStreamNxtd")
-    _skip("PureStreamNxtd", "yes")
-    _skip("PureStreamNxtd", "no")
-    _skip("PureStreamNxtd", "yes")
+    source_file = TEST_FOLDER / Path("files/Settings.xml")
+    input_file = TEST_FOLDER / Path("files/Settings.xml.copy")
+
+    _skip(source_file, input_file, "PureStreamNxtd", "yes")
+    lines_src = source_file.read_text().splitlines()
+    lines_dst = input_file.read_text().splitlines()
+
+    diff = ndiff(lines_src, lines_dst)
+    print("------------------------------------------")
+    diffs = []
+    line_number = 0
+    for line in diff:
+        line_number += 1
+        if line.startswith("- ") or line.startswith("+ "):
+            diffs.append((line_number, line))
+
+    assert len(diffs) == 6
+    assert diffs[1][0] == 103
+    assert diffs[1][1] == "+ 				<SkipConnection>yes</SkipConnection>"
+    assert diffs[3][0] == 120
+    assert diffs[3][1] == "+ 				<SkipConnection>yes</SkipConnection>"
+    assert diffs[5][0] == 135
+    assert diffs[5][1] == "+ 			<SkipConnection>yes</SkipConnection>"
