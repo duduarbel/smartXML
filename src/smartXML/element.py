@@ -15,7 +15,7 @@ class IllegalOperation(Exception):
 class ElementBase:
     def __init__(self, name: str):
         self._name = name
-        self._sons = []
+        self._sons: list[ElementBase] = []
         self._parent: "ElementBase|None" = None
         self._is_empty = False  # whether the element is self-closing
 
@@ -248,7 +248,7 @@ class ElementBase:
 
         if self._check_name_match(names_list[0], case_sensitive):
             if self._check_content_match(with_content, case_sensitive):
-                sons = []
+                sons: list[ElementBase] = []
                 sons.extend(self._sons)
                 match = []
                 for index, name in enumerate(names_list[1:]):
@@ -456,7 +456,7 @@ class Element(ElementBase):
             children_str = ""
             if len(self._sons) > 0:
                 if isinstance(self._sons[0], ContentOnly):
-                    first_content = self._sons[0]._text
+                    first_content = self._sons[0].text
                     children_str = "".join(son._to_string(index + 1, indentation) for son in self._sons[1:])
                 else:
                     children_str = "".join(son._to_string(index + 1, indentation) for son in self._sons)
