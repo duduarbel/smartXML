@@ -2319,6 +2319,8 @@ def _skip(source_file, input_file, name=None, skip2=None):
         skip_connection = protocol.find("SkipConnection", case_sensitive=False)
         assert skip_connection.content == skip2
 
+    _test_tree_integrity(xml)
+
 
 @pytest.mark.one
 def test_skip():
