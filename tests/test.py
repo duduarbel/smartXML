@@ -5,7 +5,7 @@ from readme_example import test_readme_example
 from difflib import ndiff
 
 from smartXML.xmltree import SmartXML, BadXMLFormat, _read_elements, _parse_element
-from smartXML.element import Element, TextOnlyComment, ContentOnly, IllegalOperation
+from smartXML.element import Element, TextOnlyComment, ContentOnly, IllegalOperation, CData, Doctype
 from pathlib import Path
 import pytest
 import random
@@ -863,7 +863,6 @@ def test_find_name_2():
     assert len(abcdb) == 0
 
 
-@pytest.mark.one
 def test_find_1():
     src = textwrap.dedent("""\
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -2347,3 +2346,28 @@ def test_skip():
     assert diffs[3][1] == "+ 				<SkipConnection>yes</SkipConnection>"
     assert diffs[5][0] == 135
     assert diffs[5][1] == "+ 			<SkipConnection>yes</SkipConnection>"
+
+
+def test_empty_file():
+    file_name = __create_file("")
+    with pytest.raises(BadXMLFormat):
+        SmartXML(file_name)
+
+
+def test_only_declaration():
+    src = '<?xml version="1.0" encoding="UTF-8"?>'
+    file_name = __create_file(src)
+    with pytest.raises(BadXMLFormat):
+        SmartXML(file_name)
+
+
+@pytest.mark.one
+def test_add_and_remove_element():
+    xml = SmartXML()
+    root = Element("root")
+    xml._tree = root
+    child = Element("child")
+    child.add_as_last_son_of(root)
+    assert root._sons[0] == child
+    child.remove()
+    assert len(root._sons) == 0
