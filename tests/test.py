@@ -1,11 +1,10 @@
-import argparse
 import shutil
 import textwrap
 from readme_example import test_readme_example
 from difflib import ndiff
 
 from smartXML.xmltree import SmartXML, BadXMLFormat, _read_elements, _parse_element
-from smartXML.element import Element, TextOnlyComment, ContentOnly, IllegalOperation, CData, Doctype
+from smartXML.element import Element, TextOnlyComment, ContentOnly, IllegalOperation
 from pathlib import Path
 import pytest
 import random
