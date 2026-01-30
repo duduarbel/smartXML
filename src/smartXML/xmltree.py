@@ -109,9 +109,10 @@ def _add_ready_token(incomplete_nodes, ready_nodes, element: ElementBase, depth:
     if len(incomplete_nodes) == 0:
         ready_nodes.setdefault(depth, []).append(element)
     else:
-        element.add_as_last_son_of(incomplete_nodes[-1])
-        # incomplete_nodes[-1]._sons.append(element)
-        # element._parent = incomplete_nodes[-1]
+        # element.add_as_last_son_of(incomplete_nodes[-1])
+        # performance of below is better than above
+        incomplete_nodes[-1]._sons.append(element)
+        element._parent = incomplete_nodes[-1]
 
 
 def _parse_element(text: str) -> Element:
