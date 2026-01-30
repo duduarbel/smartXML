@@ -264,10 +264,10 @@ def _read_elements(text: str) -> list[Element]:
 
 class SmartXML:
     def __init__(self, data: Path = None):
-        self._file_name = data
-        self._declaration = ""
-        self._tree = None
-        self._doctype = None
+        self._file_name: Path = data
+        self._declaration: str = ""
+        self._tree: ElementBase = None
+        self._doctype: Doctype = None
         if self._file_name:
             self.read(self._file_name)
 
