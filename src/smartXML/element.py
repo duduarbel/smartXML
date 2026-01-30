@@ -344,7 +344,7 @@ class TextOnlyComment(ElementBase):
     @text.setter
     def text(self, text: str):
         """Set the content of the element."""
-        self._text = text
+        self._text = str(text)
 
     def is_comment(self) -> bool:
         return True
