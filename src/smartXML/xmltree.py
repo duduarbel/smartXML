@@ -15,7 +15,7 @@ class BadXMLFormat(Exception):
         super().__init__(self.message)
 
 
-class TokenType(Enum):
+class _TokenType(Enum):
     comment = 1
     full_tag_name = 2
     closing = 3
@@ -24,8 +24,8 @@ class TokenType(Enum):
     doctype = 6
 
 
-class Token:
-    def __init__(self, token_type: TokenType, data: str, line_number: int):
+class _Token:
+    def __init__(self, token_type: _TokenType, data: str, line_number: int):
         self.token_type = token_type
         self.data = data
         self.line_number = line_number
@@ -48,9 +48,11 @@ def _divide_to_tokens(file_content):
 
         if char == ">":
             if last_char == "<":
-                tokens.append(Token(TokenType.full_tag_name, file_content[last_index + 1 : index].strip(), line_number))
+                tokens.append(
+                    _Token(_TokenType.full_tag_name, file_content[last_index + 1 : index].strip(), line_number)
+                )
             else:
-                tokens.append(Token(TokenType.closing, file_content[last_index + 1 : index].strip(), line_number))
+                tokens.append(_Token(_TokenType.closing, file_content[last_index + 1 : index].strip(), line_number))
             last_char = char
             last_index = index
         elif char == "<":
@@ -60,7 +62,7 @@ def _divide_to_tokens(file_content):
                 text = file_content[last_index + 1 : index]
                 text = text.strip()
                 if text:
-                    tokens.append(Token(TokenType.content, text, line_number))
+                    tokens.append(_Token(_TokenType.content, text, line_number))
             last_char = char
             last_index = index
         elif char == "\n":
@@ -73,7 +75,7 @@ def _divide_to_tokens(file_content):
                     raise BadXMLFormat(f"Malformed comment in line {line_number}")
 
                 comment = file_content[index + 3 : comment_end_index]
-                tokens.append(Token(TokenType.comment, comment, line_number))
+                tokens.append(_Token(_TokenType.comment, comment, line_number))
 
                 last_char = ""
                 last_index = comment_end_index + 3
@@ -84,7 +86,7 @@ def _divide_to_tokens(file_content):
                 if cdata_end == -1:
                     raise BadXMLFormat(f"Malformed CDATA section in line {line_number}")
                 cdata_content = file_content[index + 8 : cdata_end]
-                tokens.append(Token(TokenType.c_data, cdata_content, line_number))
+                tokens.append(_Token(_TokenType.c_data, cdata_content, line_number))
                 last_index = cdata_end + 2
                 last_char = ">"
                 index = last_index
@@ -94,7 +96,7 @@ def _divide_to_tokens(file_content):
                 if start == -1:
                     raise BadXMLFormat(f"Malformed DOCTYPE declaration in line {line_number}")
                 doctype = file_content[index:start]
-                tokens.append(Token(TokenType.doctype, doctype, line_number))
+                tokens.append(_Token(_TokenType.doctype, doctype, line_number))
 
                 last_char = ""
                 last_index = start + 1
@@ -187,7 +189,7 @@ def _read_elements(text: str) -> list[Element]:
         data = token.data
         line_number = token.line_number
 
-        if token_type == TokenType.full_tag_name:
+        if token_type == _TokenType.full_tag_name:
             # this token is anything that is between < and >
             if data.endswith("/"):
                 element: ElementBase = _parse_element(data[:-1])
@@ -215,7 +217,7 @@ def _read_elements(text: str) -> list[Element]:
                     incomplete_nodes.append(element)
                     depth += 1
 
-        elif token_type == TokenType.comment:
+        elif token_type == _TokenType.comment:
             if data.find("!--") != -1:
                 raise BadXMLFormat(f"Nested comments are not allowed in line {line_number}")
             try:
@@ -230,23 +232,23 @@ def _read_elements(text: str) -> list[Element]:
                 # The content of the comment can not be parsed, so handle this as plain text
                 _add_ready_token(incomplete_nodes, ready_nodes, TextOnlyComment(data), depth + 1)
 
-        elif token_type == TokenType.closing:
+        elif token_type == _TokenType.closing:
             element = incomplete_nodes.pop()
             _add_ready_token(incomplete_nodes, ready_nodes, element, depth)
             depth -= 1
 
-        elif token_type == TokenType.content:
+        elif token_type == _TokenType.content:
             data = data.splitlines()
             for content in data:
                 content_only = ContentOnly(content.strip())
                 _add_ready_token(incomplete_nodes, ready_nodes, content_only, depth + 1)
 
-        elif token_type == TokenType.doctype:
+        elif token_type == _TokenType.doctype:
             element = Doctype(data)
             incomplete_nodes.append(element)
             depth += 1
 
-        elif token_type == TokenType.c_data:
+        elif token_type == _TokenType.c_data:
             element = CData(data)
             _add_ready_token(incomplete_nodes, ready_nodes, element, depth + 1)
 
